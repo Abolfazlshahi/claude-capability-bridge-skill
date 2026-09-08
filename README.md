@@ -1,581 +1,300 @@
-# Claude Capability Bridge
+<div align="center">
 
-> Give third-party and custom-provider models a reusable procedural playbook for operating Claude Desktop/Cowork-style agent runtimes.
+# Claude Capability Bridge Skill
 
-[![Skill](https://img.shields.io/badge/Agent%20Skill-Claude%20Capability%20Bridge-6f42c1)](./SKILL.md) [![Version](https://img.shields.io/badge/version-0.3.0-informational)](./SKILL.md) [![CI](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/actions/workflows/validate.yml) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+### Teach custom-provider models the **workflow knowledge** needed to operate agentic tools reliably.
 
-## The idea
+<img src="./assets/bridge-overview.svg" alt="Claude Capability Bridge overview" width="100%" />
 
-A tool being exposed to a model does not automatically mean the model knows the right workflow for using it.
+[![Agent Skill](https://img.shields.io/badge/Agent%20Skill-claude--capability--bridge-8b5cf6?style=for-the-badge)](./SKILL.md)
+[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088ff?style=for-the-badge&logo=githubactions&logoColor=white)](.github/workflows/validate.yml)
+[![License](https://img.shields.io/badge/license-MIT-34d399?style=for-the-badge)](./LICENSE)
 
-A desktop agent may have access to files, code execution, browsers, Chrome, computer use, MCP/connectors, Projects, Skills, Plugins, Artifacts, interactive apps, subagents, and scheduled or remote execution. The hard part is often not *whether* a tool exists, but:
+**Discover → Select → Execute → Observe → Verify → Recover**
 
-```text
-When should I use it?
-        ↓
-What surface is safest and most reliable?
-        ↓
-What does its live contract require?
-        ↓
-What state should I preserve?
-        ↓
-How do I verify the result?
-        ↓
-What do I do when it fails?
-```
-
-Anthropic's Agent Skills model is explicitly designed to give agents reusable workflows, context, and best practices. This project applies that same general mechanism to a narrower problem: **procedural capability transfer for non-native/custom-provider models**. citeturn911786search3turn911786search9
-
-> **Important:** this Skill does not create capabilities. It teaches a model how to reason about and use capabilities that the runtime actually exposes.
+</div>
 
 ---
 
-## The core invariant
+## What problem does this solve?
+
+A model can have access to the same browser, filesystem, shell, MCP tools, connectors, and other runtime capabilities as a strong native agent and still use them poorly.
+
+The missing piece is often **procedural knowledge**: knowing which surface to choose, how to sequence calls, how to preserve state, how to diagnose failure, and what evidence is sufficient to say *done*.
+
+This Skill turns those behaviors into reusable procedures for Claude Desktop/Cowork-like and Claude Code-style Agent Skills runtimes.
+
+> **Core invariant:** capability exposed ≠ capability understood ≠ task completed ≠ task verified.
+
+---
+
+## Why this is different
+
+| Without the bridge | With the bridge |
+|---|---|
+| May see tools without knowing when to use them | Discovers the live capability surface first |
+| Can choose a plausible but wrong tool | Selects the narrowest reliable surface for the task |
+| May invent arguments or rely on stale assumptions | Reads the current tool contract before unfamiliar calls |
+| May stop after a process starts or a page loads | Verifies the actual acceptance criterion |
+| May repeat the same failed call | Classifies the failure and changes a material variable |
+| May confuse runtime, gateway, and model failures | Attributes failures to the correct layer |
+| May claim success from partial evidence | Reports verified, blocked, failed, and unknown states separately |
+
+**Important:** this table describes the Skill's intended behavioral effect. It is **not a measured benchmark result**. Use the included evaluation suite to test the effect on your model/runtime.
+
+<img src="./assets/before-after.svg" alt="Before and after comparison" width="100%" />
+
+---
+
+## How it works
+
+<img src="./assets/workflow.svg" alt="Capability Bridge workflow" width="100%" />
+
+The main Skill keeps the execution discipline compact and routes deeper procedures to references only when needed:
 
 ```text
-┌────────────────────────┐
-│ Capability is exposed  │
-└────────────┬───────────┘
-             ↓
-┌────────────────────────┐
-│ Model recognizes it    │
-└────────────┬───────────┘
-             ↓
-┌────────────────────────┐
-│ Workflow reaches target│
-└────────────┬───────────┘
-             ↓
-┌────────────────────────┐
-│ Result is verified     │
-└────────────────────────┘
-```
-
-**Capability available ≠ capability understood ≠ task completed ≠ task verified.**
-
-The bridge operationalizes that distinction with a repeated loop:
-
-```text
-DISCOVER → SELECT → ACT → OBSERVE → ASSERT → RECOVER → VERIFY → REPORT
+runtime discovery
+      ↓
+capability + permission check
+      ↓
+tool / surface selection
+      ↓
+live schema inspection
+      ↓
+ACT → OBSERVE → DECIDE
+      ↓
+acceptance verification
+      ↓
+recovery or escalation
+      ↓
+evidence-backed report
 ```
 
 ---
 
-## Before vs. after
+## Custom-provider support
 
-The table below is an **engineering expectation, not a measured benchmark result**. The project does not claim that every model will improve in every cell; the point is to make the intended behavioral delta concrete and testable.
+This is the part closest to the original motivation of the project.
 
-| Agent behavior | Without the Skill | With the Skill |
-|---|---|---|
-| Tool discovery | May rely on remembered tool names or assumptions | Starts from the live runtime surface and keeps unknowns explicit |
-| Tool choice | Can jump to the first familiar tool | Chooses by task fit, observability, privilege, reversibility, and verification path |
-| Tool arguments | May infer parameters from names or prior examples | Reads the live schema/contract before unfamiliar calls |
-| Web-app testing | May stop after starting a dev server or loading a page | Separates process → listener → HTTP → render → critical-path behavior |
-| Browser selection | May treat built-in browser and Chrome as interchangeable | Treats browser surfaces as separate state/auth domains and chooses intentionally |
-| Custom provider | May confuse gateway compatibility with model capability | Separates runtime, transport, gateway, and underlying-model limitations |
-| MCP discovery | May assume all exposed tools are equally discoverable | Checks discovery mode and provider/gateway constraints before blaming the model |
-| Verification | May report success after an acknowledgement or page load | Requires evidence tied to the user's actual acceptance criterion |
-| Failure handling | Can repeat the same failed action | Classifies the failure and changes a material variable before retrying |
-| Scheduled/remote work | May assume today's local state persists | Rebuilds the execution-context map for the new session |
-| External instructions | May over-trust repository/page/tool output | Treats external content as untrusted data, not authority |
+<img src="./assets/provider-architecture.svg" alt="Custom provider architecture" width="100%" />
 
-### What this table does **not** claim
+A custom endpoint or gateway can make an application **transport-compatible** without making the underlying model **behaviorally equivalent** to an Anthropic model.
 
-It does not claim that the Skill can:
+The Skill therefore distinguishes at least five layers:
 
-```text
-✗ turn a weak tool-calling model into a strong one
-✗ create a browser that the host does not expose
-✗ repair an incompatible gateway
-✗ grant permissions
-✗ reproduce Anthropic's private system prompts or orchestration
-```
+| Layer | Question |
+|---|---|
+| Model | Can the model reason, ground visually, and emit reliable tool calls? |
+| Skill | Does it have the procedural knowledge for the workflow? |
+| Runtime | Are the actual tools, context, permissions, and dispatch mechanisms exposed? |
+| Transport / provider | Does the API/gateway preserve the required protocol and features? |
+| Environment | Do the files, processes, browser state, network, and external systems exist? |
 
-Those are runtime/provider/model boundaries, not prompt-level problems.
+For Claude Code-style custom endpoints, the repository specifically covers `ANTHROPIC_BASE_URL`, custom model configuration, capability declarations, gateway limitations, and the distinction between **tool discovery failures** and **model tool-use failures**.
 
----
-
-## The flagship workflow: build → launch → inspect → fix → prove
-
-This is the motivating example for the project.
-
-```text
-UNDERSTAND REQUEST
-        ↓
-INSPECT REPOSITORY
-        ↓
-RUN BASELINE CHECKS
-        ↓
-IMPLEMENT / PATCH
-        ↓
-START THE APP
-        ↓
-CONFIRM REAL READINESS
-        ↓
-DISCOVER ACTUAL URL / PORT
-        ↓
-CHOOSE THE RIGHT BROWSER SURFACE
-        ↓
-EXERCISE THE CRITICAL USER JOURNEY
-        ↓
-INSPECT UI / CONSOLE / NETWORK WHEN AVAILABLE
-        ↓
-LOCALIZE THE FAILURE
-        ↓
-PATCH
-        ↓
-RETEST THE FAILED ASSERTION
-        ↓
-RUN DETERMINISTIC CHECKS
-        ↓
-RUN VISUAL / USER-FACING CHECK
-        ↓
-CLEAN UP
-        ↓
-REPORT EVIDENCE
-```
-
-The bridge explicitly prevents these common false equivalences:
-
-```text
-process running
-      ≠
-server listening
-      ≠
-HTTP responding
-      ≠
-app hydrated
-      ≠
-page correct
-      ≠
-feature works
-```
-
-Claude's current desktop experience now includes both a built-in Cowork browser and Claude in Chrome, and Anthropic describes them as different browser contexts with different purposes and authentication boundaries. citeturn911786search1turn911786search0
-
----
-
-## Why custom providers are a separate problem
-
-This is the part most directly connected to the original motivation.
-
-```text
-Claude Desktop / Claude Code
-            │
-            ▼
-      agent runtime
-      + exposed tools
-            │
-            ▼
-   Anthropic-compatible API
-            │
-            ▼
-     proxy / gateway
-            │
-            ▼
-    third-party model
-```
-
-A successful API translation does **not** make the underlying model behaviorally equivalent to an Anthropic model.
-
-The bridge therefore keeps four questions separate:
-
-```text
-1. Did the host expose the capability?
-2. Did the endpoint/gateway preserve the capability?
-3. Did the model receive and understand the capability?
-4. Could the model reliably execute and verify the workflow?
-```
-
-Claude Code documents custom endpoint/provider configuration and capability declarations. It also documents an important MCP Tool Search caveat: when `ANTHROPIC_BASE_URL` points at a non-first-party host, Tool Search is disabled by default because some gateways do not forward the required `tool_reference` blocks. This means an apparently "missing tool" can be a **transport/discovery issue**, not a model reasoning failure. citeturn911786search3
-
-That distinction is central to this project:
-
-```text
-Tool was not discovered
-          ≠
-Tool was discovered and ignored
-          ≠
-Tool was selected but malformed
-          ≠
-Tool succeeded but workflow was wrong
-          ≠
-Workflow succeeded but verification was insufficient
-```
+One concrete example is MCP Tool Search: non-first-party endpoints can disable or alter Tool Search behavior because a gateway may not preserve the protocol features required for tool references. That is an endpoint/runtime issue—not proof that the model ignored an available tool.
 
 See [`references/custom-provider-transport.md`](./references/custom-provider-transport.md).
 
 ---
 
-## Capability model
+## Web-app verification: the flagship workflow
+
+The bridge is especially useful for coding agents that need to prove a web app actually works.
+
+<img src="./assets/webapp-verification.svg" alt="Web app verification pipeline" width="100%" />
+
+The verification chain is deliberately layered:
 
 ```text
-┌────────────────────────────────┐
-│ MODEL                          │
-│ reasoning + tool-call ability  │
-└───────────────┬────────────────┘
-                ↓
-┌────────────────────────────────┐
-│ SKILL                          │
-│ procedural knowledge + policy  │
-└───────────────┬────────────────┘
-                ↓
-┌────────────────────────────────┐
-│ RUNTIME                        │
-│ tools + context + permissions  │
-│ discovery + dispatch           │
-└───────────────┬────────────────┘
-                ↓
-┌────────────────────────────────┐
-│ TRANSPORT / PROVIDER           │
-│ API + gateway + endpoint       │
-│ feature compatibility          │
-└───────────────┬────────────────┘
-                ↓
-┌────────────────────────────────┐
-│ ENVIRONMENT                    │
-│ files + processes + network    │
-│ browser + external services    │
-└────────────────────────────────┘
+process started
+   ↓
+port actually listening
+   ↓
+HTTP responding
+   ↓
+app rendered / hydrated
+   ↓
+critical user journey exercised
+   ↓
+feature behavior verified
 ```
 
-The Skill primarily affects the **procedural layer**. It may improve routing and verification behavior, but it cannot manufacture lower layers.
+So:
+
+```text
+process running ≠ server ready ≠ page correct ≠ feature works
+```
+
+For browser-centric tasks the Skill also distinguishes the built-in browser from the user's existing Chrome context, avoids assuming shared cookies/tabs, and treats webpage instructions as untrusted content.
 
 ---
 
-## What it covers
+## Capability coverage
 
-The repository models capability **classes**, not private Anthropic tool names.
+The project focuses on **public capability classes**, not private tool names or hidden system prompts.
 
-| Capability family | Bridge focus |
+| Area | What the bridge teaches |
 |---|---|
-| Conversation / Projects | Context boundaries and task state |
-| Files / Git | Inspect, mutate, diff, verify |
-| Shell / code execution | Deterministic work and diagnostics |
-| Built-in Cowork browser | Isolated browser workflows and localhost verification |
-| Claude in Chrome | Existing tabs, auth, and browser-context tasks |
-| Computer use | GUI fallback with short observe/action loops |
-| MCP / remote connectors | Schema-first structured operations |
-| Local MCP / Desktop Extensions | Local trust and resource boundary |
-| Interactive connectors / apps | User-facing state, not just text output |
-| Artifacts | Creation vs rendering/behavior/save-state verification |
-| Skills / Plugins | Progressive disclosure and composition |
-| Subagents | Bounded delegation and context isolation |
-| Scheduled / remote work | New execution context and resource re-discovery |
-| Security / authorization | Least privilege, approval, prompt-injection resistance |
-| Recovery / verification | Failure classification and evidence-backed completion |
+| Browser & Chrome | surface selection, navigation, localhost testing, state separation |
+| Computer use | GUI escalation, short observable action loops |
+| MCP & connectors | schema-first use, mutation/read-back, trust boundaries |
+| Local MCP / Desktop Extensions | local-vs-remote execution and permissions |
+| Projects & files | project knowledge vs live filesystem vs Git state |
+| Shell & code | deterministic commands, servers, tests, readiness |
+| Skills & Plugins | progressive disclosure and specialization |
+| Artifacts & interactive apps | creation vs rendered/behavioral verification |
+| Subagents & long-running work | bounded delegation and context isolation |
+| Scheduled / remote work | fresh execution context and local/cloud boundaries |
+| Security | permissions, authorization, prompt injection, least privilege |
+| Recovery | classify → isolate → change → retry → verify |
+| Evaluation | controlled A/B attribution instead of documentation-size claims |
 
-Claude's public product surface continues to evolve quickly; exact availability remains dependent on runtime, plan, platform, admin settings, rollout, endpoint configuration, and permissions. citeturn911786search1turn911786search0
+The maintained public map lives in [`references/claude-desktop-current-map.md`](./references/claude-desktop-current-map.md).
 
 ---
 
-## The bridge's operating rules
+## Evaluation: measure behavior, not file count
 
-### 1. Runtime truth beats memory
+The repository deliberately does **not** claim that the Skill improves every model. Effectiveness should be demonstrated empirically.
 
-```text
-OBSERVED_AVAILABLE
-SUPPORTED_BUT_UNVERIFIED
-BLOCKED_BY_PERMISSION
-UNAVAILABLE
-ROLLOUT_OR_PLAN_DEPENDENT
-UNKNOWN
-STALE
-```
-
-Never fabricate an exposed capability from product knowledge alone.
-
-### 2. Read contracts before guessing
-
-For unfamiliar tools, inspect:
+Run the same task with:
 
 ```text
-purpose
-required arguments
-optional arguments
-enums / types
-output shape
-error shape
-side effects
-authorization
-idempotence
+SAME MODEL
+SAME HOST
+SAME TOOLS
+SAME PROVIDER CONFIG
+SAME WORKSPACE
+SAME TASK
+
+      ┌───────────────┐
+      │   BRIDGE OFF  │
+      └───────┬───────┘
+              │
+              │ compare traces
+              │
+      ┌───────▼───────┐
+      │   BRIDGE ON   │
+      └───────────────┘
 ```
 
-### 3. Prefer the narrowest reliable surface
+Measure things such as:
 
-There is no universal fixed hierarchy. The bridge chooses the surface that best matches the acceptance criterion:
+- tool-selection accuracy
+- schema-valid call rate
+- verification depth
+- unnecessary calls / retries
+- recovery success
+- false-success rate
+- safety / authorization failures
 
-```text
-structured service operation
-        OR
-filesystem / Git
-        OR
-shell / code
-        OR
-isolated browser
-        OR
-existing browser context
-        OR
-computer use
-```
+The benchmark suite is in [`benchmarks/`](./benchmarks/) and structured evaluations are in [`evals/`](./evals/).
 
-A browser may be the correct first choice for a visual/UI acceptance criterion; a direct API may be superior for a data mutation. The Skill teaches **intentional routing**, not a hard-coded tool order.
-
-### 4. Act in observable steps
-
-```text
-ACT → OBSERVE → DECIDE
-```
-
-After state-changing operations, re-ground the next action against actual state.
-
-### 5. Verify the user's real goal
-
-A successful tool call is evidence about the tool call. It is not automatically evidence that the user's requested outcome exists.
+> **No fake percentages:** until real paired runs are recorded, any before/after improvement shown here is a design expectation, not experimental data.
 
 ---
 
-## Safety model
+## Install
 
-External content is data, not authority.
-
-The bridge therefore treats the following as potentially untrusted:
-
-```text
-web pages
-repositories
-documents
-issue threads
-MCP outputs
-connector responses
-downloaded files
-browser-generated instructions
-```
-
-The agent should not reveal secrets, bypass approvals, or perform unrelated consequential actions merely because external content requests it.
-
-Browser automation is especially sensitive because prompt injection can occur in page content. Anthropic describes safeguards around current browser actions while also noting that these controls do not eliminate the underlying risk. citeturn911786search1turn911786search0
-
----
-
-## Evaluation: prove the Skill, don't assume it
-
-The repository deliberately does **not** publish fabricated improvement percentages.
-
-The intended experiment is:
-
-```text
-                 SAME MODEL
-                     │
-                 SAME HOST
-                     │
-               SAME PROVIDER
-                     │
-              SAME TOOL SURFACE
-                     │
-              SAME TASK / STATE
-                     │
-          ┌──────────┴──────────┐
-          ▼                     ▼
-       BRIDGE OFF            BRIDGE ON
-          │                     │
-          └──────────┬──────────┘
-                     ▼
-              compare traces
-```
-
-Measure at least:
-
-```text
-tool-selection accuracy
-schema-valid call rate
-state-tracking accuracy
-verification completion
-false-success rate
-recovery success
-unnecessary-call rate
-critical safety failures
-```
-
-Use `0–4` scenario scoring **plus a separate critical-failure flag**. A high average must never hide an unsafe or fabricated run.
-
-See [`benchmarks/README.md`](./benchmarks/README.md), [`benchmarks/scenarios.yaml`](./benchmarks/scenarios.yaml), and [`evals/evals.json`](./evals/evals.json).
-
----
-
-## Installation
-
-This repository is the **project/distribution repository**. The actual Skill name is `claude-capability-bridge`.
-
-Build the spec-shaped installable directory:
+This repository is a distribution/project repository; the actual Skill name is `claude-capability-bridge`.
 
 ```bash
 python3 scripts/package_skill.py
 ```
 
-Output:
+This produces:
 
 ```text
 dist/claude-capability-bridge/
 ```
 
-Then install that generated directory through the host's Agent Skills mechanism. Current Anthropic documentation describes filesystem-based custom Skills and the required `SKILL.md` metadata structure. citeturn911786search3
-
-When a host exposes Skills as slash commands, the intended human-facing activation is:
+Install that generated directory using the host's Agent Skills mechanism. In hosts that expose Skills as slash commands, the expected invocation is:
 
 ```text
 /claude-capability-bridge
 ```
 
-Installing the Skill does not itself create permissions, browser access, MCP servers, or runtime tools.
+Installation does **not** create tools or grant permissions.
 
 ---
 
-## Repository layout
+## Repository structure
 
 ```text
-.
-├── SKILL.md
-├── README.md
-├── LICENSE
-├── evals/
-│   └── evals.json
-├── benchmarks/
-│   ├── README.md
-│   └── scenarios.yaml
-├── references/
-│   ├── claude-desktop-current-map.md
-│   ├── custom-provider-transport.md
-│   ├── runtime-boundaries.md
-│   ├── capability-model.md
-│   ├── capability-catalog.md
-│   ├── capability-handshake.md
-│   ├── browser-workflows.md
-│   ├── webapp-verification.md
-│   ├── interactive-surfaces.md
-│   ├── desktop-extensions.md
-│   ├── computer-use.md
-│   ├── mcp-and-connectors.md
-│   ├── mcp-deep-dive.md
-│   ├── async-subagents-and-remote.md
-│   ├── skills-and-plugins.md
-│   ├── projects-and-files.md
-│   ├── provider-adaptation.md
-│   ├── evaluation-and-attribution.md
-│   ├── verification.md
-│   ├── failure-recovery.md
-│   ├── security-and-permissions.md
-│   ├── task-recipes.md
-│   ├── desktop-workflows.md
-│   └── source-notes.md
+claude-capability-bridge-skill/
+├── SKILL.md                         # compact procedural entry point
+├── references/                      # deep procedures + public capability map
+├── evals/                           # structured model-facing evaluations
+├── benchmarks/                      # scenarios + scoring guidance
 ├── scripts/
-│   ├── validate_skill.py
-│   └── package_skill.py
-└── tests/
-    ├── scenarios.md
-    └── custom-provider-transport.md
+│   ├── validate_skill.py            # repository checks
+│   └── package_skill.py             # builds strict Skill-shaped package
+├── assets/                          # README visuals
+└── tests/                           # focused local test scenarios
+```
+
+The project follows progressive disclosure:
+
+```text
+metadata → SKILL.md → relevant reference → execution → verification
 ```
 
 ---
 
-## Progressive disclosure
+## Design boundaries
 
-The Skill intentionally follows a small-core / deep-reference design:
+### The Skill can teach
 
-```text
-metadata
-   ↓
-SKILL.md
-   ↓
-relevant reference
-   ↓
-recipe / script
-   ↓
-execution
-   ↓
-verification
-```
+`capability awareness` · `tool routing` · `schema discipline` · `workflow sequencing` · `state tracking` · `verification` · `recovery` · `security boundaries` · `evidence-based reporting`
 
-The main file contains routing rules and invariants. Deep procedures are loaded only when the task crosses that capability boundary.
+### The Skill cannot create
 
-Anthropic's current Agent Skills documentation uses the same general structure: a required `SKILL.md` plus optional supporting resources. citeturn911786search3turn911786search7
+`browser runtime` · `computer-use runtime` · `MCP server` · `filesystem mount` · `network access` · `permissions` · `provider protocol compatibility` · `host slash-command registration`
+
+That boundary is a core design rule, not a footnote.
 
 ---
 
 ## Validation
 
-Repository checks:
+Run the repository validator and package builder locally:
 
 ```bash
 python3 scripts/validate_skill.py
 python3 scripts/package_skill.py
 ```
 
-For strict Agent Skills conformance, validate the generated directory with the official `skills-ref` tooling when available.
+For strict Agent Skills conformance, validate the generated package with the official `skills-ref` validator when available.
+
+GitHub Actions also checks the repository and packaged Skill shape.
 
 ---
 
-## Design boundaries
+## Documentation map
 
-```text
-CAN TEACH
-✓ capability awareness
-✓ tool routing
-✓ schema discipline
-✓ workflow sequencing
-✓ state tracking
-✓ verification
-✓ recovery
-✓ security boundaries
-✓ evidence-based reporting
+Start here:
 
-CANNOT CREATE
-✗ browser runtime
-✗ computer-use runtime
-✗ MCP server
-✗ filesystem mount
-✗ network access
-✗ permissions
-✗ provider protocol compatibility
-✗ fundamental model capabilities
-✗ host slash-command registration
-```
+| Document | Purpose |
+|---|---|
+| [`SKILL.md`](./SKILL.md) | Main procedural bridge |
+| [`custom-provider-transport.md`](./references/custom-provider-transport.md) | Custom endpoints, gateways, provider boundaries |
+| [`claude-desktop-current-map.md`](./references/claude-desktop-current-map.md) | Current public capability inventory |
+| [`webapp-verification.md`](./references/webapp-verification.md) | End-to-end web-app verification |
+| [`browser-workflows.md`](./references/browser-workflows.md) | Browser / Chrome procedures |
+| [`mcp-and-connectors.md`](./references/mcp-and-connectors.md) | Structured integration workflows |
+| [`runtime-boundaries.md`](./references/runtime-boundaries.md) | Local/cloud and execution-surface boundaries |
+| [`evaluation-and-attribution.md`](./references/evaluation-and-attribution.md) | How to prove the Skill actually helped |
+| [`source-notes.md`](./references/source-notes.md) | Primary-source provenance and maintenance |
 
 ---
 
-## Maintenance
+<div align="center">
 
-When Claude Desktop/Cowork/Claude Code, browser surfaces, MCP/connectors, Skills, Plugins, Artifacts, provider routing, or the Agent Skills specification changes:
+### The goal
 
-```text
-refresh current public capability map
-            ↓
-update affected procedure
-            ↓
-update provider boundary notes
-            ↓
-update evals / benchmarks
-            ↓
-run validator + package
-            ↓
-run controlled model evaluation
-```
+**Don't simulate agentic competence. Discover the real runtime, use the right surface, verify the real outcome, and recover safely.**
 
-Primary-source provenance and maintenance notes live in [`references/source-notes.md`](./references/source-notes.md).
+MIT License · Open source · Evidence over hype
 
----
-
-## Project status
-
-**Architecture:** implemented  
-**Procedural coverage:** broad  
-**Custom-provider transport model:** implemented  
-**Evaluation suite:** implemented  
-**Measured cross-model improvement:** **not yet established**
-
-That last line is intentional. The project is only as successful as the behavioral evidence eventually shows.
-
----
-
-## License
-
-MIT — see [`LICENSE`](./LICENSE).
+</div>
