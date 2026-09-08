@@ -1,98 +1,75 @@
-# Activation, Invocation, and Working Context
+# Activation, Slash Commands, and Skill Lifetime
 
-## Slash-command activation
+## Slash-command model
 
-In Claude/Desktop-style Skill runtimes, users typically invoke a Skill through its slash command using the Skill's installed name. For this Skill the canonical command is expected to be:
+In hosts that expose Skills as slash commands, the intended user-facing invocation is conceptually:
 
 ```text
 /claude-capability-bridge
 ```
 
-The exact command surface is controlled by the host runtime. Do not claim that a slash command exists merely because a file is named `SKILL.md`.
+The host, not this repository, owns slash-command registration and activation UI. A model must not claim that installation alone proves the command is registered.
 
-When the runtime reports that this Skill has been activated, immediately treat its instructions as the procedural policy for the remainder of the applicable task/session.
+## After activation
+
+Treat activation as a procedural context change, not a permission escalation.
+
+```text
+USER INVOKES SKILL
+       ↓
+HOST LOADS SKILL
+       ↓
+MODEL RECEIVES SKILL CONTEXT
+       ↓
+BUILD SESSION CAPABILITY MAP
+       ↓
+APPLY ROUTING + VERIFICATION CONTRACT
+```
+
+Immediately after activation, establish only the facts relevant to the current task:
+
+- current workspace/project;
+- available tool surfaces;
+- relevant permissions and approval requirements;
+- live filesystem/worktree state;
+- active browser/Chrome surface when relevant;
+- running processes/servers when relevant;
+- specialized Skills or integrations that may own the task.
 
 ## What activation changes
 
-Activation does **not** grant new permissions or tools. It changes the model's operating procedure:
+Activation changes procedural behavior. It does **not** grant tools, permissions, browser sessions, filesystem mounts, network access, or other runtime capability.
 
-- inspect available capabilities;
-- understand the host/tool boundary;
-- choose tools deliberately;
-- sequence tool calls using observable checkpoints;
-- verify outcomes instead of inferring them;
-- recover from failures systematically;
-- report evidence accurately.
+## Session learning
 
-## Session learning behavior
+Build a temporary, evidence-backed mental model of the current environment. Prefer direct observations and tool metadata over assumptions. Keep the model task-scoped.
 
-After activation, build a temporary mental model of the current environment from observed facts. Keep it task-scoped and evidence-backed.
-
-Useful facts include:
+Useful state domains:
 
 ```text
-HOST
-  runtime/application identity
-  OS/platform
-  current project/workspace
-
-TOOLS
-  tool names
-  schemas
-  permissions
-  approval requirements
-
-EXECUTION
-  shell availability
-  working directory
-  process model
-  package manager
-
-WEB
-  browser surfaces
-  active URLs
-  authentication state (only when safely observable)
-
-INTEGRATIONS
-  MCP servers
-  connectors
-  repositories
-  external services
-
-STATE
-  started processes
-  ports
-  temporary files
-  changed files
+HOST / PROJECT / FILESYSTEM / GIT
+PROCESSES / BROWSER / CHROME
+MCP / CONNECTORS / SKILLS
+PERMISSIONS / AUTH / ACCEPTANCE
 ```
 
-Do not memorize credentials, secrets, tokens, private keys, or other sensitive values into narrative state.
+Never store secrets, API keys, cookies, tokens, private keys, or credentials in the state model.
 
-## Re-discovery rules
+## Re-discovery and invalidation
 
-Refresh the capability map when any of these occur:
+Refresh or downgrade state when:
 
-- a new tool appears;
-- a tool becomes unavailable;
-- the workspace changes;
-- the current project changes;
-- a browser session changes;
-- a permission boundary changes;
-- a process/server state changes materially;
-- a connector/MCP server is added or removed.
+- a tool appears, disappears, or changes schema;
+- the workspace/project changes;
+- the browser surface or origin changes;
+- permissions change;
+- a process/server restarts or exits;
+- MCP/connectors reconnect;
+- the user manually changes the environment;
+- a new observation contradicts an earlier assumption.
+
+Treat old state as stale when necessary rather than forcing new observations to fit it.
 
 ## Skill composition
 
-When another Skill is more specific to the task, prefer the more specific Skill's procedure for that domain and use this bridge as the orchestration layer.
-
-Example:
-
-```text
-/web-specific-skill
-       ↓
-claude-capability-bridge orchestration
-       ↓
-actual browser/filesystem/shell tools
-```
-
-Do not fight or duplicate a specialized Skill's instructions when they are compatible.
+When another Skill is more specialized for the current domain, let that Skill own domain-specific instructions and use this bridge for host capability routing, state awareness, verification, and recovery.
