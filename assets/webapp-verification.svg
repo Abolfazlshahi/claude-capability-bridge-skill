@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 520" role="img" aria-labelledby="title desc">
+<title id="title">Web app verification pipeline</title><desc id="desc">A layered verification pipeline from process start through port listening, HTTP readiness, rendering, critical path and feature verification.</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#070b17"/><stop offset="1" stop-color="#111b34"/></linearGradient><linearGradient id="pipe" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#60a5fa"/><stop offset=".5" stop-color="#a78bfa"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs>
+<rect width="1400" height="520" rx="30" fill="url(#bg)"/>
+<text x="70" y="70" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="34" font-weight="800">Web-app verification pipeline</text>
+<text x="70" y="105" fill="#9eabc8" font-family="Inter,Arial,sans-serif" font-size="18">A green page is not enough. Verify the real system one layer at a time.</text>
+<path d="M130 260 H1270" stroke="url(#pipe)" stroke-width="8" opacity=".35"/>
+<g font-family="Inter,Arial,sans-serif" text-anchor="middle">
+<g><circle cx="140" cy="260" r="60" fill="#102039" stroke="#60a5fa" stroke-width="4"/><text x="140" y="252" fill="#fff" font-size="17" font-weight="800">PROCESS</text><text x="140" y="276" fill="#bfdbfe" font-size="14">started</text><text x="140" y="350" fill="#9eabc8" font-size="15">PID / command exists</text></g>
+<g><circle cx="370" cy="260" r="60" fill="#14233a" stroke="#38bdf8" stroke-width="4"/><text x="370" y="252" fill="#fff" font-size="17" font-weight="800">PORT</text><text x="370" y="276" fill="#bae6fd" font-size="14">listening</text><text x="370" y="350" fill="#9eabc8" font-size="15">actual bound port</text></g>
+<g><circle cx="600" cy="260" r="60" fill="#171b34" stroke="#818cf8" stroke-width="4"/><text x="600" y="252" fill="#fff" font-size="17" font-weight="800">HTTP</text><text x="600" y="276" fill="#c7d2fe" font-size="14">healthy</text><text x="600" y="350" fill="#9eabc8" font-size="15">request succeeds</text></g>
+<g><circle cx="830" cy="260" r="60" fill="#221b35" stroke="#a78bfa" stroke-width="4"/><text x="830" y="252" fill="#fff" font-size="17" font-weight="800">APP</text><text x="830" y="276" fill="#ddd6fe" font-size="14">rendered</text><text x="830" y="350" fill="#9eabc8" font-size="15">UI is usable</text></g>
+<g><circle cx="1060" cy="260" r="60" fill="#152633" stroke="#2dd4bf" stroke-width="4"/><text x="1060" y="252" fill="#fff" font-size="17" font-weight="800">PATH</text><text x="1060" y="276" fill="#99f6e4" font-size="14">tested</text><text x="1060" y="350" fill="#9eabc8" font-size="15">critical journey works</text></g>
+<g><circle cx="1290" cy="260" r="60" fill="#10281f" stroke="#34d399" stroke-width="5"/><text x="1290" y="252" fill="#fff" font-size="17" font-weight="800">FEATURE</text><text x="1290" y="276" fill="#a7f3d0" font-size="14">verified</text><text x="1290" y="350" fill="#9eabc8" font-size="15">acceptance criterion passes</text></g>
+</g>
+<g font-family="Inter,Arial,sans-serif"><rect x="250" y="415" width="900" height="58" rx="18" fill="#0c1324" stroke="#293553"/><text x="700" y="451" text-anchor="middle" fill="#dbeafe" font-size="16">Do not collapse these states: process running ≠ server ready ≠ app correct ≠ feature verified.</text></g>
+</svg>
