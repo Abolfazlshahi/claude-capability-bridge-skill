@@ -105,7 +105,7 @@ PERMISSIONS
 writable scope, approvals, network restrictions, sensitive-action boundaries
 ```
 
-Use `references/current-claude-desktop-map.md`, `references/runtime-boundaries.md`, `references/workspace-map.md`, and `references/session-memory.md` as needed.
+Use `references/claude-desktop-current-map.md`, `references/runtime-boundaries.md`, `references/workspace-map.md`, and `references/session-memory.md` as needed.
 
 Do not retain secrets in the state model.
 
@@ -378,7 +378,7 @@ The Skill cannot solve a missing runtime capability or a fundamental provider/to
 
 Load only what the current task requires:
 
-- `references/current-claude-desktop-map.md` — current public capability inventory and availability notes.
+- `references/claude-desktop-current-map.md` — current public capability inventory and availability notes.
 - `references/runtime-boundaries.md` — local/cloud, surface, resource, and authentication boundaries.
 - `references/activation-and-memory.md` — Skill activation and lifetime.
 - `references/session-memory.md` — capability state and invalidation.
