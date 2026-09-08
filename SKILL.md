@@ -26,6 +26,8 @@ The actual command registry is controlled by the host. The model must not claim 
 
 Once the host indicates that the Skill is active, use its operating contract for the current applicable task. Activation changes procedural behavior; it does not grant new runtime permissions.
 
+Consult `references/activation-and-memory.md` for activation lifetime and session rules.
+
 ## Core laws
 
 ### Law 1 — Runtime truth beats assumptions
@@ -189,7 +191,9 @@ side-effect level
 fallback
 ```
 
-See `references/capability-model.md` and `references/tool-use-patterns.md`.
+Use `references/capability-model.md` and `references/capability-handshake.md`.
+
+When a tool is unfamiliar, use the schema-first procedure in `references/tool-schema-literacy.md`.
 
 ## Phase 3 — Build the smallest reliable tool chain
 
@@ -380,7 +384,7 @@ scripts/assets as needed
 
 Do not load every reference into the working context when a small subset is sufficient.
 
-If another installed Skill is more specialized for the current domain, let that Skill own domain-specific behavior and use this bridge for host capability routing/verification.
+If another Skill is more specialized for the current domain, let that Skill own the domain-specific behavior and use this bridge for host capability routing/verification.
 
 Consult `references/skills-and-plugins.md`.
 
@@ -508,7 +512,10 @@ Do not say "everything works" when only compilation/build was checked.
 Use references selectively:
 
 - `capability-model.md` — runtime vs model boundary and capability states.
+- `capability-handshake.md` — capability discovery, probing, evidence, and freshness.
 - `workspace-map.md` — Claude Desktop mental model and state domains.
+- `session-memory.md` — session-scoped capability memory and invalidation.
+- `tool-schema-literacy.md` — schema-first tool-call reasoning.
 - `tool-use-patterns.md` — general tool-call discipline.
 - `browser-workflows.md` — browser selection and web interaction.
 - `webapp-verification.md` — complete web-app build/test/repair loop.
@@ -523,7 +530,11 @@ Use references selectively:
 - `security-and-permissions.md` — authorization and prompt-injection boundaries.
 - `provider-adaptation.md` — diagnosing custom-provider behavioral gaps.
 - `desktop-workflows.md` — desktop/Cowork-oriented workflow patterns.
-- `activation-and-memory.md` — slash-command context and session-scoped capability memory.
+- `activation-and-memory.md` — slash-command context and Skill lifetime.
+
+## Evaluation
+
+For model validation, use the scenario definitions in `benchmarks/scenarios.yaml` and scoring guidance in `benchmarks/README.md`. Measure the model's behavior before and after activation rather than treating Skill presence as proof of capability acquisition.
 
 ## Final invariant
 
