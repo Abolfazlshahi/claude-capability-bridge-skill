@@ -15,6 +15,7 @@ REQUIRED_REFS = {
     "activation-and-memory.md",
     "browser-workflows.md",
     "capability-catalog.md",
+    "capability-handshake.md",
     "capability-model.md",
     "code-and-shell.md",
     "computer-use.md",
@@ -25,11 +26,14 @@ REQUIRED_REFS = {
     "projects-and-files.md",
     "provider-adaptation.md",
     "security-and-permissions.md",
+    "session-memory.md",
     "skills-and-plugins.md",
     "task-recipes.md",
+    "tool-schema-literacy.md",
     "tool-use-patterns.md",
     "verification.md",
     "webapp-verification.md",
+    "workspace-map.md",
     "README.md",
 }
 
@@ -59,7 +63,7 @@ def main() -> int:
     if not desc_match:
         fail("frontmatter description is missing")
 
-    name = name_match.group(1).strip().strip("\"")
+    name = name_match.group(1).strip().strip('"')
     if len(name) > 64 or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
         fail(f"invalid Skill name: {name!r}")
 
