@@ -27,6 +27,8 @@ The host owns command registration. Do not claim that a slash command exists mer
 
 After the host reports activation, apply this Skill to the current task/session. Activation changes procedural behavior; it does not grant permissions.
 
+Consult `references/activation-and-memory.md` for activation lifetime and session rules.
+
 ## First principles
 
 ### 1. Runtime truth beats memory
@@ -366,6 +368,12 @@ RESIDUAL RISK
 
 Use precise states such as `VERIFIED`, `PARTIALLY VERIFIED`, `BLOCKED`, `UNKNOWN`, and `FAILED`.
 
+## Evaluation and limits
+
+Use `references/evaluation-and-attribution.md` and the files under `evals/` and `benchmarks/` to test whether the Skill improves behavior. Do not assume that more documentation means better performance.
+
+The Skill cannot solve a missing runtime capability or a fundamental provider/tool-calling incompatibility. It should be judged by controlled A/B behavior, not by documentation size.
+
 ## Reference routing
 
 Load only what the current task requires:
@@ -376,25 +384,29 @@ Load only what the current task requires:
 - `references/session-memory.md` — capability state and invalidation.
 - `references/workspace-map.md` — layered Desktop mental model.
 - `references/capability-model.md` — model/runtime/tool/environment distinction.
+- `references/capability-catalog.md` — capability classes and routing matrix.
 - `references/capability-handshake.md` — evidence-backed capability discovery.
-- `references/tool-schema-literacy.md` — unfamiliar tool contracts and arguments.
+- `references/tool-schema-literacy.md` — schema-first tool-call reasoning.
 - `references/tool-use-patterns.md` — generic execution discipline.
 - `references/browser-workflows.md` — browser/Chrome and localhost workflows.
 - `references/webapp-verification.md` — end-to-end web-app verification.
 - `references/interactive-surfaces.md` — interactive connectors and Artifacts.
-- `references/mcp-and-connectors.md` — connector/MCP routing.
-- `references/mcp-deep-dive.md` — MCP resources, prompts, elicitation, and trust boundaries.
-- `references/desktop-extensions.md` — local MCP/extension boundary.
-- `references/projects-and-files.md` — projects/files/Git state.
 - `references/computer-use.md` — GUI escalation.
+- `references/code-and-shell.md` — deterministic execution and process management.
+- `references/mcp-and-connectors.md` — structured integrations.
+- `references/mcp-deep-dive.md` — MCP semantics, resources, prompts, elicitation, and trust boundaries.
+- `references/desktop-extensions.md` — local MCP/Desktop Extensions.
 - `references/async-subagents-and-remote.md` — subagents, long-running, scheduled, and remote work.
 - `references/skills-and-plugins.md` — procedural packaging and composition.
-- `references/task-recipes.md` — compact task recipes.
-- `references/provider-adaptation.md` — diagnosing custom-provider gaps.
+- `references/projects-and-files.md` — projects/files/Git state.
+- `references/task-recipes.md` — compact reusable task procedures.
+- `references/provider-adaptation.md` — diagnosing custom-provider gaps and ceilings.
+- `references/evaluation-and-attribution.md` — controlled evaluation and causal attribution.
 - `references/verification.md` — evidence and acceptance criteria.
 - `references/failure-recovery.md` — recovery taxonomy.
-- `references/security-and-permissions.md` — safety and authorization.
+- `references/security-and-permissions.md` — authorization and prompt-injection boundaries.
 - `references/desktop-workflows.md` — Desktop/Cowork workflow patterns.
+- `references/source-notes.md` — public-source provenance and maintenance rules.
 
 ## Final invariant
 
