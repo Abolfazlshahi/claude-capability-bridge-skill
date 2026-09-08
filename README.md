@@ -1,414 +1,284 @@
 # Claude Capability Bridge Skill
 
-> A deep procedural capability layer for third-party and custom-provider models running inside Claude Desktop-like Agent Skills runtimes.
+> A procedural bridge for third-party and custom-provider models running inside Claude Desktop/Cowork-like Agent Skills runtimes.
 
 [![Skill](https://img.shields.io/badge/Agent%20Skill-Claude%20Capability%20Bridge-6f42c1)](./SKILL.md)
-[![Validation](https://img.shields.io/badge/validation-offline%20validator-success)](./scripts/validate_skill.py)
+[![CI](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/actions/workflows/validate.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 ## The problem
 
-A capable model can still be a poor desktop agent.
+A model can be excellent at reasoning and still be a weak agent inside a desktop runtime.
 
-Anthropic's own models may arrive with strong procedural familiarity: they tend to know when to use a connector, when to execute code, when to open a browser, when to escalate to computer use, and when a task is not actually verified yet. A custom provider can expose the same runtime tools while lacking those learned workflows.
+The runtime may expose files, shell/code execution, browsers, Chrome, computer use, MCP/connectors, Projects, Skills, Plugins, Artifacts, interactive apps, subagents, and scheduled or remote execution. Seeing those tools is not the same thing as knowing **when to use them, how to sequence them, how to maintain state, how to recover, or what evidence is sufficient to call the task complete**.
 
-This Skill makes that missing procedural knowledge explicit.
+Anthropic explicitly positions Skills as reusable procedural knowledge that complements Projects, MCP, prompts, and subagents. citeturn384783search0turn688364search4
 
-### Core invariant
+This project turns that missing workflow knowledge into a portable Skill.
+
+## Core invariant
 
 ```text
-┌────────────────────┐
-│ Capability exists  │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│ Capability known   │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│ Task completed     │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│ Task verified      │
-└────────────────────┘
+┌──────────────────────┐
+│ Capability is exposed│
+└──────────┬───────────┘
+           ▼
+┌──────────────────────┐
+│ Model understands it │
+└──────────┬───────────┘
+           ▼
+┌──────────────────────┐
+│ Task reaches target  │
+└──────────┬───────────┘
+           ▼
+┌──────────────────────┐
+│ Result is verified   │
+└──────────────────────┘
 ```
 
 **Capability available ≠ capability understood ≠ task completed ≠ task verified.**
 
----
-
-## What this Skill does
+## What the bridge teaches
 
 ```text
-                 CLAUDE CAPABILITY BRIDGE
-┌───────────────────────────────────────────────────────────┐
-│ 1. HOST MODEL                                              │
-│    runtime • OS • workspace • project • permissions       │
-├───────────────────────────────────────────────────────────┤
-│ 2. CAPABILITY DISCOVERY                                    │
-│    files • shell • browser • Chrome • computer • MCP      │
-├───────────────────────────────────────────────────────────┤
-│ 3. TOOL ROUTING                                            │
-│    choose the narrowest reliable execution surface        │
-├───────────────────────────────────────────────────────────┤
-│ 4. PROCEDURAL WORKFLOW                                     │
-│    inspect → act → observe → decide                       │
-├───────────────────────────────────────────────────────────┤
-│ 5. VERIFICATION                                            │
-│    acceptance criteria • evidence • browser checks        │
-├───────────────────────────────────────────────────────────┤
-│ 6. RECOVERY                                                │
-│    classify → isolate → repair → re-test                   │
-├───────────────────────────────────────────────────────────┤
-│ 7. HONEST REPORTING                                        │
-│    verified • not verified • residual risk                │
-└───────────────────────────────────────────────────────────┘
+HOST MODEL
+    ↓
+CAPABILITY DISCOVERY
+    ↓
+SCHEMA / PERMISSION CHECK
+    ↓
+NARROWEST TOOL SELECTION
+    ↓
+EXECUTE
+    ↓
+OBSERVE
+    ↓
+ASSERT
+    ↓
+RECOVER IF NEEDED
+    ↓
+VERIFY
+    ↓
+REPORT EVIDENCE
 ```
 
-It is intentionally a **knowledge/workflow layer**, not a runtime implementation. It cannot create a browser, computer-use tool, MCP server, filesystem mount, shell, permission, or other capability that the host does not expose.
+It covers the important public capability classes documented for modern Claude Desktop/Cowork environments: built-in browser and Chrome, computer use, MCP/connectors, Desktop Extensions/local MCP, Projects, Skills/Plugins, Artifacts and interactive surfaces, subagents, scheduled tasks, and local/cloud execution boundaries. Exact availability remains runtime-, plan-, platform-, admin-, and rollout-dependent. citeturn384783search5turn384783search1turn688364search0
 
----
-
-## Activation
-
-When the host exposes installed Skills as slash commands, activate it with:
+## The flagship workflow: web development
 
 ```text
-/claude-capability-bridge
+UNDERSTAND
+   ↓
+INSPECT REPO
+   ↓
+BASELINE
+   ↓
+IMPLEMENT
+   ↓
+START SERVER
+   ↓
+CONFIRM REAL READINESS
+   ↓
+DISCOVER REAL URL/PORT
+   ↓
+OPEN BROWSER
+   ↓
+TEST CRITICAL USER JOURNEY
+   ↓
+INSPECT UI / CONSOLE / NETWORK
+   ↓
+DIAGNOSE
+   ↓
+PATCH
+   ↓
+RE-TEST FAILED ASSERTION
+   ↓
+DETERMINISTIC CHECKS
+   ↓
+VISUAL CHECK
+   ↓
+CLEANUP
+   ↓
+EVIDENCE REPORT
 ```
 
-The host owns command registration. Installing this repository does not itself create a slash-command UI or grant permissions.
-
-After the host reports activation, the model should establish a session-scoped capability map and apply the Skill's routing/verification policy to the applicable task.
-
-### Activation mental model
-
-```text
-INSTALL SKILL
-     │
-     ▼
-HOST REGISTERS SKILL
-     │
-     ▼
-/claude-capability-bridge
-     │
-     ▼
-LOAD CORE POLICY (SKILL.md)
-     │
-     ▼
-DISCOVER CURRENT RUNTIME
-     │
-     ├── tools
-     ├── permissions
-     ├── workspace/project
-     ├── browser state
-     └── process/environment state
-     │
-     ▼
-CREATE SESSION CAPABILITY MAP
-     │
-     ▼
-CONSULT ONLY RELEVANT REFERENCES
-     │
-     ▼
-EXECUTE + VERIFY + RECOVER
-```
-
----
-
-## Capability coverage
-
-The project treats Claude Desktop-like environments as a layered system rather than a single chatbot interface.
-
-| Capability family | Procedural coverage | Main reference |
-|---|---:|---|
-| Runtime / host awareness | ██████████ 100% | `capability-model.md` |
-| Capability discovery | ██████████ 100% | `capability-model.md` |
-| Tool selection / routing | ██████████ 100% | `tool-use-patterns.md` |
-| Files / Git / workspace | ██████████ 100% | `projects-and-files.md` |
-| Shell / code execution | ██████████ 100% | `code-and-shell.md` |
-| Browser workflows | ██████████ 100% | `browser-workflows.md` |
-| Local web-app verification | ██████████ 100% | `webapp-verification.md` |
-| Computer-use escalation | ██████████ 100% | `computer-use.md` |
-| MCP / connectors | ██████████ 100% | `mcp-and-connectors.md` |
-| MCP deep semantics | █████████░ 90% | `mcp-deep-dive.md` |
-| Skills / Plugins | ██████████ 100% | `skills-and-plugins.md` |
-| Projects / context separation | ██████████ 100% | `projects-and-files.md` |
-| Verification / evidence | ██████████ 100% | `verification.md` |
-| Failure recovery | ██████████ 100% | `failure-recovery.md` |
-| Security / authorization | ██████████ 100% | `security-and-permissions.md` |
-| Custom-provider adaptation | ██████████ 100% | `provider-adaptation.md` |
-| Desktop / Cowork workflows | █████████░ 90% | `desktop-workflows.md` |
-| Activation / session memory | ██████████ 100% | `activation-and-memory.md` |
-
-> These are **coverage targets for the documentation**, not claims about model performance. Real model capability must be benchmarked.
-
-### Readiness scorecard
-
-```text
-Runtime awareness        ██████████ 100%
-Tool selection           ██████████ 100%
-Workflow knowledge       ██████████ 100%
-Browser/web verification ██████████ 100%
-Failure recovery        ██████████ 100%
-Security boundaries      ██████████ 100%
-Desktop UX model         █████████░  90%
-Activation semantics     ██████████ 100%
-Tool-schema literacy     █████████░  90%
-Real-model validation    █████░░░░░  50%
-```
-
-The final line is deliberately not presented as solved: the repository contains behavioral scenarios and validation tooling, but model-family benchmarking requires running those scenarios against real providers.
-
----
-
-## Capability routing ladder
-
-The bridge prefers the narrowest trustworthy surface that can satisfy the acceptance criteria.
-
-```text
-┌──────────────────────────────┐
-│ Structured API / MCP / Conn. │  ← preferred for structured data/actions
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│ Filesystem / Git             │  ← source state and repository changes
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│ Shell / Code Execution       │  ← deterministic work and diagnostics
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│ Browser                      │  ← user-facing web behavior
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│ Existing Chrome Context      │  ← user-authenticated browser state
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│ Computer / Desktop Control   │  ← GUI-only or last-resort workflows
-└──────────────────────────────┘
-```
-
-This is a heuristic, not a prohibition. A UI acceptance criterion still requires UI/browser evidence even when an API could simulate the same operation.
-
----
-
-## The web-app verification engine
-
-The flagship workflow is designed for the exact class of tasks where custom-provider agents often stop too early.
-
-```text
-┌────────────┐
-│ UNDERSTAND │
-└─────┬──────┘
-      ▼
-┌────────────┐
-│  INSPECT   │
-└─────┬──────┘
-      ▼
-┌────────────┐
-│  BASELINE  │
-└─────┬──────┘
-      ▼
-┌────────────┐
-│ IMPLEMENT  │
-└─────┬──────┘
-      ▼
-┌────────────┐
-│   LAUNCH   │──────→ actual readiness + actual port/URL
-└─────┬──────┘
-      ▼
-┌────────────┐
-│   BROWSER  │──────→ rendered UI + route + visible state
-└─────┬──────┘
-      ▼
-┌────────────┐
-│ INTERACT   │──────→ critical user journeys
-└─────┬──────┘
-      ▼
-┌────────────┐
-│ DIAGNOSE   │──────→ UI → URL/state → console → network → server
-└─────┬──────┘
-      ▼
-┌────────────┐
-│   PATCH    │
-└─────┬──────┘
-      ▼
-┌────────────┐
-│ RE-VERIFY  │───────────────┐
-└─────┬──────┘               │
-      │ PASS                  │ FAIL
-      ▼                       │
-┌────────────┐                │
-│ TEST/LINT  │                │
-└─────┬──────┘                │
-      ▼                       │
-┌────────────┐       ┌────────┴────────┐
-│ VISUAL QA  │       │ RECOVER / LOOP  │
-└─────┬──────┘       └─────────────────┘
-      ▼
-┌────────────┐
-│   REPORT   │
-└────────────┘
-```
-
-### Truth states
+The bridge deliberately separates:
 
 ```text
 process running
       ≠
 server listening
       ≠
-HTTP responds
+HTTP responding
       ≠
 app hydrated
       ≠
-page is correct
+page correct
       ≠
 feature works
 ```
 
-The Skill therefore forbids weak completion claims such as:
+Claude's built-in Cowork browser can open sites, read pages, click, type, and fill forms inside the desktop app, while Claude in Chrome provides an existing-browser-context path. Those surfaces have different state and authentication boundaries. citeturn384783search4turn384783search7
+
+## Capability model
 
 ```text
-"npm run build passed, therefore the app works"
-"the page opened, therefore the feature works"
-"there are no console errors, therefore the UI is correct"
+┌─────────────────────────────┐
+│ MODEL                       │
+│ reasoning + tool habits     │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│ SKILL                       │
+│ procedural knowledge        │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│ RUNTIME                     │
+│ tools + context + perms     │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│ ENVIRONMENT                 │
+│ files + processes + network │
+│ browser + external services │
+└─────────────────────────────┘
 ```
 
----
+A Skill can improve the **procedural layer**. It cannot manufacture a missing browser, shell, MCP server, permission, filesystem mount, or host integration.
 
-## Failure recovery matrix
+## Why the Skill can be useful
+
+The value proposition is narrow and testable:
 
 ```text
-                    FAILURE
-                       │
-        ┌──────────────┼──────────────┐
-        ▼              ▼              ▼
-   TOOL LAYER      ENVIRONMENT      APP LOGIC
-        │              │              │
- availability     dependency       runtime/UI
- permission       readiness        network/auth
- schema           process          state mismatch
-        │              │              │
-        └──────────────┼──────────────┘
-                       ▼
-                    CLASSIFY
-                       ▼
-                    ISOLATE
-                       ▼
-             CHANGE ONE VARIABLE
-                       ▼
-                 RETRY / ESCALATE
-                       ▼
-                    VERIFY
+SAME RUNTIME
+SAME TOOLS
+SAME TASK
+      │
+      ├── MODEL WITHOUT BRIDGE
+      │
+      └── MODEL + BRIDGE
+                ↓
+          compare traces
 ```
 
-The bridge explicitly distinguishes tool failure, permission failure, readiness failure, navigation failure, application failure, schema misuse, authentication problems, procedural misunderstanding, and authorization boundaries.
-
----
-
-## Session capability map
-
-The model should build a lightweight internal map instead of assuming a generic Claude Desktop setup exists.
+We care about behavioral deltas such as:
 
 ```text
-HOST
-├── runtime identity
-├── platform / OS
-└── current workspace/project
-
-CONTEXT
-├── conversation
-├── project knowledge
-├── live filesystem/worktree
-├── Git state
-├── browser state
-└── connector state
-
-TOOLS
-├── filesystem
-├── shell/code
-├── background process execution
-├── browser
-├── Chrome
-├── screenshots / visual inspection
-├── computer use
-├── MCP / connectors
-├── Git
-├── Skills / Plugins
-└── scheduling / remote dispatch
-
-STATE
-├── cwd
-├── PIDs / processes
-├── ports / URLs
-├── current page
-├── auth/session state
-├── changed files
-└── external side effects
-
-PERMISSIONS
-├── writable scope
-├── network restrictions
-├── approvals
-└── sensitive-action boundaries
+tool-selection accuracy
+schema-valid calls
+unnecessary calls
+state-tracking accuracy
+verification completion
+false-success rate
+recovery success
+safety/authorization compliance
 ```
 
-Unknown state remains unknown until evidence upgrades it.
+The repository therefore treats benchmark evidence—not file count—as the criterion for a successful Skill release.
 
----
+## Current public capability map
 
-## Repository architecture
+The maintained map is in [`references/current-claude-desktop-map.md`](./references/current-claude-desktop-map.md). It deliberately models capability **classes** rather than private tool names.
+
+Current public areas covered:
+
+```text
+Conversation / Projects
+Skills / Plugins
+Files / Git
+Shell / Code Execution
+Built-in Cowork Browser
+Claude in Chrome
+Computer Use
+MCP / Remote Connectors
+Local MCP / Desktop Extensions
+Interactive Connector Apps
+Artifacts
+Subagents
+Scheduled Tasks
+Remote / Cross-Surface Sessions
+Security / Permissions
+Verification / Recovery
+```
+
+Anthropic's current documentation also makes the local/cloud boundary explicit: cloud Cowork sessions run in isolated cloud sandboxes, while local files and local integrations can be reached through the desktop app under the documented conditions. Scheduled tasks are separate cloud runs and should not be assumed to inherit live local state. citeturn688364search0turn384783search1turn384783search9
+
+## Installation
+
+This GitHub repository is a **distribution/project repository**, not a strict one-folder Skill checkout.
+
+The Agent Skills specification requires the Skill's `name` to match its parent directory name. This repository intentionally keeps the repository name `claude-capability-bridge-skill` while the actual Skill name and slash command are `claude-capability-bridge`. citeturn688364search1
+
+Build the spec-shaped installable directory:
+
+```bash
+python3 scripts/package_skill.py
+```
+
+The output is:
+
+```text
+dist/claude-capability-bridge/
+```
+
+Install that generated directory using the host's Skill installation mechanism. In a host that exposes Skills as slash commands, the expected invocation is:
+
+```text
+/claude-capability-bridge
+```
+
+Installation does not grant tools or permissions; the host still determines the actual runtime surface.
+
+## Repository layout
 
 ```text
 .
 ├── SKILL.md
 ├── README.md
 ├── LICENSE
-│
+├── evals/
+│   └── evals.json
+├── benchmarks/
+│   ├── README.md
+│   └── scenarios.yaml
 ├── references/
+│   ├── current-claude-desktop-map.md
+│   ├── runtime-boundaries.md
 │   ├── activation-and-memory.md
-│   ├── browser-workflows.md
-│   ├── capability-catalog.md
 │   ├── capability-model.md
-│   ├── code-and-shell.md
+│   ├── capability-catalog.md
+│   ├── capability-handshake.md
+│   ├── tool-schema-literacy.md
+│   ├── browser-workflows.md
+│   ├── webapp-verification.md
+│   ├── interactive-surfaces.md
+│   ├── desktop-extensions.md
 │   ├── computer-use.md
-│   ├── desktop-workflows.md
-│   ├── failure-recovery.md
 │   ├── mcp-and-connectors.md
 │   ├── mcp-deep-dive.md
+│   ├── async-subagents-and-remote.md
+│   ├── skills-and-plugins.md
 │   ├── projects-and-files.md
 │   ├── provider-adaptation.md
-│   ├── security-and-permissions.md
-│   ├── skills-and-plugins.md
-│   ├── task-recipes.md
-│   ├── tool-use-patterns.md
+│   ├── evaluation-and-attribution.md
 │   ├── verification.md
-│   ├── webapp-verification.md
-│   └── README.md
-│
+│   ├── failure-recovery.md
+│   ├── security-and-permissions.md
+│   ├── task-recipes.md
+│   ├── desktop-workflows.md
+│   └── source-notes.md
 ├── scripts/
-│   └── validate_skill.py
-│
-├── tests/
-│   └── scenarios.md
-│
-└── .github/
-    └── workflows/
-        └── validate.yml
+│   ├── validate_skill.py
+│   └── package_skill.py
+└── tests/
+    └── scenarios.md
 ```
 
-### Progressive disclosure
+## Progressive disclosure
 
-The Skill follows the same principle it teaches models:
+The project follows the Skill specification's intended loading pattern:
 
 ```text
 metadata
@@ -417,123 +287,84 @@ SKILL.md
    ↓
 relevant reference
    ↓
-optional recipe / script
+script / recipe / asset
    ↓
 execution
    ↓
 verification
 ```
 
-Do not dump every reference into context when only one capability family is relevant.
-
----
-
-## What it does not do
-
-This boundary is intentional.
-
-```text
-SKILL CAN TEACH
-───────────────
-✓ when to use a capability
-✓ how to sequence tools
-✓ how to interpret results
-✓ how to verify outcomes
-✓ how to recover from failures
-✓ how to model session state
-✓ how to avoid pretending
-
-SKILL CANNOT CREATE
-───────────────────
-✗ a missing browser runtime
-✗ a missing computer-use interface
-✗ a missing MCP server
-✗ a missing filesystem mount
-✗ a missing permission
-✗ a missing network path
-✗ a host slash-command registry
-```
-
-A missing runtime capability is a runtime/integration problem, not a prompt problem.
-
----
+The main `SKILL.md` stays focused on routing and invariants; detailed procedures live in references. The official specification recommends keeping the main file under 500 lines and validating Skills with `skills-ref`. citeturn688364search1
 
 ## Validation
 
-Run the offline validator:
+Repository validator:
 
 ```bash
-python scripts/validate_skill.py
+python3 scripts/validate_skill.py
 ```
 
-It checks Skill frontmatter, naming, required references, and internal reference consistency. It does **not** prove that a particular Claude Desktop release exposes every capability described by this project.
+Spec-shaped package validator:
 
----
-
-## Benchmarking
-
-The repository includes model-facing behavioral scenarios because documentation coverage alone is not enough.
-
-Recommended evaluation pattern:
-
-```text
-MODEL A (native)
-       │
-       ├── baseline task
-       └── task + bridge Skill
-
-MODEL B (custom)
-       │
-       ├── baseline task
-       └── task + bridge Skill
-
-MODEL C (custom)
-       │
-       ├── baseline task
-       └── task + bridge Skill
-
-                 ↓
-      compare behavioral evidence
+```bash
+python3 scripts/package_skill.py
+python3 -m pip install skills-ref
+skills-ref validate dist/claude-capability-bridge
 ```
 
-Useful metrics include:
+The GitHub Actions workflow runs repository checks and validates the generated installable Skill shape.
+
+## Evaluation
+
+The repository contains two complementary evaluation layers:
+
+- `evals/evals.json` — structured model-facing evaluations.
+- `benchmarks/scenarios.yaml` — broader scenario coverage for runtime/tool behavior.
+
+Use paired baseline vs Skill-enabled runs under a controlled runtime. The Skill should only be considered effective when the trace shows repeatable improvement.
+
+## Design boundaries
 
 ```text
-tool selection accuracy
-first-use success rate
-schema argument accuracy
-unnecessary tool-call rate
-verification completion rate
-false-success rate
-recovery success rate
-critical-path coverage
-permission-boundary compliance
+CAN TEACH
+✓ capability awareness
+✓ tool routing
+✓ schema discipline
+✓ workflow sequencing
+✓ state tracking
+✓ verification
+✓ recovery
+✓ safety boundaries
+✓ evidence-based reporting
+
+CANNOT CREATE
+✗ browser runtime
+✗ computer-use runtime
+✗ MCP server
+✗ filesystem mount
+✗ network access
+✗ permissions
+✗ host slash-command registration
 ```
 
-The benchmark is deliberately separated from the Skill's documentation claims.
+## Maintenance
 
----
-
-## Scope and maintenance
-
-This repository models public, reproducible agent workflows. It does not claim to reproduce Anthropic's private system prompts or proprietary internal implementation.
-
-When the host runtime, Claude Desktop capabilities, MCP behavior, browser surfaces, Skill specification, or plugin model changes:
+When Claude Desktop/Cowork, browser surfaces, MCP/connectors, Skills, Plugins, Artifacts, or the Agent Skills specification changes:
 
 ```text
-update capability catalog
+refresh public capability map
         ↓
 update affected reference
         ↓
-update scenarios
+update evals/benchmarks
         ↓
-run validator
+run validator + package
         ↓
-re-check routing in SKILL.md
+run controlled model evaluation
 ```
 
----
+See [`references/source-notes.md`](./references/source-notes.md) for the maintained primary-source list.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+MIT — see [`LICENSE`](./LICENSE).
