@@ -30,6 +30,7 @@ REQUIRED_REFS = {
     "computer-use.md",
     "desktop-extensions.md",
     "desktop-workflows.md",
+    "evaluation-and-attribution.md",
     "failure-recovery.md",
     "interactive-surfaces.md",
     "mcp-and-connectors.md",
@@ -98,11 +99,9 @@ def main() -> int:
     if len(body_lines) > 500:
         fail(f"SKILL.md body is {len(body_lines)} lines; keep the main file under 500 lines")
 
-    # A repo can be a distribution container. If this repo is installed directly,
-    # the host may require the containing folder name to match the Skill name.
     root_name = ROOT.name
     if root_name != name:
-        warn(f"install directory name '{root_name}' differs from Skill name '{name}'; install/rename the Skill directory to '{name}' for strict spec conformance")
+        warn(f"install directory name '{root_name}' differs from Skill name '{name}'; use scripts/package_skill.py or rename the install directory to '{name}'")
 
     if not REFS.is_dir():
         fail("references directory is missing")
