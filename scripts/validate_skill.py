@@ -2,7 +2,7 @@
 """Offline structural validator for the Claude Capability Bridge Skill.
 
 This does not replace the official skills-ref validator. It adds repository-specific
-checks for reference routing and evaluation files.
+checks for reference routing, evaluations, and benchmark files.
 """
 
 from __future__ import annotations
@@ -37,6 +37,7 @@ REQUIRED_REFS = {
     "mcp-deep-dive.md",
     "projects-and-files.md",
     "provider-adaptation.md",
+    "custom-provider-transport.md",
     "runtime-boundaries.md",
     "security-and-permissions.md",
     "session-memory.md",
@@ -101,7 +102,7 @@ def main() -> int:
 
     root_name = ROOT.name
     if root_name != name:
-        warn(f"install directory name '{root_name}' differs from Skill name '{name}'; use scripts/package_skill.py or rename the install directory to '{name}'")
+        warn(f"install directory name '{root_name}' differs from Skill name '{name}'; package into a directory named '{name}' for strict spec conformance")
 
     if not REFS.is_dir():
         fail("references directory is missing")
@@ -137,8 +138,13 @@ def main() -> int:
     if not BENCHMARKS.is_file():
         fail("benchmarks/scenarios.yaml is missing")
     benchmark_text = BENCHMARKS.read_text(encoding="utf-8")
-    if not benchmark_text.startswith("version:") or "skill_name:" not in benchmark_text or "evals:" not in benchmark_text:
-        fail("benchmark scenario file is missing required top-level fields")
+    for required in ("version:", "skill_name:", "evals:"):
+        if required not in benchmark_text:
+            fail(f"benchmark scenario file is missing top-level field: {required}")
+
+    test_doc = ROOT / "tests" / "custom-provider-transport.md"
+    if not test_doc.is_file():
+        fail("tests/custom-provider-transport.md is missing")
 
     print("PASS: Skill structure, frontmatter, references, evals, and benchmark checks passed")
     print(f"Skill: {name}")
