@@ -1,103 +1,115 @@
-# Claude Desktop Mental Model
+# Workspace Map
 
-The goal is to help a custom model reason about the host as a layered environment rather than as one giant "Claude" capability.
-
-## Layer 0 — Conversation
-
-The conversation contains user intent, constraints, prior observations, and model-generated plans. Conversation text is not proof that a tool action occurred.
-
-## Layer 1 — Skill policy
-
-A Skill supplies reusable procedural knowledge, references, assets, and scripts. It influences planning and execution behavior but cannot silently add a tool to the runtime.
-
-## Layer 2 — Agent runtime
-
-The host determines which tools are exposed, how calls are dispatched, what approvals are required, what context is injected, and what execution surfaces exist.
-
-## Layer 3 — Tool surfaces
-
-Common surfaces include:
-
-- filesystem/project files;
-- shell/code execution;
-- browser automation;
-- existing Chrome/browser session;
-- computer/desktop control;
-- MCP tools/resources/prompts;
-- connectors;
-- Git/version control;
-- scheduling/remote dispatch;
-- specialized application integrations.
-
-## Layer 4 — Environment
-
-The underlying machine and services contain the actual state:
+Claude Desktop-like agent environments are best understood as overlapping state domains rather than one monolithic "Claude" capability.
 
 ```text
-OS
-filesystem
-process table
-network
-localhost services
-browser profile
-cookies/session
-desktop applications
-repositories
-remote APIs
+┌────────────────────────────────────────────┐
+│ HOST RUNTIME                               │
+│ permissions • tools • platform • session   │
+├───────────────┬────────────────────────────┤
+│ CONVERSATION  │ SKILL POLICY               │
+│ intent/context│ procedures/references      │
+├───────────────┼────────────────────────────┤
+│ PROJECT       │ FILESYSTEM / GIT           │
+│ knowledge     │ live source/history        │
+├───────────────┼────────────────────────────┤
+│ PROCESSES     │ BROWSER / CHROME           │
+│ servers/jobs  │ tabs • origin • auth state │
+├───────────────┼────────────────────────────┤
+│ MCP / CONNECTORS / INTEGRATIONS            │
+│ external structured state and actions      │
+└────────────────────────────────────────────┘
 ```
 
-## Workspace truth model
+## Layers
 
-Treat the following as separate truth domains:
+### Conversation
+Contains user intent, constraints, observations, and prior discussion. Conversation text is not proof that a tool action occurred.
 
-| Domain | What it proves |
+### Skill policy
+Supplies reusable procedural knowledge, references, scripts, and assets. It influences model behavior but does not silently create runtime capability.
+
+### Agent runtime
+Controls which tools are exposed, how calls are dispatched, which context is injected, and what approvals/permissions apply.
+
+### Tool surfaces
+Typical surfaces include filesystem/project files, shell/code execution, browser automation, existing Chrome/browser sessions, computer control, MCP tools/resources/prompts, connectors, Git, scheduling/remote dispatch, and application integrations.
+
+### Environment
+The actual OS, filesystem, processes, network, localhost services, browser profile, desktop applications, repositories, and remote APIs.
+
+## Truth hierarchy
+
+For a concrete environmental fact, prefer evidence closest to the live state:
+
+```text
+current tool observation
+    > live process/log output
+    > filesystem/Git inspection
+    > explicit project configuration
+    > prior conversation statement
+    > model memory
+```
+
+The best source depends on the fact. Project configuration is authoritative for declared commands; live process observation is authoritative for whether a process is currently running.
+
+## Separate truth domains
+
+| Domain | Proves |
 |---|---|
-| Project knowledge | Information loaded into project context |
-| Filesystem | Actual files reachable by the current filesystem tool |
-| Git | Repository history/status visible through Git |
-| Process state | Processes actually started/running |
-| Browser state | What the selected browser currently exposes |
-| MCP/connector state | Results returned by external integration |
-| Conversation | Claims, instructions, and prior reasoning |
+| Project knowledge | What is loaded into project context |
+| Filesystem | What the current filesystem interface can reach |
+| Git | Repository state/history visible through Git |
+| Process state | Processes actually observed/running |
+| Browser state | Current page/origin/UI state in the chosen browser |
+| MCP/connectors | Results returned by integrations |
+| Conversation | Instructions and claims, not execution proof |
 
-Example: seeing `README.md` in project knowledge does not prove the same file is writable on disk.
+Seeing `README.md` in project knowledge does not prove the file is writable on disk.
 
-## Current-session capability ledger
+## Session capability ledger
 
-Use a compact internal table:
+Maintain internally:
 
 ```text
-Capability | Evidence | Permission | Preferred use | Fallback
+Capability | Evidence | Permission | Preferred use | Fallback | Freshness
 ```
 
-Evidence should point to the tool/runtime observation that established availability.
+Downgrade or invalidate stale entries after environment changes.
 
 ## State transitions
 
-A model should think in transitions, not only actions:
+Think in observable state transitions:
 
 ```text
 unknown workspace
     ↓ inspect
 known workspace
-    ↓ run command
+    ↓ execute
 process created
-    ↓ readiness check
+    ↓ readiness probe
 service ready
-    ↓ browser open
+    ↓ browser navigation
 page loaded
-    ↓ critical action
+    ↓ user action
 state changed
     ↓ assertion
 verified
 ```
 
-Each arrow is an opportunity to observe and recover.
+Each transition is an observation checkpoint.
 
-## Browser state is independent
+## Workspace changes
 
-A local development server can be healthy while the browser is stale, authenticated to a different account, on the wrong route, or blocked by a client-side error. Always re-observe browser state after meaningful changes.
+When switching projects/repositories/workspaces, reconsider:
 
-## Process ownership
+- cwd and filesystem roots;
+- Git worktree/status;
+- package manager and scripts;
+- running servers/processes;
+- browser origin and test URL;
+- credentials/authentication context;
+- available integrations;
+- permissions.
 
-Record processes started by the agent whenever the host exposes PIDs or equivalent handles. Cleanup should target those owned processes, not arbitrary processes sharing a port or name.
+Do not carry ports, URLs, auth assumptions, paths, or tool choices from the old workspace without evidence.
