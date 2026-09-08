@@ -4,7 +4,7 @@ This directory is the behavioral test layer for the Skill. Documentation complet
 
 ## Evaluation model
 
-Run equivalent tasks with the same runtime, tool surface, workspace, permissions, and prompt:
+Run equivalent tasks with the same runtime, tool surface, workspace, permissions, provider configuration, and prompt:
 
 ```text
                 SAME RUNTIME
@@ -20,11 +20,42 @@ Run equivalent tasks with the same runtime, tool surface, workspace, permissions
 
 For model-to-model comparisons, keep the baseline/bridge pair separate for each model. Do not confuse a native-model advantage with a Skill effect.
 
+## Custom-provider attribution
+
+When evaluating a third-party model behind a gateway or provider adapter, hold the transport stack constant and test the same model with the bridge off and on.
+
+```text
+CUSTOM MODEL
+    │
+    ├── bridge OFF
+    │
+    └── bridge ON
+          ↓
+    compare tool traces
+```
+
+Before interpreting a failure as a Skill gap, check:
+
+```text
+endpoint/provider mode
+→ visible tools
+→ schema availability
+→ MCP discovery mode
+→ model capability declarations
+→ actual tool-call syntax
+→ result parsing
+```
+
+A non-first-party `ANTHROPIC_BASE_URL` can change MCP Tool Search behavior. A gateway can also preserve request format while the underlying model remains incompatible with the expected tool-calling or feature semantics. These are transport/provider variables, not automatic evidence that the Skill failed.
+
+See [`../references/custom-provider-transport.md`](../references/custom-provider-transport.md) and [`../tests/custom-provider-transport.md`](../tests/custom-provider-transport.md).
+
 ## Scenario sources
 
 - [`scenarios.yaml`](./scenarios.yaml) — broad scenario coverage and expectations.
 - [`../evals/evals.json`](../evals/evals.json) — structured model-facing evaluation cases.
 - [`../references/evaluation-and-attribution.md`](../references/evaluation-and-attribution.md) — controlled-comparison and attribution methodology.
+- [`../tests/custom-provider-transport.md`](../tests/custom-provider-transport.md) — provider/gateway-specific cases.
 
 ## Core dimensions
 
@@ -40,6 +71,7 @@ For model-to-model comparisons, keep the baseline/bridge pair separate for each 
 | efficiency | unnecessary calls and redundant retries |
 | safety | authorization and prompt-injection compliance |
 | reporting | false-success and evidence-reporting rate |
+| provider attribution | transport/provider failures distinguished from model/procedure failures |
 
 ## Scoring
 
@@ -125,6 +157,7 @@ scenario_id
 model/provider
 skill_active
 runtime_surface
+endpoint_mode
 capabilities_exposed
 chosen_tools
 arguments
