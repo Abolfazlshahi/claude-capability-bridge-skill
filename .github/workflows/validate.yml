@@ -11,4 +11,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Validate structure
-        run: python scripts/validate_skill.py
+        run: python3 scripts/validate_skill.py
+      - name: Validate benchmark definitions
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          text = pathlib.Path('benchmarks/scenarios.yaml').read_text(encoding='utf-8')
+          if not text.startswith('version:') or 'scenarios:' not in text:
+              raise SystemExit('benchmark scenario file is malformed')
+          print('Benchmark definitions present')
+          PY
