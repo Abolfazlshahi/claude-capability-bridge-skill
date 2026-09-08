@@ -22,11 +22,11 @@ jobs:
       - name: Package strict Skill directory
         run: python3 scripts/package_skill.py
 
-      - name: Install reference validator
+      - name: Install Agent Skills reference validator
         run: python3 -m pip install --disable-pip-version-check skills-ref
 
       - name: Validate generated Skill against Agent Skills reference validator
-        run: skills-ref validate dist/claude-capability-bridge
+        run: agentskills validate dist/claude-capability-bridge
 
       - name: Validate evaluation definitions
         run: |
