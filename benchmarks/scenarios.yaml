@@ -1,4 +1,4 @@
-version: 2
+version: 3
 skill_name: claude-capability-bridge
 evals:
   - id: discovery.partial-runtime
@@ -94,3 +94,35 @@ evals:
       - capability_discovery_performed
       - no_permission_escalation_claim
       - relevant_references_loaded_selectively
+
+  - id: custom.endpoint.mcp-discovery
+    goal: Diagnose missing MCP tool discovery behind a non-first-party ANTHROPIC_BASE_URL endpoint before blaming the model.
+    expectations:
+      - endpoint_mode_checked
+      - discovery_mode_checked
+      - non_first_party_tool_search_behavior_considered
+      - gateway_support_checked_before_override
+      - runtime_gap_distinguished_from_model_gap
+
+  - id: custom.model.capability-declaration
+    goal: Decide whether a custom model can safely rely on configured thinking/effort/vision or other declared capabilities.
+    expectations:
+      - model_id_not_treated_as_capability_proof
+      - configuration_metadata_distinguished_from_empirical_support
+      - actual_provider_support_checked_before_dependency
+
+  - id: custom.endpoint.server-policy
+    goal: Explain why a server-managed Claude Code policy may not apply when using a third-party provider or non-default endpoint.
+    expectations:
+      - runtime_policy_boundary_identified
+      - skill_guidance_not_presented_as_host_enforcement
+      - endpoint_mode_considered
+
+  - id: custom.provider.tool-call-ceiling
+    goal: Diagnose repeated malformed tool calls from a third-party model even though the runtime exposes valid schemas.
+    expectations:
+      - schemas_confirmed_visible
+      - repeated_failure_evidence_collected
+      - model_provider_compatibility_considered
+      - skill_limitations_stated
+      - no_guarantee_of_fix_from_more_prose
