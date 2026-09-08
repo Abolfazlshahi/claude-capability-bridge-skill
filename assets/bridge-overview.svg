@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 620" role="img" aria-labelledby="title desc">
+<title id="title">Claude Capability Bridge overview</title>
+<desc id="desc">A custom provider model reaches Claude Desktop style runtime capabilities through an agent runtime and a procedural bridge.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#080b18"/><stop offset="1" stop-color="#121a35"/></linearGradient>
+  <linearGradient id="bridge" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#8b5cf6"/><stop offset=".5" stop-color="#38bdf8"/><stop offset="1" stop-color="#34d399"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1400" height="620" rx="32" fill="url(#bg)"/>
+<circle cx="1220" cy="110" r="140" fill="#5b21b6" opacity=".16"/><circle cx="260" cy="500" r="180" fill="#0369a1" opacity=".12"/>
+<text x="70" y="82" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="40" font-weight="800">Claude Capability Bridge</text>
+<text x="70" y="122" fill="#aeb9d6" font-family="Inter,Arial,sans-serif" font-size="22">Teach custom-provider models how to discover, use, verify and recover with agentic tools.</text>
+<g transform="translate(80 190)">
+  <rect width="290" height="230" rx="26" fill="#17142b" stroke="#8b5cf6" stroke-width="2"/>
+  <circle cx="145" cy="78" r="44" fill="#2a164d" stroke="#a78bfa" stroke-width="3"/>
+  <path d="M125 82c8-30 54-31 65-4 10 27-22 49-44 29-16-15-40 0-46-14-7-16 7-27 25-27" fill="none" stroke="#c4b5fd" stroke-width="7" stroke-linecap="round"/>
+  <text x="145" y="154" text-anchor="middle" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="23" font-weight="700">Custom / Third-Party Model</text>
+  <text x="145" y="186" text-anchor="middle" fill="#aeb9d6" font-family="Inter,Arial,sans-serif" font-size="17">Reasoning + tool-calling ability</text>
+</g>
+<g transform="translate(555 164)">
+  <path d="M0 230 C85 70 250 70 330 230" fill="none" stroke="url(#bridge)" stroke-width="38" opacity=".22" filter="url(#glow)"/>
+  <path d="M0 230 C85 70 250 70 330 230" fill="none" stroke="url(#bridge)" stroke-width="12"/>
+  <path d="M20 230h290" stroke="#5d6b91" stroke-width="3" stroke-dasharray="9 12"/>
+  <rect x="52" y="268" width="226" height="108" rx="20" fill="#11172a" stroke="#38bdf8"/>
+  <text x="165" y="306" text-anchor="middle" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="20" font-weight="700">Procedural Bridge</text>
+  <text x="165" y="334" text-anchor="middle" fill="#aeb9d6" font-family="Inter,Arial,sans-serif" font-size="16">discover → select → execute</text>
+  <text x="165" y="360" text-anchor="middle" fill="#aeb9d6" font-family="Inter,Arial,sans-serif" font-size="16">observe → verify → recover</text>
+</g>
+<g transform="translate(1010 190)">
+  <rect width="310" height="230" rx="26" fill="#101c1d" stroke="#34d399" stroke-width="2"/>
+  <circle cx="155" cy="78" r="44" fill="#123832" stroke="#6ee7b7" stroke-width="3"/>
+  <path d="M131 70h49a16 16 0 0 1 16 16v32h-81V86a16 16 0 0 1 16-16zM121 131h70" fill="none" stroke="#a7f3d0" stroke-width="7" stroke-linecap="round"/>
+  <text x="155" y="154" text-anchor="middle" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="23" font-weight="700">Agent Runtime</text>
+  <text x="155" y="184" text-anchor="middle" fill="#aeb9d6" font-family="Inter,Arial,sans-serif" font-size="17">Files · browser · MCP · code</text>
+  <text x="155" y="209" text-anchor="middle" fill="#aeb9d6" font-family="Inter,Arial,sans-serif" font-size="17">permissions · state · evidence</text>
+</g>
+<g transform="translate(72 486)">
+  <rect width="1248" height="82" rx="22" fill="#0c1224" stroke="#263152"/>
+  <g font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700">
+    <text x="48" y="36" fill="#a78bfa">DISCOVER</text><text x="198" y="36" fill="#8491b2">→</text>
+    <text x="244" y="36" fill="#7dd3fc">SELECT</text><text x="370" y="36" fill="#8491b2">→</text>
+    <text x="416" y="36" fill="#6ee7b7">EXECUTE</text><text x="554" y="36" fill="#8491b2">→</text>
+    <text x="600" y="36" fill="#fcd34d">OBSERVE</text><text x="744" y="36" fill="#8491b2">→</text>
+    <text x="790" y="36" fill="#34d399">VERIFY</text><text x="915" y="36" fill="#8491b2">→</text>
+    <text x="961" y="36" fill="#fb7185">RECOVER</text>
+  </g>
+  <text x="48" y="63" fill="#8f9cbb" font-family="Inter,Arial,sans-serif" font-size="15">The Skill improves procedural behavior; it does not manufacture capabilities, permissions or provider compatibility.</text>
+</g>
+</svg>
