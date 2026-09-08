@@ -10,11 +10,9 @@
 
 A model can be excellent at reasoning and still be a weak agent inside a desktop runtime.
 
-The runtime may expose files, shell/code execution, browsers, Chrome, computer use, MCP/connectors, Projects, Skills, Plugins, Artifacts, interactive apps, subagents, and scheduled or remote execution. Seeing those tools is not the same thing as knowing **when to use them, how to sequence them, how to maintain state, how to recover, or what evidence is sufficient to call the task complete**.
+Claude Desktop/Cowork and Claude Code can expose files, shell/code execution, browsers, Chrome, computer use, MCP/connectors, Projects, Skills, Plugins, Artifacts, interactive apps, subagents, and scheduled or remote execution. Seeing a tool is not the same thing as knowing when to use it, how to sequence it, how to preserve state, how to recover, or what evidence is sufficient to declare success.
 
-Anthropic explicitly positions Skills as reusable procedural knowledge that complements Projects, MCP, prompts, and subagents. citeturn384783search0turn688364search4
-
-This project turns that missing workflow knowledge into a portable Skill.
+This project turns that missing workflow knowledge into a portable Agent Skill.
 
 ## Core invariant
 
@@ -41,28 +39,28 @@ This project turns that missing workflow knowledge into a portable Skill.
 ## What the bridge teaches
 
 ```text
-HOST MODEL
-    ↓
+HOST / SESSION MODEL
+        ↓
 CAPABILITY DISCOVERY
-    ↓
-SCHEMA / PERMISSION CHECK
-    ↓
-NARROWEST TOOL SELECTION
-    ↓
+        ↓
+SCHEMA + PERMISSION CHECK
+        ↓
+ROUTE TO NARROWEST RELIABLE SURFACE
+        ↓
 EXECUTE
-    ↓
+        ↓
 OBSERVE
-    ↓
+        ↓
 ASSERT
-    ↓
+        ↓
 RECOVER IF NEEDED
-    ↓
+        ↓
 VERIFY
-    ↓
+        ↓
 REPORT EVIDENCE
 ```
 
-It covers the important public capability classes documented for modern Claude Desktop/Cowork environments: built-in browser and Chrome, computer use, MCP/connectors, Desktop Extensions/local MCP, Projects, Skills/Plugins, Artifacts and interactive surfaces, subagents, scheduled tasks, and local/cloud execution boundaries. Exact availability remains runtime-, plan-, platform-, admin-, and rollout-dependent. citeturn384783search5turn384783search1turn688364search0
+The bridge covers public capability classes such as browser/Chrome, computer use, MCP/connectors, local MCP/Desktop Extensions, Projects, Skills/Plugins, Artifacts/interactive surfaces, subagents, schedules, and local/cloud execution boundaries. Exact availability is always runtime-, plan-, platform-, admin-, endpoint-, and rollout-dependent.
 
 ## The flagship workflow: web development
 
@@ -85,7 +83,7 @@ OPEN BROWSER
    ↓
 TEST CRITICAL USER JOURNEY
    ↓
-INSPECT UI / CONSOLE / NETWORK
+INSPECT UI / TELEMETRY
    ↓
 DIAGNOSE
    ↓
@@ -118,14 +116,48 @@ page correct
 feature works
 ```
 
-The current built-in Cowork browser can open sites, read pages, click, type, and fill forms inside the desktop app, while Claude in Chrome provides an existing-browser-context path. Those surfaces have different state and authentication boundaries. citeturn384783search4turn384783search7
+## Custom-provider architecture
+
+This is the part most directly tied to the original motivation of the project.
+
+```text
+Claude Desktop / Claude Code
+          │
+          ▼
+   agent runtime + tools
+          │
+          ▼
+ Anthropic API contract
+          │
+          ▼
+ gateway / proxy / provider adapter
+          │
+          ▼
+   third-party model
+```
+
+A compatible gateway does **not** make the target model behaviorally equivalent to Anthropic's models.
+
+Claude Code documents `ANTHROPIC_BASE_URL` as an endpoint override for proxies and LLM gateways. It also documents custom model entries and provider-specific capability declarations. These are transport/configuration mechanisms; the target model still has its own tool-calling, vision, context, reasoning, and protocol capabilities.
+
+One especially important consequence is MCP Tool Search: when `ANTHROPIC_BASE_URL` points to a non-first-party host, Claude Code disables Tool Search by default because many proxies do not forward `tool_reference` blocks. `ENABLE_TOOL_SEARCH=true` is an explicit override for compatible gateways; it is not a generic fix for every provider.
+
+That distinction matters to the bridge:
+
+```text
+tool not discovered because endpoint/runtime mode changed
+                 ≠
+model saw the tool and ignored it
+```
+
+See [`references/custom-provider-transport.md`](./references/custom-provider-transport.md).
 
 ## Capability model
 
 ```text
 ┌─────────────────────────────┐
 │ MODEL                       │
-│ reasoning + tool habits     │
+│ reasoning + tool ability    │
 └──────────────┬──────────────┘
                ↓
 ┌─────────────────────────────┐
@@ -135,101 +167,84 @@ The current built-in Cowork browser can open sites, read pages, click, type, and
                ↓
 ┌─────────────────────────────┐
 │ RUNTIME                     │
-│ tools + context + perms     │
+│ tools + context + policy    │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│ TRANSPORT / PROVIDER        │
+│ API + gateway + model       │
 └──────────────┬──────────────┘
                ↓
 ┌─────────────────────────────┐
 │ ENVIRONMENT                 │
 │ files + processes + network │
-│ browser + external services │
+│ browser + services          │
 └─────────────────────────────┘
 ```
 
-A Skill can improve the **procedural layer**. It cannot manufacture a missing browser, shell, MCP server, permission, filesystem mount, or host integration.
+A Skill primarily changes the procedural layer. It cannot create a missing browser, shell, MCP server, filesystem mount, network path, permission, or host integration.
 
-## Why the Skill can be useful
+## Why it can be useful
 
-The value proposition is narrow and testable:
+The claim is intentionally narrow and testable:
 
 ```text
-SAME RUNTIME
+SAME HOST
 SAME TOOLS
 SAME TASK
-      │
-      ├── MODEL WITHOUT BRIDGE
-      │
-      └── MODEL + BRIDGE
-                ↓
-          compare traces
+SAME PROVIDER
+        │
+        ├── BRIDGE OFF
+        │
+        └── BRIDGE ON
+               ↓
+        compare tool traces
 ```
 
-We care about behavioral deltas such as:
+Useful metrics include:
 
 ```text
 tool-selection accuracy
-schema-valid calls
-unnecessary calls
+schema-valid call rate
 state-tracking accuracy
 verification completion
 false-success rate
 recovery success
-safety/authorization compliance
+unnecessary-call rate
+critical safety failures
 ```
 
-The repository therefore treats benchmark evidence—not file count—as the criterion for a successful Skill release.
+The repository treats benchmark evidence—not Skill size—as the criterion for effectiveness.
 
-## Current public capability map
+## Activation
 
-The maintained map is in [`references/claude-desktop-current-map.md`](./references/claude-desktop-current-map.md). It deliberately models capability **classes** rather than private tool names.
-
-Current public areas covered:
-
-```text
-Conversation / Projects
-Skills / Plugins
-Files / Git
-Shell / Code Execution
-Built-in Cowork Browser
-Claude in Chrome
-Computer Use
-MCP / Remote Connectors
-Local MCP / Desktop Extensions
-Interactive Connector Apps
-Artifacts
-Subagents
-Scheduled Tasks
-Remote / Cross-Surface Sessions
-Security / Permissions
-Verification / Recovery
-```
-
-Anthropic's current documentation makes the local/cloud boundary explicit: cloud Cowork sessions run in isolated cloud environments, while local files and local integrations can be reached through the desktop app under documented conditions. Scheduled tasks are separate cloud runs and should not be assumed to inherit live local state. citeturn688364search0turn384783search1turn384783search9
-
-## Installation
-
-This GitHub repository is a **distribution/project repository**, not a strict one-folder Skill checkout.
-
-The Agent Skills specification requires the Skill's `name` to match its parent directory name. This repository intentionally keeps the repository name `claude-capability-bridge-skill` while the actual Skill name and slash command are `claude-capability-bridge`. citeturn688364search1
-
-Build the spec-shaped installable directory:
-
-```bash
-python3 scripts/package_skill.py
-```
-
-The output is:
-
-```text
-dist/claude-capability-bridge/
-```
-
-Install that generated directory using the host's Skill installation mechanism. In a host that exposes Skills as slash commands, the expected invocation is:
+When the host exposes installed Skills as slash commands:
 
 ```text
 /claude-capability-bridge
 ```
 
-Installation does not grant tools or permissions; the host still determines the actual runtime surface.
+The host owns command registration. Installing this repository does not itself create a command or grant permissions.
+
+After activation, the model should build a lightweight session capability map and apply the relevant procedures. It should not dump the entire map into the conversation unless useful.
+
+## Installation
+
+This GitHub repository is a distribution/project repository. The actual Skill name is `claude-capability-bridge`.
+
+Build the spec-shaped Skill directory:
+
+```bash
+python3 scripts/package_skill.py
+```
+
+Output:
+
+```text
+dist/claude-capability-bridge/
+```
+
+Then install that generated directory with the host's Agent Skills mechanism.
 
 ## Repository layout
 
@@ -245,6 +260,7 @@ Installation does not grant tools or permissions; the host still determines the 
 │   └── scenarios.yaml
 ├── references/
 │   ├── claude-desktop-current-map.md
+│   ├── custom-provider-transport.md
 │   ├── runtime-boundaries.md
 │   ├── activation-and-memory.md
 │   ├── session-memory.md
@@ -275,12 +291,11 @@ Installation does not grant tools or permissions; the host still determines the 
 │   ├── validate_skill.py
 │   └── package_skill.py
 └── tests/
-    └── scenarios.md
+    ├── scenarios.md
+    └── custom-provider-transport.md
 ```
 
 ## Progressive disclosure
-
-The project follows the Skill specification's intended loading pattern:
 
 ```text
 metadata
@@ -289,41 +304,31 @@ SKILL.md
    ↓
 relevant reference
    ↓
-script / recipe / asset
+recipe / script
    ↓
 execution
    ↓
 verification
 ```
 
-The main `SKILL.md` stays focused on routing and invariants; detailed procedures live in references. The official specification recommends keeping the main file under 500 lines and validating Skills with `skills-ref`. citeturn688364search1
+The main Skill stays focused on activation, capability routing, state, verification, and recovery. Deep procedures remain in references.
 
 ## Validation
 
-Repository validator:
+Repository checks:
 
 ```bash
 python3 scripts/validate_skill.py
-```
-
-Spec-shaped package validation:
-
-```bash
 python3 scripts/package_skill.py
-python3 -m pip install skills-ref
-skills-ref validate dist/claude-capability-bridge
 ```
 
-GitHub Actions also runs the structural checks and validates the generated Skill shape with the reference validator.
+For spec conformance, use the official `skills-ref` validator against `dist/claude-capability-bridge` when available.
 
 ## Evaluation
 
-The repository contains two complementary evaluation layers:
+The project has both structured evaluations and broader benchmark scenarios. The important comparison is controlled before/after behavior under the same runtime and provider.
 
-- `evals/evals.json` — structured model-facing evaluations.
-- `benchmarks/scenarios.yaml` — broader scenario coverage for runtime/tool behavior.
-
-Use paired baseline vs Skill-enabled runs under a controlled runtime. The Skill should only be considered effective when the trace shows repeatable improvement.
+A documentation-heavy Skill without a measurable behavioral improvement is not considered a finished success.
 
 ## Design boundaries
 
@@ -336,7 +341,7 @@ CAN TEACH
 ✓ state tracking
 ✓ verification
 ✓ recovery
-✓ safety boundaries
+✓ security boundaries
 ✓ evidence-based reporting
 
 CANNOT CREATE
@@ -346,26 +351,29 @@ CANNOT CREATE
 ✗ filesystem mount
 ✗ network access
 ✗ permissions
+✗ provider protocol compatibility
 ✗ host slash-command registration
 ```
 
 ## Maintenance
 
-When Claude Desktop/Cowork, browser surfaces, MCP/connectors, Skills, Plugins, Artifacts, or the Agent Skills specification changes:
+When Claude Desktop/Cowork/Claude Code, browser surfaces, MCP/connectors, Skills, Plugins, Artifacts, provider-routing behavior, or the Agent Skills specification changes:
 
 ```text
-refresh public capability map
+refresh current capability map
         ↓
-update affected reference
+update affected procedure
         ↓
-update evals/benchmarks
+update provider boundary notes
+        ↓
+update evals / benchmarks
         ↓
 run validator + package
         ↓
 run controlled model evaluation
 ```
 
-See [`references/source-notes.md`](./references/source-notes.md) for the maintained primary-source list.
+See [`references/source-notes.md`](./references/source-notes.md) for the primary-source set.
 
 ## License
 
