@@ -10,14 +10,36 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Validate structure
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate repository structure
         run: python3 scripts/validate_skill.py
-      - name: Validate benchmark definitions
+
+      - name: Package strict Skill directory
+        run: python3 scripts/package_skill.py
+
+      - name: Install reference validator
+        run: python3 -m pip install --disable-pip-version-check skills-ref
+
+      - name: Validate generated Skill against Agent Skills reference validator
+        run: skills-ref validate dist/claude-capability-bridge
+
+      - name: Validate evaluation definitions
         run: |
           python3 - <<'PY'
+          import json
           import pathlib
+          data = json.loads(pathlib.Path('evals/evals.json').read_text(encoding='utf-8'))
+          assert data['skill_name'] == 'claude-capability-bridge'
+          assert data['evals']
           text = pathlib.Path('benchmarks/scenarios.yaml').read_text(encoding='utf-8')
-          if not text.startswith('version:') or 'scenarios:' not in text:
-              raise SystemExit('benchmark scenario file is malformed')
+          assert text.startswith('version:')
+          assert 'skill_name:' in text
+          assert 'evals:' in text
+          print(f"Validated {len(data['evals'])} structured evals")
           print('Benchmark definitions present')
           PY
