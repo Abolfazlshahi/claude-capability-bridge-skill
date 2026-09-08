@@ -2,88 +2,148 @@
 
 ## What this Skill can and cannot fix
 
-A third-party model can receive the same runtime tools as an Anthropic model and still behave differently because tool schemas do not automatically provide the workflow knowledge needed to choose, sequence, verify, and recover from those tools. Anthropic describes Skills as a mechanism for reusable procedural knowledge and workflows. citeturn384783search0turn688364search4
+A third-party model can receive runtime tools and still behave differently from an Anthropic model because tool schemas do not automatically provide the workflow knowledge needed to choose, sequence, verify, and recover from those tools.
 
-The bridge therefore targets the **knowledge/procedure side** of the gap. It cannot create a missing runtime capability, repair a broken tool adapter, or upgrade a model's fundamental ability to emit valid tool calls.
+The bridge targets the **knowledge and procedure side** of that gap. It cannot create a missing runtime capability, repair a broken gateway/adapter, or upgrade a model's fundamental ability to emit valid tool calls.
+
+See `custom-provider-transport.md` for the concrete Claude Code gateway and custom-endpoint boundaries that matter when the underlying model is swapped.
 
 ## Five independent dimensions
 
 ### 1. Runtime capability
-Can the host actually execute the operation?
+Can the current host execute the operation?
 
 ### 2. Model awareness
-Does the model recognize that an exposed capability exists and what class of problem it solves?
+Does the model recognize that an exposed capability exists and understand its task class?
 
 ### 3. Schema competence
-Can it map current live tool schemas to valid arguments and interpret returned data correctly?
+Can the model map a live tool schema to valid arguments and interpret its returned data?
 
 ### 4. Procedural competence
-Can it sequence tools, maintain state, handle dependencies, and verify the intended outcome?
+Can it sequence tools, maintain state, handle dependencies, and recover?
 
 ### 5. Verification competence
-Does it know what evidence is sufficient for the user's actual acceptance criterion?
+Does it know what evidence is sufficient for the actual acceptance criterion?
 
-Keep these dimensions separate. A Skill can directly influence 2–5, but only indirectly and probabilistically affects behavior.
+A Skill can directly influence dimensions 2–5, but only probabilistically.
 
-## Failure attribution
-
-Use the following diagnosis before changing prompts or references:
+## The custom-provider stack
 
 ```text
-Tool is absent from runtime
-  → integration/runtime problem
-
-Tool is present but model never considers it
-  → awareness/routing problem
-
-Tool is selected but arguments are malformed
-  → schema/tool-call problem
-
-Tool call succeeds but sequence is wrong
-  → procedural problem
-
-Sequence reaches target but agent stops too early
-  → verification problem
-
-Model cannot reliably emit/parse tool calls at all
-  → model/provider compatibility ceiling
+Claude Desktop / Claude Code host
+        ↓
+agent runtime + tool surface
+        ↓
+Anthropic-compatible API contract
+        ↓
+gateway / proxy / provider adapter
+        ↓
+third-party model
 ```
 
-The final category is especially important: a larger Skill may not fix a model whose tool-calling interface, structured-output reliability, context handling, or visual grounding is fundamentally inadequate.
+Every layer can fail independently.
+
+A transport-compatible gateway does not imply model-compatible behavior.
+
+## Concrete Claude Code cases
+
+Claude Code documents several mechanisms for routing requests away from the direct Anthropic API, including `ANTHROPIC_BASE_URL` for proxies/LLM gateways and provider-specific environment variables for Bedrock, Vertex, and Foundry.
+
+Important consequences for this Skill:
+
+```text
+endpoint override
+  ≠
+Anthropic model replacement that behaves identically
+```
+
+The current runtime can also use custom model IDs and, for supported third-party deployment modes, explicit capability metadata. Treat those declarations as runtime configuration, not evidence that the model genuinely supports every declared behavior.
+
+## MCP Tool Search trap
+
+One especially important custom-endpoint difference is MCP Tool Search. Claude Code documents that Tool Search is disabled by default when `ANTHROPIC_BASE_URL` points to a non-first-party host because many proxies do not forward `tool_reference` blocks.
+
+Therefore:
+
+```text
+MCP server exists
+      ↓
+Tool Search disabled/default-changed by endpoint mode
+      ↓
+tool discovery behavior differs
+```
+
+This is **not** necessarily a model-awareness failure.
+
+Only recommend enabling `ENABLE_TOOL_SEARCH=true` after establishing that the proxy forwards the required tool-reference protocol and the target model supports the feature.
+
+## Server-managed settings boundary
+
+Claude Code also documents that server-managed settings require a direct Anthropic API connection and are unavailable for third-party providers and non-default `ANTHROPIC_BASE_URL`/LLM gateway configurations.
+
+The Skill must therefore distinguish:
+
+```text
+runtime-enforced policy
+        ≠
+Skill guidance
+```
+
+Never tell a custom-provider model that a server-managed control is active unless the current deployment proves it.
+
+## Diagnostic matrix
+
+```text
+Request never reaches provider
+→ host/network/auth
+
+Gateway rejects protocol
+→ adapter/transport
+
+Gateway succeeds but tool/reference blocks disappear
+→ gateway feature compatibility
+
+Tool absent from model-visible context
+→ runtime/discovery configuration
+
+Tool visible, but model ignores it
+→ awareness/routing
+
+Tool visible, arguments malformed
+→ schema/tool-call competence
+
+Correct calls, wrong sequence
+→ procedural competence
+
+Correct sequence, premature success claim
+→ verification competence
+
+Vision/context/tool-result interpretation fails
+→ model/provider capability
+```
 
 ## Attribution protocol
 
-To determine whether this Skill actually helps a model, use paired evaluations with the same runtime surface and task:
+To determine whether this Skill actually helps, keep the runtime and task fixed:
 
 ```text
-             SAME HOST + SAME TOOLS
-                       │
-          ┌────────────┴────────────┐
-          ▼                         ▼
-     BASELINE MODEL            + BRIDGE SKILL
-          │                         │
-          └────────────┬────────────┘
-                       ▼
-             compare behavior
+same host
+same tools
+same schemas
+same files
+same permissions
+same task
+
+custom model
+├── bridge OFF
+└── bridge ON
 ```
 
-Hold constant:
-
-- user prompt;
-- tool schemas;
-- project/files;
-- permissions;
-- browser state;
-- network conditions;
-- temperature/decoding settings where possible;
-- task order and seed where supported.
-
-Measure more than completion:
+Measure:
 
 ```text
-tool-choice accuracy
+tool-selection accuracy
 schema-valid call rate
-unnecessary-call rate
 state-tracking accuracy
 verification completion
 false-success rate
@@ -91,69 +151,50 @@ recovery success
 critical safety failures
 ```
 
-Run multiple trials per scenario. One successful run is not evidence of a robust improvement.
+Run multiple trials. One successful completion is not evidence of a robust behavioral gain.
 
 ## High-value symptoms the bridge should improve
 
-### Tool exists but model ignores it
-Load the relevant capability reference and make the trigger/selection condition explicit.
-
-### Model opens browser before using a direct connector
-Reinforce the narrowest-capability policy and require it to compare candidates by task fit, observability, determinism, reversibility, and privilege.
-
-### Model starts a server but never tests it
-Use the web-app state machine: process → listener → HTTP/app readiness → browser → critical path.
-
-### Model opens the page and declares success
-Require an acceptance assertion and, for UI tasks, user-facing evidence.
-
-### Model repeats identical failed calls
-Require error classification and a changed variable or tool path before retry.
-
-### Model claims use of unavailable tools
-Treat as a capability-state failure; the Skill should force runtime evidence before claims.
+- exposed tool ignored by the model;
+- incorrect tool ordering;
+- server started but never verified;
+- browser opened but critical journey never exercised;
+- identical failed calls repeated without diagnosis;
+- success reported without evidence;
+- state (path, URL, port, returned ID, process) guessed instead of observed.
 
 ## High-value non-fixes
 
-Do **not** respond to a runtime problem by adding prose such as:
+Do not try to repair runtime problems with more prose:
 
 ```text
-"Use browser X"
-"There is definitely a tool Y"
-"Port is always 3000"
+"There is definitely a browser tool."
+"MCP Tool Search must be enabled."
+"The gateway supports every Claude feature."
 ```
 
-Do not hard-code private tool names or infer undocumented host behavior into the Skill.
+Inspect the current runtime and endpoint mode first.
 
-## Design implication
+## Model adaptation strategy
 
-The strongest bridge is not a huge encyclopedia. It is a compact set of reusable protocols:
+For a weaker third-party model, prefer compact executable protocols over encyclopedia-style prose:
 
 ```text
-condition
-→ discover capability
-→ inspect live contract
-→ select narrowest reliable surface
-→ execute
-→ observe
-→ assert
-→ recover if needed
-→ verify
-→ report evidence
+WHEN condition
+→ CHECK current capability state
+→ READ live contract/schema
+→ CALL minimally
+→ OBSERVE result
+→ ASSERT expected state
+→ CONTINUE / RECOVER
 ```
 
-Deep references should only be loaded when the task crosses into their capability family. This follows the progressive-disclosure model of Agent Skills. citeturn688364search1
-
-## Runtime variability
-
-Current Claude Desktop/Cowork behavior itself varies by execution surface and availability state. Cloud sessions, local desktop resources, browser surfaces, local MCP/Desktop Extensions, scheduled runs, and connected services do not imply the same resource access. Anthropic explicitly documents these boundaries. citeturn688364search0turn384783search1
-
-Therefore the Skill must remain **runtime-aware, not product-assumption-driven**.
+Then load only the relevant deep reference.
 
 ## Success criterion
 
-The bridge is useful only if controlled evaluation shows a repeatable improvement in agent behavior. Documentation size, number of reference files, or perceived completeness are not evidence of effectiveness.
+The bridge is successful only when controlled evaluation shows a repeatable improvement in agent behavior. Documentation volume, number of files, or apparent completeness are not evidence.
 
 ## Non-goals
 
-This project does not attempt to reproduce private system prompts, model weights, proprietary internal safety classifiers, hidden orchestration, or undocumented tool contracts.
+This project does not attempt to reproduce private system prompts, model weights, proprietary classifiers, hidden orchestration, or undocumented tool contracts.
