@@ -1,17 +1,17 @@
 ---
 name: claude-capability-bridge
-description: Teaches third-party and custom-provider models how to operate inside Claude Desktop-like Agent Skills runtimes by discovering real capabilities, selecting and sequencing tools, using browser/Chrome/computer/MCP/connectors/files/Git/code, handling Projects/Skills/Plugins/artifacts/subagents/scheduled work, tracking session and local-vs-cloud state, verifying outcomes, and recovering safely from failures. Use for coding, web-app testing, GUI automation, research, file work, integrations, and complex multi-step desktop tasks.
+description: Teaches third-party and custom-provider models how to operate inside Claude Desktop-like Agent Skills runtimes by discovering real capabilities, selecting and sequencing tools, using browser/Chrome/computer/MCP/connectors/files/Git/code, handling Projects/Skills/Plugins/artifacts/subagents/scheduled work, tracking session and local-vs-cloud state, diagnosing gateway/custom-provider feature gaps, verifying outcomes, and recovering safely from failures. Use for coding, web-app testing, GUI automation, research, file work, integrations, and complex multi-step desktop tasks.
 license: MIT
-compatibility: Claude Desktop or another Agent Skills-compatible runtime. Specific tools, browser surfaces, local extensions, permissions, and plan/rollout features are runtime-dependent and must be discovered.
+compatibility: Claude Desktop or another Agent Skills-compatible runtime. Specific tools, browser surfaces, local extensions, permissions, model/provider features, and plan/rollout features are runtime-dependent and must be discovered.
 metadata:
   project: claude-capability-bridge
-  version: "0.2.0"
+  version: "0.3.0"
   purpose: procedural-capability-bridge
 ---
 
 # Claude Capability Bridge
 
-Act as a procedural capability layer for models that may not have strong native familiarity with Claude Desktop/Cowork-style agent workflows.
+Act as a procedural capability layer for models that may not have strong native familiarity with Claude Desktop/Cowork-style agent workflows or the behavioral expectations of Claude Code's agent runtime.
 
 The Skill teaches **how to use capabilities that the host actually exposes**. It does not create tools, permissions, browser sessions, MCP servers, filesystem mounts, or other runtime capabilities.
 
@@ -25,7 +25,7 @@ If the host exposes installed Skills as slash commands, the human-facing command
 
 The host owns command registration. Do not claim that a slash command exists merely because this Skill contains a matching name.
 
-After the host reports activation, apply this Skill to the current task/session. Activation changes procedural behavior; it does not grant permissions.
+After the host reports activation, apply this Skill to the current task/session. Activation changes procedural behavior; it does not grant permissions or change provider/runtime configuration.
 
 Consult `references/activation-and-memory.md` for activation lifetime and session rules.
 
@@ -45,31 +45,38 @@ UNKNOWN
 STALE
 ```
 
-Only call a capability as though it were available when current evidence supports that conclusion. A failed call is not automatically proof that the capability is absent; distinguish bad arguments, permissions, environment failures, and true non-exposure.
+Only call a capability as though it were available when current evidence supports that conclusion. A failed call is not automatically proof that the capability is absent; distinguish bad arguments, permissions, environment failures, endpoint/gateway behavior, and true non-exposure.
 
-### 2. Separate four layers
+### 2. Separate the layers
 
 ```text
 MODEL
-  reasoning + planning + procedural knowledge
+  reasoning + planning + procedural knowledge + native tool-calling ability
+
+SKILL
+  explicit procedural knowledge and task protocols
 
 RUNTIME
-  exposed tools + context + permissions + dispatch
+  exposed tools + context + permissions + discovery + dispatch
 
-TOOLS / INTEGRATIONS
-  files + code + browser + Chrome + computer + MCP/connectors + apps
+TRANSPORT / PROVIDER
+  API contract + gateway/proxy + model endpoint + feature compatibility
 
 ENVIRONMENT
   OS + processes + filesystem + network + browser profile + services
 ```
 
-Keep conversation context, project knowledge, live filesystem, Git, browser state, MCP state, and remote state distinct.
+Keep conversation context, project knowledge, live filesystem, Git, browser state, MCP state, provider state, and remote state distinct.
 
 ### 3. Capability available ≠ capability understood
 
 A model may receive a correct tool schema and still lack the workflow for using it effectively. This Skill exists primarily to bridge that procedural gap.
 
-### 4. Completion requires evidence
+### 4. Endpoint compatibility ≠ model compatibility
+
+A Claude Code-compatible gateway can successfully receive requests while the underlying third-party model differs in tool calling, vision, context behavior, reasoning, or other model capabilities. See `references/custom-provider-transport.md`.
+
+### 5. Completion requires evidence
 
 ```text
 implemented
@@ -79,7 +86,7 @@ implemented
   ≠ verified
 ```
 
-Never fabricate a tool action, browser observation, or test result.
+Never fabricate a tool action, browser observation, model capability, or test result.
 
 ## Phase 0 — Build a session map
 
@@ -92,6 +99,9 @@ runtime/application, OS/platform, current workspace/project
 CONTEXT
 conversation, project knowledge, live filesystem/worktree
 
+PROVIDER
+model identity when observable, endpoint/gateway mode, relevant feature declarations
+
 TOOLS
 files, shell/code, processes, browser, Chrome, screenshots/vision,
 computer use, MCP/connectors, Git, Skills/Plugins, artifacts/apps,
@@ -99,7 +109,7 @@ scheduling/remote execution
 
 STATE
 cwd, PIDs, ports, URLs, current browser/page, auth state,
-changed files, external side effects
+changed files, MCP/tool discovery state, external side effects
 
 PERMISSIONS
 writable scope, approvals, network restrictions, sensitive-action boundaries
@@ -157,6 +167,41 @@ computer use
 ```
 
 This is not a rigid hierarchy. UI acceptance criteria still require UI evidence; an API result cannot substitute for visual verification when visual behavior is what matters.
+
+## Phase 2.5 — Diagnose provider and transport boundaries
+
+When the model/provider is non-Anthropic or requests are routed through a gateway/proxy, do not immediately attribute missing behavior to the Skill.
+
+Establish, where observable:
+
+```text
+runtime surface
+→ selected model identity
+→ endpoint/provider mode
+→ visible tool surface
+→ MCP discovery mode
+→ declared model capabilities
+→ actual tool-call behavior
+```
+
+Use `references/custom-provider-transport.md`.
+
+Important current Claude Code distinctions include:
+
+```text
+ANTHROPIC_BASE_URL changes the endpoint
+        ≠
+changes the underlying model's abilities
+
+non-first-party endpoint
+        → MCP Tool Search defaults can differ
+
+custom model metadata
+        ≠
+empirical proof of capability
+```
+
+If the failure is transport/protocol/runtime-level, report it as such. Do not add more procedural prose as a substitute for fixing the endpoint or adapter.
 
 ## Phase 3 — Read the tool contract
 
@@ -254,7 +299,7 @@ Do not report an artifact as correct merely because its generation call succeede
 
 Treat each integration as its own contract. Consult `references/mcp-and-connectors.md`, `references/mcp-deep-dive.md`, and `references/desktop-extensions.md` when relevant.
 
-Remember the important boundary:
+Remember:
 
 ```text
 remote connector
@@ -262,6 +307,8 @@ remote connector
 ```
 
 Remote and local integrations can have different execution locations, permissions, network reachability, and surface availability.
+
+When a non-first-party endpoint is involved, also consult `references/custom-provider-transport.md` before diagnosing MCP discovery failures as model behavior.
 
 ## Projects, files, and Git
 
@@ -316,6 +363,7 @@ ENVIRONMENT / DEPENDENCY
 PROCESS / READINESS
 NAVIGATION / TARGET
 SCHEMA / ARGUMENT
+PROTOCOL / GATEWAY
 APPLICATION / RUNTIME
 NETWORK / AUTH
 MODEL / PROCEDURAL
@@ -368,17 +416,31 @@ RESIDUAL RISK
 
 Use precise states such as `VERIFIED`, `PARTIALLY VERIFIED`, `BLOCKED`, `UNKNOWN`, and `FAILED`.
 
-## Evaluation and limits
+## Evaluation and attribution
 
-Use `references/evaluation-and-attribution.md` and the files under `evals/` and `benchmarks/` to test whether the Skill improves behavior. Do not assume that more documentation means better performance.
+Use `references/evaluation-and-attribution.md`, `tests/custom-provider-transport.md`, and the files under `evals/` and `benchmarks/` to test whether the Skill changes behavior.
 
-The Skill cannot solve a missing runtime capability or a fundamental provider/tool-calling incompatibility. It should be judged by controlled A/B behavior, not by documentation size.
+The important experiment for custom providers is:
+
+```text
+SAME HOST
+SAME TOOLS
+SAME TASK
+SAME PROVIDER
+
+BRIDGE OFF
+   vs
+BRIDGE ON
+```
+
+Keep gateway configuration, tool surface, permissions, task data, and relevant model settings constant. Compare traces, not just final text.
 
 ## Reference routing
 
 Load only what the current task requires:
 
 - `references/claude-desktop-current-map.md` — current public capability inventory and availability notes.
+- `references/custom-provider-transport.md` — gateway/custom endpoint/provider boundaries and feature compatibility.
 - `references/runtime-boundaries.md` — local/cloud, surface, resource, and authentication boundaries.
 - `references/activation-and-memory.md` — Skill activation and lifetime.
 - `references/session-memory.md` — capability state and invalidation.
@@ -410,4 +472,4 @@ Load only what the current task requires:
 
 ## Final invariant
 
-**Do not simulate competence. Discover the real runtime, use the right surface, preserve verified state, and prove the user's actual goal.**
+**Do not simulate competence. Discover the real runtime, distinguish transport/model/tool/workflow failures, use the right surface, preserve verified state, and prove the user's actual goal.**
