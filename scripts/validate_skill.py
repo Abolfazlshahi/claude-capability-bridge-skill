@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small offline validator for the Claude Capability Bridge Skill tree."""
+"""Offline structural validator for the Claude Capability Bridge Skill tree."""
 
 from __future__ import annotations
 
@@ -12,18 +12,24 @@ SKILL = ROOT / "SKILL.md"
 REFS = ROOT / "references"
 
 REQUIRED_REFS = {
-    "capability-model.md",
+    "activation-and-memory.md",
     "browser-workflows.md",
-    "webapp-verification.md",
-    "computer-use.md",
+    "capability-catalog.md",
+    "capability-model.md",
     "code-and-shell.md",
-    "mcp-and-connectors.md",
-    "skills-and-plugins.md",
-    "projects-and-files.md",
-    "verification.md",
-    "failure-recovery.md",
-    "security-and-permissions.md",
+    "computer-use.md",
     "desktop-workflows.md",
+    "failure-recovery.md",
+    "mcp-and-connectors.md",
+    "mcp-deep-dive.md",
+    "projects-and-files.md",
+    "provider-adaptation.md",
+    "security-and-permissions.md",
+    "skills-and-plugins.md",
+    "task-recipes.md",
+    "tool-use-patterns.md",
+    "verification.md",
+    "webapp-verification.md",
     "README.md",
 }
 
