@@ -4,10 +4,12 @@
 
 ### Teach custom-provider models the **workflow knowledge** needed to operate agentic tools reliably.
 
-<img src="./assets/bridge-overview.svg" alt="Claude Capability Bridge overview" width="100%" />
+<p>
+  <img src="./assets/bridge-overview.svg" alt="Claude Capability Bridge overview" width="100%" />
+</p>
 
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-claude--capability--bridge-8b5cf6?style=for-the-badge)](./SKILL.md)
-[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088ff?style=for-the-badge&logo=githubactions&logoColor=white)](.github/workflows/validate.yml)
+[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088ff?style=for-the-badge&logo=githubactions&logoColor=white)](./.github/workflows/validate.yml)
 [![License](https://img.shields.io/badge/license-MIT-34d399?style=for-the-badge)](./LICENSE)
 
 **Discover → Select → Execute → Observe → Verify → Recover**
@@ -16,9 +18,29 @@
 
 ---
 
+## 💖 Support the project
+
+Financial support is optional and helps with continued development.
+
+The wallet addresses below are taken from the author's [Chat-management-bot-and-AI-assistant](https://github.com/Abolfazlshahi/Chat-management-bot-and-AI-assistant) repository.
+
+| Network | Address |
+|---|---|
+| **TON** | `UQDfjVk2UdpiMg-bsxqoLa0O_icuaF20D-wWJgIJwK1Ha2Ul` |
+| **USDT — TRC20** | `TR8ibZGKutPKoDm5nMbHFwGPFBuMKwjG6j` |
+| **USDT — BEP20** | `0x8c45d6bae8a5a572b2a776779fe0bcae3d3f9107` |
+
+<p align="center">
+  <a href="https://nowpayments.io/donation?api_key=724be14f-9bdf-4318-99d0-0a837b5493b6" target="_blank" rel="noreferrer noopener">
+    <img src="https://nowpayments.io/images/embeds/donation-button-white.svg" alt="Cryptocurrency & Bitcoin donation button by NOWPayments">
+  </a>
+</p>
+
+---
+
 ## 🌍 Language
 
-**English** · [中文](./README_ZH.md) · [Español](./README_ES.md) · [हिन्दी](./README_HI.md) · [العربية](./README_AR.md) · [Français](./README_FR.md) · [فارسی](./README_FA.md)
+**English** · [中文](./i18n/README_ZH.md) · [Español](./i18n/README_ES.md) · [हिन्दी](./i18n/README_HI.md) · [العربية](./i18n/README_AR.md) · [Français](./i18n/README_FR.md) · [فارسی](./i18n/README_FA.md)
 
 Seven localized README versions are maintained for the project.
 
@@ -48,7 +70,9 @@ This Skill turns those behaviors into reusable procedures for Claude Desktop/Cow
 | May confuse runtime, gateway, and model failures | Attributes failures to the correct layer |
 | May claim success from partial evidence | Reports verified, blocked, failed, and unknown states separately |
 
-<img src="./assets/before-after.svg" alt="Before and after comparison" width="100%" />
+<p align="center">
+  <img src="./assets/before-after.svg" alt="Before and after comparison" width="100%" />
+</p>
 
 > **Honesty note:** this table describes the intended behavioral effect. It is **not** a measured benchmark result. See the evaluation section before making performance claims.
 
@@ -56,7 +80,9 @@ This Skill turns those behaviors into reusable procedures for Claude Desktop/Cow
 
 ## ⚙️ How it works
 
-<img src="./assets/workflow.svg" alt="Capability Bridge workflow" width="100%" />
+<p align="center">
+  <img src="./assets/workflow.svg" alt="Capability Bridge workflow" width="100%" />
+</p>
 
 ```text
 Runtime discovery
@@ -84,11 +110,11 @@ The main `SKILL.md` stays compact. Detailed procedures are progressively loaded 
 
 This is the part closest to the original motivation of the project.
 
-<img src="./assets/provider-architecture.svg" alt="Custom provider architecture" width="100%" />
+<p align="center">
+  <img src="./assets/provider-architecture.svg" alt="Custom provider architecture" width="100%" />
+</p>
 
 A custom endpoint or gateway can make an application **transport-compatible** without making the underlying model **behaviorally equivalent** to an Anthropic model.
-
-The Skill therefore separates five layers:
 
 | Layer | Question |
 |---|---|
@@ -110,7 +136,9 @@ See [`references/custom-provider-transport.md`](./references/custom-provider-tra
 
 The bridge is especially useful when an agent builds or repairs a web app and must prove that the **real user flow** works.
 
-<img src="./assets/webapp-verification.svg" alt="Web app verification pipeline" width="100%" />
+<p align="center">
+  <img src="./assets/webapp-verification.svg" alt="Web app verification pipeline" width="100%" />
+</p>
 
 The verification chain is layered:
 
@@ -221,15 +249,27 @@ python3 scripts/validate_skill.py
 
 ```text
 claude-capability-bridge-skill/
-├── SKILL.md                  # main procedural entry point
-├── references/               # deep procedures + public capability map
-├── benchmarks/               # behavioral benchmark scenarios
-├── evals/                    # structured evaluation definitions
-├── scripts/                  # validation + packaging utilities
-├── tests/                    # focused test scenarios
-├── assets/                   # README visuals
-├── README*.md                # localized documentation
-└── LICENSE                   # MIT license
+├── SKILL.md
+├── references/
+├── benchmarks/
+├── evals/
+├── scripts/
+├── tests/
+├── assets/
+├── i18n/                       # localized README files
+│   ├── README_FA.md
+│   ├── README_ZH.md
+│   ├── README_ES.md
+│   ├── README_HI.md
+│   ├── README_AR.md
+│   └── README_FR.md
+└── LICENSE
+```
+
+The project follows progressive disclosure:
+
+```text
+metadata → SKILL.md → relevant reference → execution → verification
 ```
 
 ---
@@ -279,26 +319,6 @@ GitHub Actions also checks repository structure and the packaged Skill shape.
 
 ---
 
-## 💖 Support the project
-
-Financial support is optional and helps with continued development.
-
-The wallet addresses below are taken from the author's [Chat-management-bot-and-AI-assistant](https://github.com/Abolfazlshahi/Chat-management-bot-and-AI-assistant) repository.
-
-| Network | Address |
-|---|---|
-| **TON** | `UQDfjVk2UdpiMg-bsxqoLa0O_icuaF20D-wWJgIJwK1Ha2Ul` |
-| **USDT — TRC20** | `TR8ibZGKutPKoDm5nMbHFwGPFBuMKwjG6j` |
-| **USDT — BEP20** | `0x8c45d6bae8a5a572b2a776779fe0bcae3d3f9107` |
-
-<p align="center">
-  <a href="https://nowpayments.io/donation?api_key=724be14f-9bdf-4318-99d0-0a837b5493b6" target="_blank" rel="noreferrer noopener">
-    <img src="https://nowpayments.io/images/embeds/donation-button-white.svg" alt="Cryptocurrency & Bitcoin donation button by NOWPayments">
-  </a>
-</p>
-
----
-
 ## 📣 Telegram
 
 Project updates, releases, experiments and more:
@@ -313,13 +333,13 @@ Project updates, releases, experiments and more:
 
 | Language | README |
 |---|---|
-| 🇬🇧 English | [README.md](./README.md) |
-| 🇨🇳 简体中文 | [README_ZH.md](./README_ZH.md) |
-| 🇪🇸 Español | [README_ES.md](./README_ES.md) |
-| 🇮🇳 हिन्दी | [README_HI.md](./README_HI.md) |
-| 🇸🇦 العربية | [README_AR.md](./README_AR.md) |
-| 🇫🇷 Français | [README_FR.md](./README_FR.md) |
-| 🇮🇷 فارسی | [README_FA.md](./README_FA.md) |
+| 🇬🇧 English | [`README.md`](./README.md) |
+| 🇨🇳 简体中文 | [`README_ZH.md`](./i18n/README_ZH.md) |
+| 🇪🇸 Español | [`README_ES.md`](./i18n/README_ES.md) |
+| 🇮🇳 हिन्दी | [`README_HI.md`](./i18n/README_HI.md) |
+| 🇸🇦 العربية | [`README_AR.md`](./i18n/README_AR.md) |
+| 🇫🇷 Français | [`README_FR.md`](./i18n/README_FR.md) |
+| 🇮🇷 فارسی | [`README_FA.md`](./i18n/README_FA.md) |
 
 ---
 
