@@ -63,6 +63,48 @@
         "Re-checks scheduled-run capabilities and permissions",
         "Distinguishes remote connector access from local-only resources"
       ]
+    },
+    {
+      "id": 7,
+      "prompt": "The model is running through a non-first-party ANTHROPIC_BASE_URL gateway. An MCP server is configured, but some tools are not appearing. Diagnose the cause before changing the prompt.",
+      "expected_output": "The agent checks endpoint/gateway mode and MCP discovery behavior first, recognizes that non-first-party endpoints can change MCP Tool Search behavior, and distinguishes discovery/runtime loss from model failure.",
+      "expectations": [
+        "Checks endpoint/provider mode before blaming model behavior",
+        "Recognizes non-first-party ANTHROPIC_BASE_URL as a relevant runtime condition",
+        "Does not assume Tool Search behaves like a direct Anthropic endpoint",
+        "Does not recommend an override without checking gateway/model support"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "A custom model is selectable through the Claude Code model picker. Decide whether you can rely on extended thinking, adaptive thinking, interleaved thinking, or effort controls for this model.",
+      "expected_output": "The agent distinguishes model ID/configuration metadata from empirical capability and only relies on a feature after verifying that the deployment actually supports it.",
+      "expectations": [
+        "Does not infer capability from model display name",
+        "Understands supported-capability metadata is declarative",
+        "Checks actual provider/runtime support before relying on a feature"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "The user is using a third-party provider and asks why a server-managed Claude Code policy did not apply. Explain the boundary and identify what the Skill can and cannot enforce.",
+      "expected_output": "The agent explains that server-managed settings have provider/endpoint requirements and distinguishes host-enforced policy from Skill guidance.",
+      "expectations": [
+        "Does not claim server-managed enforcement where the endpoint bypasses it",
+        "Separates runtime policy from procedural Skill instructions",
+        "Suggests runtime configuration rather than pretending a Skill can enforce host policy"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "The gateway accepts Anthropic-format requests, but the third-party model repeatedly emits malformed tool calls even though the tool schema is visible. Determine whether adding more Skill instructions is likely to solve the issue.",
+      "expected_output": "The agent classifies the problem as a model/provider tool-calling compatibility issue when evidence supports it, and does not promise that additional Skill prose can overcome a fundamental compatibility ceiling.",
+      "expectations": [
+        "Separates transport compatibility from model capability",
+        "Checks whether tool schemas are actually visible",
+        "Uses repeated controlled evidence before declaring a provider ceiling",
+        "Does not present the Skill as a universal tool-calling fix"
+      ]
     }
   ]
 }
