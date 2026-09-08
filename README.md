@@ -118,7 +118,7 @@ page correct
 feature works
 ```
 
-Claude's built-in Cowork browser can open sites, read pages, click, type, and fill forms inside the desktop app, while Claude in Chrome provides an existing-browser-context path. Those surfaces have different state and authentication boundaries. citeturn384783search4turn384783search7
+The current built-in Cowork browser can open sites, read pages, click, type, and fill forms inside the desktop app, while Claude in Chrome provides an existing-browser-context path. Those surfaces have different state and authentication boundaries. citeturn384783search4turn384783search7
 
 ## Capability model
 
@@ -180,7 +180,7 @@ The repository therefore treats benchmark evidence—not file count—as the cri
 
 ## Current public capability map
 
-The maintained map is in [`references/current-claude-desktop-map.md`](./references/current-claude-desktop-map.md). It deliberately models capability **classes** rather than private tool names.
+The maintained map is in [`references/claude-desktop-current-map.md`](./references/claude-desktop-current-map.md). It deliberately models capability **classes** rather than private tool names.
 
 Current public areas covered:
 
@@ -203,7 +203,7 @@ Security / Permissions
 Verification / Recovery
 ```
 
-Anthropic's current documentation also makes the local/cloud boundary explicit: cloud Cowork sessions run in isolated cloud sandboxes, while local files and local integrations can be reached through the desktop app under the documented conditions. Scheduled tasks are separate cloud runs and should not be assumed to inherit live local state. citeturn688364search0turn384783search1turn384783search9
+Anthropic's current documentation makes the local/cloud boundary explicit: cloud Cowork sessions run in isolated cloud environments, while local files and local integrations can be reached through the desktop app under documented conditions. Scheduled tasks are separate cloud runs and should not be assumed to inherit live local state. citeturn688364search0turn384783search1turn384783search9
 
 ## Installation
 
@@ -244,13 +244,15 @@ Installation does not grant tools or permissions; the host still determines the 
 │   ├── README.md
 │   └── scenarios.yaml
 ├── references/
-│   ├── current-claude-desktop-map.md
+│   ├── claude-desktop-current-map.md
 │   ├── runtime-boundaries.md
 │   ├── activation-and-memory.md
+│   ├── session-memory.md
 │   ├── capability-model.md
 │   ├── capability-catalog.md
 │   ├── capability-handshake.md
 │   ├── tool-schema-literacy.md
+│   ├── tool-use-patterns.md
 │   ├── browser-workflows.md
 │   ├── webapp-verification.md
 │   ├── interactive-surfaces.md
@@ -304,7 +306,7 @@ Repository validator:
 python3 scripts/validate_skill.py
 ```
 
-Spec-shaped package validator:
+Spec-shaped package validation:
 
 ```bash
 python3 scripts/package_skill.py
@@ -312,7 +314,7 @@ python3 -m pip install skills-ref
 skills-ref validate dist/claude-capability-bridge
 ```
 
-The GitHub Actions workflow runs repository checks and validates the generated installable Skill shape.
+GitHub Actions also runs the structural checks and validates the generated Skill shape with the reference validator.
 
 ## Evaluation
 
