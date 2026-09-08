@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""Offline structural validator for the Claude Capability Bridge Skill tree."""
+"""Offline structural validator for the Claude Capability Bridge Skill.
+
+This does not replace the official skills-ref validator. It adds repository-specific
+checks for reference routing and evaluation files.
+"""
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import re
 import sys
@@ -10,24 +15,32 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "SKILL.md"
 REFS = ROOT / "references"
+EVALS = ROOT / "evals" / "evals.json"
+BENCHMARKS = ROOT / "benchmarks" / "scenarios.yaml"
 
 REQUIRED_REFS = {
     "activation-and-memory.md",
+    "async-subagents-and-remote.md",
     "browser-workflows.md",
     "capability-catalog.md",
     "capability-handshake.md",
     "capability-model.md",
+    "claude-desktop-current-map.md",
     "code-and-shell.md",
     "computer-use.md",
+    "desktop-extensions.md",
     "desktop-workflows.md",
     "failure-recovery.md",
+    "interactive-surfaces.md",
     "mcp-and-connectors.md",
     "mcp-deep-dive.md",
     "projects-and-files.md",
     "provider-adaptation.md",
+    "runtime-boundaries.md",
     "security-and-permissions.md",
     "session-memory.md",
     "skills-and-plugins.md",
+    "source-notes.md",
     "task-recipes.md",
     "tool-schema-literacy.md",
     "tool-use-patterns.md",
@@ -41,6 +54,10 @@ REQUIRED_REFS = {
 def fail(message: str) -> None:
     print(f"FAIL: {message}", file=sys.stderr)
     raise SystemExit(1)
+
+
+def warn(message: str) -> None:
+    print(f"WARN: {message}")
 
 
 def main() -> int:
@@ -58,6 +75,7 @@ def main() -> int:
     frontmatter = match.group(1)
     name_match = re.search(r"^name:\s*(.+)$", frontmatter, re.MULTILINE)
     desc_match = re.search(r"^description:\s*(.+)$", frontmatter, re.MULTILINE)
+    compatibility_match = re.search(r"^compatibility:\s*(.+)$", frontmatter, re.MULTILINE)
     if not name_match:
         fail("frontmatter name is missing")
     if not desc_match:
@@ -67,9 +85,24 @@ def main() -> int:
     if len(name) > 64 or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
         fail(f"invalid Skill name: {name!r}")
 
-    description = desc_match.group(1).strip()
+    description = desc_match.group(1).strip().strip('"')
     if not description or len(description) > 1024:
         fail("description must be non-empty and <= 1024 characters")
+
+    if compatibility_match:
+        compatibility = compatibility_match.group(1).strip().strip('"')
+        if len(compatibility) > 500:
+            fail("compatibility must be <= 500 characters")
+
+    body_lines = text[match.end():].splitlines()
+    if len(body_lines) > 500:
+        fail(f"SKILL.md body is {len(body_lines)} lines; keep the main file under 500 lines")
+
+    # A repo can be a distribution container. If this repo is installed directly,
+    # the host may require the containing folder name to match the Skill name.
+    root_name = ROOT.name
+    if root_name != name:
+        warn(f"install directory name '{root_name}' differs from Skill name '{name}'; install/rename the Skill directory to '{name}' for strict spec conformance")
 
     if not REFS.is_dir():
         fail("references directory is missing")
@@ -81,11 +114,38 @@ def main() -> int:
     referenced_names = set(re.findall(r"`references/([^`]+)`", text))
     unknown = sorted(referenced_names - REQUIRED_REFS)
     if unknown:
-        fail("SKILL.md references files that do not exist in the required map: " + ", ".join(unknown))
+        fail("SKILL.md references files not tracked by validator: " + ", ".join(unknown))
 
-    print("PASS: Skill structure and frontmatter checks passed")
+    if not EVALS.is_file():
+        fail("evals/evals.json is missing")
+    try:
+        payload = json.loads(EVALS.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        fail(f"invalid evals/evals.json: {exc}")
+
+    if payload.get("skill_name") != name:
+        fail("evals/evals.json skill_name does not match SKILL.md name")
+    if not isinstance(payload.get("evals"), list) or not payload["evals"]:
+        fail("evals/evals.json must contain a non-empty evals list")
+
+    for index, item in enumerate(payload["evals"], start=1):
+        for field in ("id", "prompt", "expected_output", "expectations"):
+            if field not in item:
+                fail(f"eval {index} is missing '{field}'")
+        if not isinstance(item["expectations"], list) or not item["expectations"]:
+            fail(f"eval {index} expectations must be a non-empty list")
+
+    if not BENCHMARKS.is_file():
+        fail("benchmarks/scenarios.yaml is missing")
+    benchmark_text = BENCHMARKS.read_text(encoding="utf-8")
+    if not benchmark_text.startswith("version:") or "skill_name:" not in benchmark_text or "evals:" not in benchmark_text:
+        fail("benchmark scenario file is missing required top-level fields")
+
+    print("PASS: Skill structure, frontmatter, references, evals, and benchmark checks passed")
     print(f"Skill: {name}")
+    print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
+    print(f"Evals: {len(payload['evals'])}")
     return 0
 
 
