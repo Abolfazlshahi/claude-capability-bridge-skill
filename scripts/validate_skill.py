@@ -2,7 +2,7 @@
 """Offline structural validator for the Claude Capability Bridge Skill.
 
 This does not replace the official skills-ref validator. It adds repository-specific
-checks for reference routing, evaluations, and benchmark files.
+checks for reference routing, evaluations, benchmark files, and critical regression scenarios.
 """
 
 from __future__ import annotations
@@ -19,38 +19,16 @@ EVALS = ROOT / "evals" / "evals.json"
 BENCHMARKS = ROOT / "benchmarks" / "scenarios.yaml"
 
 REQUIRED_REFS = {
-    "activation-and-memory.md",
-    "async-subagents-and-remote.md",
-    "browser-workflows.md",
-    "capability-catalog.md",
-    "capability-handshake.md",
-    "capability-model.md",
-    "claude-desktop-current-map.md",
-    "code-and-shell.md",
-    "computer-use.md",
-    "desktop-extensions.md",
-    "desktop-workflows.md",
-    "evaluation-and-attribution.md",
-    "failure-recovery.md",
-    "interactive-surfaces.md",
-    "mcp-and-connectors.md",
-    "mcp-deep-dive.md",
-    "projects-and-files.md",
-    "provider-adaptation.md",
-    "custom-provider-transport.md",
-    "project-recognition-and-launch.md",
-    "runtime-boundaries.md",
-    "security-and-permissions.md",
-    "session-memory.md",
-    "skills-and-plugins.md",
-    "source-notes.md",
-    "task-recipes.md",
-    "tool-schema-literacy.md",
-    "tool-use-patterns.md",
-    "verification.md",
-    "webapp-verification.md",
-    "workspace-map.md",
-    "README.md",
+    "activation-and-memory.md", "async-subagents-and-remote.md", "browser-workflows.md",
+    "capability-catalog.md", "capability-handshake.md", "capability-model.md",
+    "claude-desktop-current-map.md", "code-and-shell.md", "computer-use.md",
+    "desktop-extensions.md", "desktop-workflows.md", "evaluation-and-attribution.md",
+    "failure-recovery.md", "interactive-surfaces.md", "mcp-and-connectors.md",
+    "mcp-deep-dive.md", "projects-and-files.md", "provider-adaptation.md",
+    "custom-provider-transport.md", "project-recognition-and-launch.md", "runtime-boundaries.md",
+    "security-and-permissions.md", "session-memory.md", "skills-and-plugins.md",
+    "source-notes.md", "task-recipes.md", "tool-schema-literacy.md", "tool-use-patterns.md",
+    "verification.md", "webapp-verification.md", "workspace-map.md", "README.md",
 }
 
 
@@ -143,19 +121,21 @@ def main() -> int:
         if required not in benchmark_text:
             fail(f"benchmark scenario file is missing top-level field: {required}")
 
-    test_doc = ROOT / "tests" / "custom-provider-transport.md"
-    if not test_doc.is_file():
-        fail("tests/custom-provider-transport.md is missing")
+    required_tests = {
+        "custom-provider-transport.md",
+        "project-recognition.md",
+        "browser-operating-protocol.md",
+    }
+    missing_tests = sorted(name for name in required_tests if not (ROOT / "tests" / name).is_file())
+    if missing_tests:
+        fail("missing regression tests: " + ", ".join(missing_tests))
 
-    project_test = ROOT / "tests" / "project-recognition.md"
-    if not project_test.is_file():
-        fail("tests/project-recognition.md is missing")
-
-    print("PASS: Skill structure, project-recognition reference, evals, benchmarks, and regression tests passed")
+    print("PASS: Skill structure, browser/project references, evals, benchmarks, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
     print(f"Evals: {len(payload['evals'])}")
+    print(f"Regression tests: {len(required_tests)}")
     return 0
 
 
