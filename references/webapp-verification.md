@@ -14,13 +14,68 @@ A web app task is complete only when:
 - relevant browser/runtime errors were examined;
 - no claim exceeds the evidence collected.
 
-## Phase 0 — Understand
+## Phase 0 — Understand the application before touching the browser
 
-Extract acceptance criteria from the user request. Separate implementation, visual, behavioral, data/API, and environment requirements. Choose reasonable defaults for genuinely unspecified details and report those assumptions when they materially affect verification.
+The first question is **"What kind of project is this, and what execution model does it require?"**
+
+Do not open an arbitrary HTML/template file merely because it exists. A file that looks browser-renderable may be a server-side template, component source, or build input rather than the user-facing entry point.
+
+Construct this minimum execution-model record before browser verification:
+
+```text
+PROJECT TYPE
+FRAMEWORK / RUNTIME
+PACKAGE / ENVIRONMENT MANAGER
+ENTRY POINT
+DECLARED START / DEV / PREVIEW COMMAND
+DEPENDENT SERVICES
+EXPECTED HOST / BINDING
+EXPECTED OR DISCOVERED PORT / URL
+READINESS SIGNAL
+```
+
+Authoritative evidence order:
+
+```text
+project README / explicit instructions
+→ package/build metadata
+→ dependency declarations and lockfiles
+→ framework markers / entry points
+→ configured scripts / task files
+→ framework defaults only as a last resort
+```
+
+If the project type is uncertain, inspect more before choosing how to launch it.
+
+### Execution-model gate
+
+Before using a browser, classify the target as one of:
+
+```text
+STATIC
+SERVER-BACKED
+FULL-STACK / MULTI-SERVICE
+UNKNOWN
+```
+
+Rules:
+
+- **STATIC:** direct file preview can be valid when the project is intentionally static and the acceptance criteria allow it.
+- **SERVER-BACKED:** start the intended server/runtime and test the served URL. Do not test a template through `file://`.
+- **FULL-STACK / MULTI-SERVICE:** start or connect the required services and verify their integration boundaries before judging the frontend.
+- **UNKNOWN:** do not guess. Inspect project metadata and launch instructions first.
+
+A browser tool is for testing a running web experience; it is not a substitute for identifying how the application is supposed to execute.
 
 ## Phase 1 — Inspect
 
 Inspect the project before changing it. Determine framework/runtime, package manager, entry points, scripts, environment variables, build/test commands, dev-server command, expected ports, host binding, existing tests, and generated directories. Prefer project-declared commands over remembered framework conventions.
+
+For Python projects, inspect `pyproject.toml`, `requirements*.txt`, `Pipfile`, `manage.py`, `app.py`, `wsgi.py`, `asgi.py`, README instructions, and declared task scripts. For Node projects, inspect `package.json` and its `scripts`. Do not blindly substitute a remembered command such as `python app.py`, `flask run`, `uvicorn main:app`, `npm run dev`, or a conventional port.
+
+Templates under directories such as `templates/` are source artifacts, not normally the browser entry point for a server-rendered application.
+
+See `references/project-recognition-and-launch.md` for the deeper recognition matrix.
 
 ## Phase 2 — Baseline
 
@@ -34,9 +89,13 @@ Make the smallest coherent change that satisfies the request. Preserve existing 
 
 Start the application using the declared development or preview command. Track command, working directory, PID, stdout/stderr, port, and URL when available. A live process is not proof of readiness.
 
+For multi-service applications, identify which dependencies are required for the requested flow and verify each required service before starting browser acceptance tests.
+
 ## Phase 5 — Open and inspect
 
 Open the actual server URL using the best available browser. Inspect route/title, major regions, loading state, missing assets, obvious runtime errors, layout issues, and initial API failures.
+
+If the browser displays a raw template, source markup, unresolved server variables, missing server-side imports, or a `file://` page where a server route is expected, **stop browser iteration**. Return to project recognition and launch the intended runtime.
 
 ## Phase 6 — Critical-path tests
 
@@ -105,6 +164,7 @@ Stop processes started by the agent when safe and appropriate. Never terminate a
 
 | Criterion | Evidence | Status |
 |---|---|---|
+| Project recognized | framework + execution model + command | PASS/FAIL |
 | App starts | readiness + actual URL | PASS/FAIL |
 | Route renders | observed route/page | PASS/FAIL |
 | Primary journey | observed state transition | PASS/FAIL |
@@ -121,6 +181,10 @@ Stop processes started by the agent when safe and appropriate. Never terminate a
 **No console errors, so correct:** behavior can be wrong without throwing.
 
 **Port is probably 3000:** use the actual reported/discovered URL.
+
+**Template opened directly, so the app works:** a server-backed project must be tested through its intended runtime.
+
+**Unknown project, remembered command:** inspect project evidence before launching.
 
 **Just retry:** re-observe and change the failed variable or tool path.
 
