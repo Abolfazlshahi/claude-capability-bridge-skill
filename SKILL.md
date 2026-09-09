@@ -1,11 +1,11 @@
 ---
 name: claude-capability-bridge
-description: Teaches third-party and custom-provider models how to operate inside Claude Desktop-like Agent Skills runtimes by discovering real capabilities, selecting and sequencing tools, using browser/Chrome/computer/MCP/connectors/files/Git/code, handling Projects/Skills/Plugins/artifacts/subagents/scheduled work, tracking session and local-vs-cloud state, diagnosing gateway/custom-provider feature gaps, verifying outcomes, and recovering safely from failures. Use for coding, web-app testing, GUI automation, research, file work, integrations, and complex multi-step desktop tasks.
+description: Teaches third-party and custom-provider models how to operate inside Claude Desktop-like Agent Skills runtimes by discovering real capabilities, selecting and sequencing tools, using browser/Chrome/computer/MCP/connectors/files/Git/code, handling Projects/Skills/Plugins/artifacts/subagents/scheduled work, tracking session and local-vs-cloud state, diagnosing gateway/custom-provider feature gaps, recognizing project execution models before launch, verifying outcomes, and recovering safely from failures. Use for coding, web-app testing, GUI automation, research, file work, integrations, and complex multi-step desktop tasks.
 license: MIT
 compatibility: Claude Desktop or another Agent Skills-compatible runtime. Specific tools, browser surfaces, local extensions, permissions, model/provider features, and plan/rollout features are runtime-dependent and must be discovered.
 metadata:
   project: claude-capability-bridge
-  version: "0.3.0"
+  version: "0.4.0"
   purpose: procedural-capability-bridge
 ---
 
@@ -134,6 +134,52 @@ SECURITY / AUTHORIZATION
 
 For each important requirement, know the observable assertion and what evidence can prove it.
 
+## Phase 1.5 — Recognize the execution model before launching
+
+For any coding or web-application task, identify **what kind of project you are operating on** before choosing a browser target or launch command.
+
+Build the smallest launch contract:
+
+```text
+PROJECT TYPE
+FRAMEWORK / RUNTIME
+PACKAGE / ENVIRONMENT MANAGER
+ENTRY POINT
+DECLARED START / DEV / PREVIEW COMMAND
+DEPENDENT SERVICES
+HOST / BINDING
+PORT / URL
+READINESS SIGNAL
+```
+
+Use authoritative evidence in this order:
+
+```text
+project instructions / README
+→ package and dependency metadata
+→ framework markers / entry points
+→ declared scripts / task files
+→ framework defaults only as a last resort
+```
+
+Classify the project as:
+
+```text
+STATIC
+SERVER-BACKED
+FULL-STACK / MULTI-SERVICE
+UNKNOWN
+```
+
+Hard rules:
+
+- A server-backed project must be tested through its intended server/runtime, not by opening a template/source file directly with `file://`.
+- A static project may be opened directly only when the project is intentionally static and that matches the acceptance criteria.
+- A full-stack flow requires the services needed for the requested behavior, not merely a rendered frontend.
+- An unknown project requires more inspection before launch; do not invent a familiar command or port.
+
+For the detailed recognition matrix and Python/Node/Django/server-rendered cases, consult `references/project-recognition-and-launch.md`.
+
 ## Phase 2 — Discover and rank capabilities
 
 For each candidate capability:
@@ -235,16 +281,17 @@ For consequential or ambiguous actions, avoid long blind chains. Re-ground targe
 
 ## Browser and web-app workflow
 
-For build/fix/design/verification requests involving a web app, follow `references/webapp-verification.md` and `references/browser-workflows.md`.
+For build/fix/design/verification requests involving a web app, follow `references/project-recognition-and-launch.md`, `references/webapp-verification.md`, and `references/browser-workflows.md`.
 
 Canonical flow:
 
 ```text
 inspect repo
+→ identify execution model
 → establish declared commands
 → baseline
 → implement
-→ start process
+→ start process/services
 → confirm actual readiness
 → discover actual URL/port
 → choose browser surface
@@ -270,6 +317,8 @@ process exists
 ≠ page correct
 ≠ feature works
 ```
+
+A template or source file displayed by the browser is not proof that the application is running. If a server-backed project was opened directly as `file://`, stop browser iteration, return to project recognition, launch the intended runtime, and retest the served route.
 
 ### Browser surface rules
 
@@ -360,6 +409,7 @@ Classify failures before retrying:
 TOOL
 PERMISSION / APPROVAL
 ENVIRONMENT / DEPENDENCY
+PROJECT / EXECUTION MODEL
 PROCESS / READINESS
 NAVIGATION / TARGET
 SCHEMA / ARGUMENT
@@ -441,6 +491,7 @@ Load only what the current task requires:
 
 - `references/claude-desktop-current-map.md` — current public capability inventory and availability notes.
 - `references/custom-provider-transport.md` — gateway/custom endpoint/provider boundaries and feature compatibility.
+- `references/project-recognition-and-launch.md` — project-type recognition, launch contracts, server-backed/static/full-stack execution models.
 - `references/runtime-boundaries.md` — local/cloud, surface, resource, and authentication boundaries.
 - `references/activation-and-memory.md` — Skill activation and lifetime.
 - `references/session-memory.md` — capability state and invalidation.
@@ -472,4 +523,4 @@ Load only what the current task requires:
 
 ## Final invariant
 
-**Do not simulate competence. Discover the real runtime, distinguish transport/model/tool/workflow failures, use the right surface, preserve verified state, and prove the user's actual goal.**
+**Do not simulate competence. Recognize the project and real runtime first, distinguish transport/model/tool/workflow failures, use the right surface, preserve verified state, and prove the user's actual goal.**
