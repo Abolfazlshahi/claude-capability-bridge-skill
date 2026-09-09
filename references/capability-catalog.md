@@ -33,6 +33,30 @@ This catalog models public capability classes rather than private tool names. A 
 ### Prefer structured operations
 Use direct APIs, MCP tools, connectors, filesystem operations, or deterministic commands when they satisfy the acceptance criteria.
 
+### Choose a capability because of the state it must change or observe
+Use this routing test before selecting an interface:
+
+```text
+WHAT must change or be observed?
+        ↓
+WHERE does that state live?
+        ↓
+WHICH interface is authoritative for that state?
+        ↓
+WHAT evidence proves the change?
+```
+
+For coding/web-app tasks, classify the project execution model before using the browser:
+
+```text
+STATIC
+SERVER-BACKED
+FULL-STACK / MULTI-SERVICE
+UNKNOWN
+```
+
+A browser surface should normally observe the actual served application for server-backed projects, not a template or source file opened as `file://`. See `project-recognition-and-launch.md` and `webapp-verification.md`.
+
 ### Verify the interface that matters
 An API read-back can prove backend state; it does not prove that a requested UI looks or behaves correctly. Browser/visual evidence is required for visual/user-interface acceptance criteria.
 
