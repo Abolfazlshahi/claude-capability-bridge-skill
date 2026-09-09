@@ -14,6 +14,7 @@ inspect repo
 → start the intended server/runtime
 → confirm listener + HTTP readiness
 → discover real URL/port
+→ discover browser surface + contract
 → choose appropriate browser surface
 → inspect rendered app
 → execute critical journey
@@ -27,6 +28,73 @@ inspect repo
 ```
 
 **Hard gate:** do not open a template or arbitrary HTML file directly in the browser until the project has been classified as intentionally static. For Python/server-rendered projects, test the served application through its actual runtime.
+
+## Recipe: operate a browser correctly
+
+```text
+translate task into browser acceptance criterion
+→ determine whether a browser is actually required
+→ inspect live browser/tool surface
+→ discover supported actions + permissions
+→ choose built-in / Chrome / structured browser / computer surface
+→ establish target URL/page and auth context
+→ navigate
+→ wait for readiness
+→ observe current page
+→ locate target from current state
+→ perform one meaningful action
+→ observe result
+→ assert expected state
+→ record evidence
+```
+
+Never invent browser operations that the runtime does not expose. Treat the browser reference as a conceptual contract and the live tool schema as the source of truth.
+
+## Recipe: test a localhost application in the browser
+
+```text
+inspect project
+→ classify execution model
+→ identify launch command
+→ start owned process
+→ inspect logs/PID
+→ verify listener + HTTP readiness
+→ discover actual URL/port
+→ open served HTTP URL
+→ inspect first render
+→ exercise requested journey
+→ inspect console/network/DOM when available
+→ visual review when relevant
+→ re-test after fixes
+```
+
+Never substitute `file://path/to/template.html` for a server-backed application. A template is source code, not proof that the application works.
+
+## Recipe: choose between built-in browser and Chrome
+
+```text
+does task require existing tab/cookies/auth/browser extensions?
+├─ yes → prefer Chrome integration when available
+└─ no  → prefer isolated/built-in browser for clean public or localhost work
+```
+
+If the requested surface is unavailable, use a fallback only when it preserves the user's intent. Never silently move an authenticated task into an unrelated browser context.
+
+## Recipe: browser debugging loop
+
+```text
+reproduce failure
+→ observe visible symptom
+→ inspect URL/page state
+→ inspect console/network/DOM if exposed
+→ classify navigation/server/application/UI failure
+→ patch smallest relevant cause
+→ reload or revisit target
+→ reproduce original journey
+→ verify corrected state
+```
+
+A clean console or successful HTTP response is supporting evidence, not a substitute for the user-visible acceptance criterion.
 
 ## Recipe: recognize a project before launching it
 
