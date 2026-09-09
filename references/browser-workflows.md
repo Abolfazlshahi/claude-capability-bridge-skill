@@ -2,7 +2,28 @@
 
 ## Browser surfaces
 
-A Claude Desktop-like environment may expose an isolated built-in browser, an existing Chrome integration, or neither. Never infer one from another.
+A Claude Desktop-like environment may expose an isolated built-in browser, an existing Chrome integration, a structured browser-use tool, or neither. Never infer one from another.
+
+### Browser capability contract
+
+Before using a browser, discover which surface is actually exposed and which actions it supports. At minimum, look for:
+
+```text
+OPEN / NAVIGATE
+READ PAGE / CURRENT STATE
+LOCATE ELEMENT / TARGET
+CLICK
+TYPE / ENTER TEXT
+FILL FORMS
+SCREENSHOT / VISUAL OBSERVATION
+OPTIONAL: DOM / PAGE STRUCTURE
+OPTIONAL: CONSOLE / NETWORK TELEMETRY
+AUTHENTICATION CONTEXT / SITE PERMISSIONS
+```
+
+Do not treat this list as a promise that every runtime exposes every operation. Use the live tool description/schema and current host state as the authority.
+
+The current Claude Cowork built-in browser can open sites, read pages, click, type, and fill forms. Claude in Chrome provides the corresponding user-browser workflow and uses the user's existing browser context. A structured browser-use surface may additionally expose page structure alongside visual state. These are related capability families, not interchangeable sessions.
 
 ### Choose the surface
 
@@ -10,37 +31,41 @@ A Claude Desktop-like environment may expose an isolated built-in browser, an ex
 
 **Chrome integration** when the task explicitly depends on the user's existing browser context, tabs, cookies, extension state, or authenticated session.
 
-If both are exposed, prefer the built-in browser for isolated/public work and Chrome for user-context-dependent work.
+**Structured browser-use tool** when the runtime exposes page structure/semantic targets and the task benefits from reliable element-level interaction rather than screen coordinates.
+
+If multiple surfaces are exposed, choose intentionally from the acceptance criteria and available capabilities. Do not assume the preferred surface is always online or available.
 
 ## Generic navigation loop
 
 ```text
 FORMULATE TARGET URL
-→ OPEN
+→ OPEN / NAVIGATE
 → WAIT FOR READINESS
-→ OBSERVE PAGE
+→ OBSERVE PAGE / STRUCTURE
 → LOCATE TARGET
 → ACT
 → OBSERVE RESULT
 → ASSERT EXPECTED STATE
 ```
 
-After a navigation that materially changes state, inspect the result before issuing another action. Keep selectors/targets grounded in the current page instead of stale assumptions.
+After navigation that materially changes state, inspect the result before issuing another action. Keep selectors/targets grounded in the current page instead of stale assumptions.
 
 ## Localhost application testing
 
 When a development server is needed:
 
-1. Inspect project metadata (`package.json`, `pyproject.toml`, `Cargo.toml`, etc.).
-2. Identify package manager and declared scripts.
-3. Start the least invasive development/preview command.
+1. Inspect project metadata (`package.json`, `pyproject.toml`, `Cargo.toml`, `manage.py`, etc.).
+2. Identify application type, framework/runtime, package manager, entry point, and declared run commands.
+3. Start the least invasive declared development/preview command for that project type.
 4. Capture stdout/stderr and process ID when possible.
-5. Detect the actual listening URL/port; do not blindly assume `3000`.
-6. Open the actual URL in the available browser.
+5. Detect the actual listening URL/port; do not blindly assume `3000` or another convention.
+6. Open the actual served URL in the available browser.
 7. Wait for a real readiness signal: successful HTTP response, browser load, or project-specific health check.
 8. Inspect the first render before interacting.
 9. Exercise critical paths.
 10. Capture browser/console/network evidence if the host exposes it.
+
+**Never open a server-backed HTML template directly with `file://` just because an `.html` file is visible in the repository.** Determine whether the file is rendered by Flask/Django/FastAPI/Rails/another server or framework, launch that runtime, and test the resulting HTTP URL.
 
 ### Port discovery precedence
 
