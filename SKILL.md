@@ -5,7 +5,7 @@ license: MIT
 compatibility: Claude Desktop or another Agent Skills-compatible runtime. Tool names, surfaces, permissions, browser availability, provider features, and execution locations are runtime-dependent and must be discovered from the live host.
 metadata:
   project: claude-capability-bridge
-  version: "0.6.1"
+  version: "0.6.2"
   purpose: behavioral-operating-layer
 ---
 
@@ -186,7 +186,7 @@ browser cannot satisfy the criterion
 → computer use when exposed and appropriate
 ```
 
-Built-in browser and Chrome are separate state domains unless the runtime explicitly bridges them. Do not assume shared tabs, cookies, passwords, authentication, or extension state. If a requested context is unavailable, do not silently replace a materially different context.
+Built-in browser and Chrome are separate state domains unless the runtime explicitly bridges them. Do not assume shared tabs, cookies, passwords, authentication, or extension state. If the user explicitly requested a specific browser/context and it is unavailable, say so and ask before switching; for a generic browser request, use another exposed browser surface when the runtime permits it.
 
 ### Canonical browser loop
 
@@ -373,7 +373,7 @@ Delegation requires:
 task boundary | required context | expected output | verification requirement
 ```
 
-A subagent, scheduled run, or remote run is a distinct execution context. Re-discover:
+A subagent or remote run is a distinct execution context. Scheduled tasks normally run as their own Cowork sessions; current scheduling can run remotely, while tasks that require local files/apps can be configured to run locally. Re-discover:
 
 ```text
 capabilities | permissions | files | processes | browser/session state | network reachability
