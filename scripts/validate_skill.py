@@ -2,9 +2,7 @@
 """Offline structural validator for the Claude Capability Bridge Skill.
 
 This does not replace the official skills-ref validator. It adds repository-specific
-checks for reference routing, evaluations, benchmark files, regression scenarios, and
-an embedded browser operating kernel so critical behavior cannot regress into link-only
-instructions.
+checks for reference routing, evaluations, benchmark files, and critical regression scenarios.
 """
 
 from __future__ import annotations
@@ -19,7 +17,6 @@ SKILL = ROOT / "SKILL.md"
 REFS = ROOT / "references"
 EVALS = ROOT / "evals" / "evals.json"
 BENCHMARKS = ROOT / "benchmarks" / "scenarios.yaml"
-BROWSER_REF = REFS / "browser-workflows.md"
 
 REQUIRED_REFS = {
     "activation-and-memory.md", "async-subagents-and-remote.md", "browser-workflows.md",
@@ -33,16 +30,6 @@ REQUIRED_REFS = {
     "source-notes.md", "task-recipes.md", "tool-schema-literacy.md", "tool-use-patterns.md",
     "verification.md", "webapp-verification.md", "workspace-map.md", "README.md",
 }
-
-BROWSER_KERNEL_MARKERS = (
-    "## Browser operating protocol — mandatory",
-    "Discover the real browser surface",
-    "### Browser action loop",
-    "### Local web-app rule",
-    "template/source file as the running application",
-    "### Browser safety",
-    "### Browser recovery",
-)
 
 
 def fail(message: str) -> None:
@@ -92,13 +79,6 @@ def main() -> int:
     if len(body_lines) > 500:
         fail(f"SKILL.md body is {len(body_lines)} lines; keep the main file under 500 lines")
 
-    missing_kernel = [marker for marker in BROWSER_KERNEL_MARKERS if marker not in text]
-    if missing_kernel:
-        fail("SKILL.md is missing embedded browser operating rules: " + "; ".join(missing_kernel))
-
-    if "cite" in text or "turn0search" in text or "turn1search" in text:
-        fail("SKILL.md contains research-tool citation markup; operational instructions must be self-contained")
-
     root_name = ROOT.name
     if root_name != name:
         warn(f"install directory name '{root_name}' differs from Skill name '{name}'; package into a directory named '{name}' for strict spec conformance")
@@ -115,10 +95,24 @@ def main() -> int:
     if unknown:
         fail("SKILL.md references files not tracked by validator: " + ", ".join(unknown))
 
-    if BROWSER_REF.is_file():
-        browser_text = BROWSER_REF.read_text(encoding="utf-8")
-        if "cite" in browser_text or "turn0search" in browser_text or "turn1search" in browser_text:
-            fail("browser-workflows.md contains research-tool citation markup; it must be self-contained")
+    forbidden_external_dependency_phrases = (
+        "go read the documentation",
+        "visit the documentation",
+        "read this URL",
+        "follow this link to learn",
+        "open this URL to learn",
+    )
+    lowered = text.lower()
+    for phrase in forbidden_external_dependency_phrases:
+        if phrase in lowered:
+            fail(f"SKILL.md contains forbidden external-dependency instruction: {phrase!r}")
+
+    if "never invent" not in lowered:
+        fail("SKILL.md must contain the no-fabrication tool rule")
+    if "file://" not in lowered or "server-backed" not in lowered:
+        fail("SKILL.md must contain the server-backed template anti-pattern")
+    if "browser operating kernel" not in lowered:
+        fail("SKILL.md must contain the browser operating kernel")
 
     if not EVALS.is_file():
         fail("evals/evals.json is missing")
@@ -150,12 +144,13 @@ def main() -> int:
         "custom-provider-transport.md",
         "project-recognition.md",
         "browser-operating-protocol.md",
+        "capability-operating-kernel.md",
     }
     missing_tests = sorted(name for name in required_tests if not (ROOT / "tests" / name).is_file())
     if missing_tests:
         fail("missing regression tests: " + ", ".join(missing_tests))
 
-    print("PASS: Skill structure, embedded browser kernel, references, evals, benchmarks, and regression tests passed")
+    print("PASS: Skill structure, browser/project/provider references, external-dependency guard, evals, benchmarks, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
