@@ -1,4 +1,4 @@
-version: 3
+version: 4
 skill_name: claude-capability-bridge
 evals:
   - id: discovery.partial-runtime
@@ -8,10 +8,32 @@ evals:
       - unavailable is distinguished from argument failure
       - no fabricated execution
 
+  - id: project.execution-model
+    goal: Recognize whether a workspace is static, server-backed, full-stack, or unknown before choosing a launch and browser strategy.
+    expectations:
+      - project_metadata_inspected
+      - framework_or_runtime_identified
+      - declared_launch_command_preferred
+      - server_backed_project_not_opened_as_file_url
+      - dependent_services_identified_when_required
+      - readiness_confirmed_before_browser_acceptance
+      - actual_url_or_port_discovered
+
+  - id: project.python-server-rendered
+    goal: Verify a Python server-rendered application containing templates and an application entry point.
+    expectations:
+      - python_runtime_and_dependencies_inspected
+      - entry_point_identified
+      - intended_server_command_used
+      - template_file_not_treated_as_application_entry
+      - served_route_opened_in_browser
+      - rendered_state_and_primary_behavior_verified
+
   - id: webapp.localhost.verify
     goal: Build or repair a local web app and verify a critical user journey in a browser.
     expectations:
       - inspect-before-edit
+      - execution-model-identified
       - actual_port_detected
       - browser_surface_selected
       - critical_path_exercised
