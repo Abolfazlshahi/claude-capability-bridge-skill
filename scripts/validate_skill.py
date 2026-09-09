@@ -147,7 +147,11 @@ def main() -> int:
     if not test_doc.is_file():
         fail("tests/custom-provider-transport.md is missing")
 
-    print("PASS: Skill structure, project-recognition reference, evals, and benchmark checks passed")
+    project_test = ROOT / "tests" / "project-recognition.md"
+    if not project_test.is_file():
+        fail("tests/project-recognition.md is missing")
+
+    print("PASS: Skill structure, project-recognition reference, evals, benchmarks, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
