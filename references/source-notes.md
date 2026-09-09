@@ -2,7 +2,7 @@
 
 _Last reviewed: 2026-09-09._
 
-This project models public, reproducible behavior. It does not claim to reproduce private system prompts, weights, internal classifiers, undocumented orchestration, or private tool names.
+This project models public, reproducible behavior. It does not claim to reproduce private system prompts, weights, internal classifiers, undocumented orchestration, private tool names, or implementation details that are not observable.
 
 ## Primary sources checked
 
@@ -26,11 +26,23 @@ This project models public, reproducible behavior. It does not claim to reproduc
 - Claude — Customize Cowork with plugins — 2026-01-30
   https://claude.com/blog/cowork-plugins
 
-### Claude Code architecture and tool behavior
+### Claude Code architecture and native mechanisms
 - Claude Code Docs — How Claude Code works
   https://code.claude.com/docs/en/how-claude-code-works
 - Claude Code Docs — Tools reference
   https://code.claude.com/docs/en/tools-reference
+- Claude Code Docs — Hooks reference
+  https://code.claude.com/docs/en/hooks
+- Claude Code Docs — Automate workflows with hooks
+  https://code.claude.com/docs/en/hooks-guide
+- Claude Code Docs — How Claude remembers your project
+  https://code.claude.com/docs/en/memory
+- Claude Code Docs — Output styles
+  https://code.claude.com/docs/en/output-styles
+- Claude Code Docs — Orchestrate teams of Claude Code sessions
+  https://code.claude.com/docs/en/agent-teams
+- Claude Code Docs — Continue local sessions from any device with Remote Control
+  https://code.claude.com/docs/en/remote-control
 - Claude Code Docs — Get started with the desktop app
   https://code.claude.com/docs/en/desktop-quickstart
 - Claude Code Docs — Platforms and integrations
@@ -43,8 +55,6 @@ This project models public, reproducible behavior. It does not claim to reproduc
   https://code.claude.com/docs/en/llm-gateway
 - Claude Code Docs — Connect Claude Code to tools via MCP
   https://code.claude.com/docs/en/mcp
-- Claude Code Docs — Give Claude custom tools
-  https://code.claude.com/docs/en/agent-sdk/custom-tools
 - Claude Code Docs — Claude Code on the web
   https://code.claude.com/docs/en/web-quickstart
 - Claude Code Docs — Automate work with routines
@@ -53,7 +63,7 @@ This project models public, reproducible behavior. It does not claim to reproduc
 ### Provider and policy boundaries
 - Claude Code Docs — Configure server-managed settings
   https://code.claude.com/docs/en/server-managed-settings
-- Claude Code Docs — Enterprise deployment overview / third-party integrations
+- Claude Code Docs — Enterprise deployment / third-party integrations
   https://code.claude.com/docs/en/third-party-integrations
 
 ### MCP / connectors / local extensions
@@ -80,6 +90,20 @@ This project models public, reproducible behavior. It does not claim to reproduc
 - Claude Help Center — Set up browser use in Claude Cowork for Team and Enterprise plans
   https://support.claude.com/en/articles/16635803-set-up-browser-use-in-claude-cowork-for-team-and-enterprise-plans
 
+### Microsoft 365 / collaboration surfaces
+- Claude Help Center — Connect to Microsoft 365
+  https://support.claude.com/en/articles/15183774-connect-to-microsoft-365
+- Claude Help Center — Set up the Microsoft 365 connector
+  https://support.claude.com/en/articles/12542951-set-up-the-microsoft-365-connector
+- Claude Help Center — Microsoft 365 connector security guide
+  https://support.claude.com/en/articles/12684923-microsoft-365-connector-security-guide
+- Claude Help Center — Use Skills in Claude, including Microsoft 365 add-ins
+  https://support.claude.com/en/articles/12512180-use-skills-in-claude
+- Claude Help Center — Create and edit files with Claude
+  https://support.claude.com/en/articles/12111783-create-and-edit-files-with-claude
+- Claude Help Center — What is Claude Tag?
+  https://support.claude.com/en/articles/15594475-what-is-claude-tag
+
 ### Project recognition / coding workflow
 - Claude — Bringing automated preview, review, and merge to Claude Code on desktop — 2026-02-20
   https://claude.com/blog/preview-review-and-merge-with-claude-code
@@ -87,8 +111,6 @@ This project models public, reproducible behavior. It does not claim to reproduc
   https://academy.claude.com/tutorials/navigating-the-claude-desktop-app
 - Claude Help Center — Get started with Claude Cowork
   https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork
-
-These sources support the project-execution distinction used by the bridge: coding environments can work directly in project files, run commands, start development servers, and preview running applications. Browser access is an interaction/verification surface; it is not a replacement for determining the project's execution model.
 
 ### Skills / plugins / agent workflows
 - Claude Help Center — What are Skills?
@@ -118,4 +140,6 @@ These sources support the project-execution distinction used by the bridge: codi
 6. When `ANTHROPIC_BASE_URL` or another provider routing mode changes runtime behavior, classify that as a transport/provider boundary before blaming the Skill.
 7. Never encode a private or undocumented tool name into the workflow contract merely because it appeared in an external example.
 8. Before browser verification of a coding task, identify the project's execution model and launch contract; do not treat a template/source file as the application entry point unless the project is intentionally static.
-9. Re-check this source list and the capability map after significant Claude Desktop/Cowork/Claude Code releases.
+9. Native Claude Code mechanisms such as hooks, permissions, CLAUDE.md, output styles, teams, worktrees, and Remote Control are release-sensitive; verify current host behavior rather than hardcoding an exhaustive catalog.
+10. Office and collaboration surfaces are also rollout-, client-, permission-, and plan-sensitive; distinguish native application state from standalone file creation and ordinary connector access.
+11. Re-check this source list and the capability map after significant Claude Desktop/Cowork/Claude Code releases.
