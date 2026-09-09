@@ -38,6 +38,7 @@ REQUIRED_REFS = {
     "projects-and-files.md",
     "provider-adaptation.md",
     "custom-provider-transport.md",
+    "project-recognition-and-launch.md",
     "runtime-boundaries.md",
     "security-and-permissions.md",
     "session-memory.md",
@@ -146,7 +147,7 @@ def main() -> int:
     if not test_doc.is_file():
         fail("tests/custom-provider-transport.md is missing")
 
-    print("PASS: Skill structure, frontmatter, references, evals, and benchmark checks passed")
+    print("PASS: Skill structure, project-recognition reference, evals, and benchmark checks passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
