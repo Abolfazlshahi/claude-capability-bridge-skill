@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Claude Desktop-like agent systems combine several distinct layers. Keep them separate when reasoning about a custom provider.
+Claude Desktop-like agent systems combine distinct layers. Keep them separate when reasoning about a custom provider.
 
 ### Layer A — Model cognition
 The model supplies planning, reasoning, tool-choice judgment, interpretation of tool results, and procedural habits learned during training or supplied in context.
@@ -23,11 +23,27 @@ A successful action requires the relevant capability at every required layer.
 | State | Meaning | Behavior |
 |---|---|---|
 | AVAILABLE | Observed and callable | Use according to schema/workflow |
-| POSSIBLE | Suggested by host/docs but unverified | Discover before depending on it |
+| POSSIBLE | Suggested by host/docs but unverified | Discover/probe before depending on it |
 | UNKNOWN | Not enough information | Do not claim it exists; choose a safer alternative |
-| UNAVAILABLE | Explicitly absent/disabled | Stop trying identical calls; use fallback |
+| UNAVAILABLE | Explicitly absent/disabled | Stop identical calls; use fallback |
+| BLOCKED | Exists but permission/approval prevents use | Resolve authorization or use a permitted path |
+| STALE | Previously observed but context may have changed | Refresh before use |
 
 Also track **procedural confidence**: HIGH when a specialized workflow is present; MEDIUM when the tool is understood but task guidance is weak; LOW when only a raw tool schema is visible.
+
+## Discovery versus probing
+
+Discovery establishes what the runtime exposes. Probing establishes what is actually usable now.
+
+Use the dedicated protocol in `references/capability-probing.md` when a capability is important but only UNKNOWN/POSSIBLE, when a context boundary may have changed, or when a small safe test can distinguish competing explanations.
+
+Core sequence:
+
+```text
+ENUMERATE → INSPECT → SAFE PROBE → OBSERVE → CLASSIFY → USE
+```
+
+Never turn a documentation claim, model label, stale observation, or conceptual capability name into `AVAILABLE` without current evidence.
 
 ## Capability contract
 
@@ -66,6 +82,9 @@ Best for packaging Skills, connectors, and related workflows.
 
 ### Scheduling / remote dispatch
 Best for tasks initiated remotely or on a schedule. It orchestrates underlying capabilities rather than replacing them.
+
+### Artifacts
+Best for interactive deliverables with their own persistence, versioning, sharing, and web-access lifecycle. Creation must be separated from correctness and access verification.
 
 ## Diagnosing custom-provider failures
 
