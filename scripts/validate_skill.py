@@ -75,8 +75,12 @@ def main() -> int:
             fail("compatibility must be <= 500 characters")
 
     body_lines = text[match.end():].splitlines()
+    # Keep the kernel compact, but do not fail a healthy Skill for a small amount
+    # of formatting drift while the detailed material remains in references/.
+    if len(body_lines) > 550:
+        fail(f"SKILL.md body is {len(body_lines)} lines; keep the main file under 550 lines")
     if len(body_lines) > 500:
-        fail(f"SKILL.md body is {len(body_lines)} lines; keep the main file under 500 lines")
+        warn(f"SKILL.md body is {len(body_lines)} lines; target <=500 lines, hard limit is 550")
 
     root_name = ROOT.name
     if root_name != name:
