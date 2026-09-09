@@ -12,24 +12,45 @@ Identify:
 - current working directory;
 - repository root;
 - runtime versions;
-- package manager;
+- package manager/environment manager;
 - environment variables required by the task;
-- commands declared by the project.
+- commands declared by the project;
+- project execution model (static, server-backed, full-stack, or unknown).
+
+Before launching anything, inspect the project's authoritative metadata and instructions. Consult `references/project-recognition-and-launch.md` for the recognition matrix.
 
 Do not expose or print secrets unnecessarily.
+
+## Launch precondition
+
+Do not choose a command only because it is a familiar framework command. Establish:
+
+```text
+project type
+→ framework/runtime
+→ entry point
+→ declared start/dev/preview command
+→ dependencies
+→ expected host/port
+→ readiness signal
+```
+
+For a server-backed project, the goal is to launch the application's server/runtime, not to open one of its templates or source files directly in a browser.
+
+For an intentionally static project, direct file preview may be valid. For an unknown project, inspect further before launching.
 
 ## Command selection
 
 Prefer:
 
 ```text
-project script
+project-declared script / command
 → package-manager script
 → framework CLI
 → generic shell command
 ```
 
-Do not replace a project-defined command with an approximate remembered command unless necessary.
+Do not replace a project-defined command with an approximate remembered command unless necessary and supported by project evidence.
 
 ## Process management
 
@@ -48,7 +69,7 @@ Use a dedicated process group or wrapper when supported. Do not kill by broad na
 
 ## Readiness
 
-A process existing is not readiness. Prefer a project health endpoint, successful TCP connection, HTTP response, or browser load.
+A process existing is not readiness. Prefer a project health endpoint, successful TCP connection, HTTP response, browser load, or project-specific readiness signal.
 
 ```text
 START
@@ -89,7 +110,7 @@ Do not infer API correctness from process logs alone.
 Before installing dependencies:
 
 - inspect lockfiles and package metadata;
-- use the project's package manager;
+- use the project's package/environment manager;
 - avoid unnecessary global installs;
 - avoid replacing versions merely to silence a warning;
 - understand whether installation modifies tracked files.
