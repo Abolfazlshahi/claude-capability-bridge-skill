@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Offline structural validator for the Claude Capability Bridge Skill.
-
-This does not replace the official skills-ref validator. It adds repository-specific
-checks for reference routing, evaluations, benchmark files, and critical regression scenarios.
-"""
+"""Offline structural validator for the Claude Capability Bridge Skill."""
 
 from __future__ import annotations
 
@@ -17,18 +13,21 @@ SKILL = ROOT / "SKILL.md"
 REFS = ROOT / "references"
 EVALS = ROOT / "evals" / "evals.json"
 BENCHMARKS = ROOT / "benchmarks" / "scenarios.yaml"
+BEHAVIORAL = ROOT / "benchmarks" / "behavioral-benchmark.md"
 
 REQUIRED_REFS = {
     "activation-and-memory.md", "async-subagents-and-remote.md", "browser-workflows.md",
     "capability-catalog.md", "capability-handshake.md", "capability-model.md",
-    "claude-desktop-current-map.md", "code-and-shell.md", "computer-use.md",
-    "desktop-extensions.md", "desktop-workflows.md", "evaluation-and-attribution.md",
-    "failure-recovery.md", "interactive-surfaces.md", "mcp-and-connectors.md",
-    "mcp-deep-dive.md", "projects-and-files.md", "provider-adaptation.md",
-    "custom-provider-transport.md", "project-recognition-and-launch.md", "runtime-boundaries.md",
-    "security-and-permissions.md", "session-memory.md", "skills-and-plugins.md",
-    "source-notes.md", "task-recipes.md", "tool-schema-literacy.md", "tool-use-patterns.md",
-    "verification.md", "webapp-verification.md", "workspace-map.md", "README.md",
+    "capability-probing.md", "claude-desktop-current-map.md", "code-and-shell.md",
+    "computer-use.md", "desktop-extensions.md", "desktop-workflows.md",
+    "evaluation-and-attribution.md", "failure-recovery.md", "interactive-surfaces.md",
+    "mcp-and-connectors.md", "mcp-deep-dive.md", "projects-and-files.md",
+    "provider-adaptation.md", "custom-provider-transport.md", "project-recognition-and-launch.md",
+    "runtime-boundaries.md", "runtime-boundary-matrix.md", "security-and-permissions.md",
+    "session-memory.md", "skills-and-plugins.md", "source-notes.md", "task-recipes.md",
+    "tool-routing-matrix.md", "tool-schema-literacy.md", "tool-use-patterns.md",
+    "verification.md", "webapp-verification.md", "workspace-map.md", "artifact-lifecycle.md",
+    "README.md",
 }
 
 
@@ -96,23 +95,23 @@ def main() -> int:
         fail("SKILL.md references files not tracked by validator: " + ", ".join(unknown))
 
     forbidden_external_dependency_phrases = (
-        "go read the documentation",
-        "visit the documentation",
-        "read this URL",
-        "follow this link to learn",
-        "open this URL to learn",
+        "go read the documentation", "visit the documentation", "read this URL",
+        "follow this link to learn", "open this URL to learn",
     )
     lowered = text.lower()
     for phrase in forbidden_external_dependency_phrases:
         if phrase in lowered:
             fail(f"SKILL.md contains forbidden external-dependency instruction: {phrase!r}")
 
-    if "never invent" not in lowered:
-        fail("SKILL.md must contain the no-fabrication tool rule")
-    if "file://" not in lowered or "server-backed" not in lowered:
-        fail("SKILL.md must contain the server-backed template anti-pattern")
-    if "browser operating kernel" not in lowered:
-        fail("SKILL.md must contain the browser operating kernel")
+    for required_phrase, label in (
+        ("never invent", "no-fabrication tool rule"),
+        ("file://", "server-backed template anti-pattern"),
+        ("browser operating kernel", "browser operating kernel"),
+        ("smallest safe probe", "capability probing rule"),
+        ("authoritative", "authoritative routing/verification rule"),
+    ):
+        if required_phrase not in lowered:
+            fail(f"SKILL.md must contain the {label}")
 
     if not EVALS.is_file():
         fail("evals/evals.json is missing")
@@ -140,21 +139,27 @@ def main() -> int:
         if required not in benchmark_text:
             fail(f"benchmark scenario file is missing top-level field: {required}")
 
+    if not BEHAVIORAL.is_file():
+        fail("benchmarks/behavioral-benchmark.md is missing")
+    behavioral_text = BEHAVIORAL.read_text(encoding="utf-8").lower()
+    for required in ("control", "treatment", "trajectory", "grading"):
+        if required not in behavioral_text:
+            fail(f"behavioral benchmark is missing: {required}")
+
     required_tests = {
-        "custom-provider-transport.md",
-        "project-recognition.md",
-        "browser-operating-protocol.md",
-        "capability-operating-kernel.md",
+        "custom-provider-transport.md", "project-recognition.md",
+        "browser-operating-protocol.md", "capability-operating-kernel.md",
     }
-    missing_tests = sorted(name for name in required_tests if not (ROOT / "tests" / name).is_file())
+    missing_tests = sorted(test for test in required_tests if not (ROOT / "tests" / test).is_file())
     if missing_tests:
         fail("missing regression tests: " + ", ".join(missing_tests))
 
-    print("PASS: Skill structure, browser/project/provider references, external-dependency guard, evals, benchmarks, and regression tests passed")
+    print("PASS: Skill structure, capability probing, routing, browser/project/provider references, external-dependency guard, evals, behavioral benchmark, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
     print(f"Evals: {len(payload['evals'])}")
+    print("Behavioral benchmark: present")
     print(f"Regression tests: {len(required_tests)}")
     return 0
 
