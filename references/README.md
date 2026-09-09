@@ -1,11 +1,12 @@
 # Reference Map
 
-These documents are intentionally separated from `SKILL.md` so the agent can load only the procedure required for the current task. The canonical current-capability snapshot is `claude-desktop-current-map.md`; provider-specific boundaries are in `custom-provider-transport.md`; evidence provenance is kept in `source-notes.md`.
+These documents are intentionally separated from `SKILL.md` so the agent can load only the procedure required for the current task. The canonical current-capability snapshot is `claude-desktop-current-map.md`; provider-specific boundaries are in `custom-provider-transport.md`; project execution-model recognition is in `project-recognition-and-launch.md`; evidence provenance is kept in `source-notes.md`.
 
 | Reference | Use when |
 |---|---|
 | `claude-desktop-current-map.md` | checking the current public Claude Desktop/Cowork/Claude Code capability surface |
 | `custom-provider-transport.md` | diagnosing gateways, `ANTHROPIC_BASE_URL`, model/provider feature gaps, and MCP discovery differences |
+| `project-recognition-and-launch.md` | identifying static vs server-backed vs full-stack projects and constructing a launch contract |
 | `capability-model.md` | separating model, runtime, tool, provider, and environment responsibility |
 | `capability-catalog.md` | choosing among capability classes and local/cloud surfaces |
 | `capability-handshake.md` | discovering, probing, and freshness-checking capabilities |
