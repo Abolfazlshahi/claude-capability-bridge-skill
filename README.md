@@ -5,7 +5,7 @@
 ### Teach custom-provider models the **workflow knowledge** needed to operate agentic tools reliably.
 
 <p>
-  <img src="./assets/bridge-overview.svg" alt="Claude Capability Bridge overview" width="100%" />
+  <img src="./assets/banner-hero-dark.svg" alt="Claude Capability Bridge overview" width="100%" />
 </p>
 
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-claude--capability--bridge-8b5cf6?style=for-the-badge)](./SKILL.md)
