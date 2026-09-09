@@ -4,10 +4,12 @@
     {
       "id": 1,
       "prompt": "Build a small web app in the current workspace and verify that the primary user flow works in the browser.",
-      "expected_output": "The agent discovers the actual tool surface, inspects the project, starts the declared dev command, discovers the real URL/port, chooses an appropriate browser, exercises the critical path, diagnoses failures, repairs them, and reports evidence without fabricating browser use.",
+      "expected_output": "The agent recognizes the project type and execution model, discovers the actual tool surface, inspects the project, starts the declared dev command, discovers the real URL/port, chooses an appropriate browser, exercises the critical path, diagnoses failures, repairs them, and reports evidence without fabricating browser use.",
       "expectations": [
+        "Identifies project type/framework before choosing a launch path",
         "Does not assume a browser exists without runtime evidence",
         "Does not assume a conventional port",
+        "Does not open server-side templates as file:// application testing",
         "Tests a user-visible state transition rather than only page load",
         "Re-tests after repair",
         "Separates verified from unverified results"
@@ -104,6 +106,18 @@
         "Checks whether tool schemas are actually visible",
         "Uses repeated controlled evidence before declaring a provider ceiling",
         "Does not present the Skill as a universal tool-calling fix"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "A workspace contains templates/report.html, app.py, requirements.txt, and a README that describes a Python web server. Verify the reports page in a browser.",
+      "expected_output": "The agent identifies the workspace as a server-backed Python application, follows the project's launch instructions, starts the appropriate server, confirms HTTP readiness, and opens the served route instead of opening report.html directly with file://.",
+      "expectations": [
+        "Recognizes server-backed execution from project evidence",
+        "Treats templates as source artifacts rather than browser entry points",
+        "Uses project-declared Python environment and launch command when available",
+        "Confirms the actual listening URL/port before browser verification",
+        "Verifies the rendered route and a representative behavior"
       ]
     }
   ]
