@@ -1,6 +1,6 @@
 # Research Source Notes
 
-_Last reviewed: 2026-09-08._
+_Last reviewed: 2026-09-09._
 
 This project models public, reproducible behavior. It does not claim to reproduce private system prompts, weights, internal classifiers, undocumented orchestration, or private tool names.
 
@@ -80,6 +80,16 @@ This project models public, reproducible behavior. It does not claim to reproduc
 - Claude Help Center — Set up browser use in Claude Cowork for Team and Enterprise plans
   https://support.claude.com/en/articles/16635803-set-up-browser-use-in-claude-cowork-for-team-and-enterprise-plans
 
+### Project recognition / coding workflow
+- Claude — Bringing automated preview, review, and merge to Claude Code on desktop — 2026-02-20
+  https://claude.com/blog/preview-review-and-merge-with-claude-code
+- Claude Academy — Navigating the Claude desktop app: Chat, Claude Cowork, Claude Code
+  https://academy.claude.com/tutorials/navigating-the-claude-desktop-app
+- Claude Help Center — Get started with Claude Cowork
+  https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork
+
+These sources support the project-execution distinction used by the bridge: coding environments can work directly in project files, run commands, start development servers, and preview running applications. Browser access is an interaction/verification surface; it is not a replacement for determining the project's execution model.
+
 ### Skills / plugins / agent workflows
 - Claude Help Center — What are Skills?
   https://support.claude.com/en/articles/12512176-what-are-skills
@@ -107,4 +117,5 @@ This project models public, reproducible behavior. It does not claim to reproduc
 5. A gateway can be protocol-compatible while the underlying model remains behaviorally different.
 6. When `ANTHROPIC_BASE_URL` or another provider routing mode changes runtime behavior, classify that as a transport/provider boundary before blaming the Skill.
 7. Never encode a private or undocumented tool name into the workflow contract merely because it appeared in an external example.
-8. Re-check this source list and the capability map after significant Claude Desktop/Cowork/Claude Code releases.
+8. Before browser verification of a coding task, identify the project's execution model and launch contract; do not treat a template/source file as the application entry point unless the project is intentionally static.
+9. Re-check this source list and the capability map after significant Claude Desktop/Cowork/Claude Code releases.
