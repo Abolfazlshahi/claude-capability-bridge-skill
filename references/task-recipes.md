@@ -6,14 +6,16 @@ These are compact procedural recipes. Adapt tool names and arguments to the runt
 
 ```text
 inspect repo
-→ detect framework/package manager
-→ read scripts
+→ identify project type + framework + runtime
+→ read project instructions / metadata / scripts
+→ construct launch contract
 → baseline checks
 → implement
-→ start dev server
-→ confirm readiness
-→ open real URL
-→ inspect UI
+→ start the intended server/runtime
+→ confirm listener + HTTP readiness
+→ discover real URL/port
+→ choose appropriate browser surface
+→ inspect rendered app
 → execute critical journey
 → inspect failures
 → patch
@@ -24,6 +26,24 @@ inspect repo
 → evidence report
 ```
 
+**Hard gate:** do not open a template or arbitrary HTML file directly in the browser until the project has been classified as intentionally static. For Python/server-rendered projects, test the served application through its actual runtime.
+
+## Recipe: recognize a project before launching it
+
+```text
+inspect root files
+→ README / explicit instructions
+→ package / dependency metadata
+→ framework markers
+→ entry points
+→ declared scripts / task files
+→ classify STATIC / SERVER-BACKED / FULL-STACK / UNKNOWN
+→ construct launch contract
+→ only then choose launch + browser path
+```
+
+Never replace a project-declared launch method with a remembered framework command without evidence.
+
 ## Recipe: fix a bug reported from a screenshot
 
 ```text
@@ -33,6 +53,7 @@ inspect screenshot evidence
 → reproduce if possible
 → make minimal patch
 → run deterministic check
+→ launch according to project execution model
 → open affected route
 → reproduce original symptom
 → verify corrected state
@@ -112,10 +133,10 @@ Never fill a capability gap by pretending the action happened.
 tool exists but model fails to use it
 → inspect tool description/schema
 → identify missing procedural step
-→ consult relevant reference
 → execute smallest safe example
 → observe result
-→ continue task
+→ classify model vs runtime vs provider issue
+→ continue only after the capability boundary is understood
 ```
 
-If the tool itself is absent, this is an integration problem rather than a Skill-knowledge problem.
+If the tool itself is absent or the endpoint does not preserve the required protocol, this is an integration problem rather than a Skill-knowledge problem.
