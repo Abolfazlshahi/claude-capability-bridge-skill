@@ -5,12 +5,17 @@ These documents are intentionally separated from `SKILL.md` so the agent can loa
 | Reference | Use when |
 |---|---|
 | `claude-desktop-current-map.md` | checking the current public Claude Desktop/Cowork/Claude Code capability surface |
+| `claude-code-native-mechanisms.md` | hooks, CLAUDE.md/rules, slash commands, output styles, rewind, worktrees, teams, SDK/CI, IDE, and Remote Control boundaries |
+| `office-and-collaboration-surfaces.md` | native Office, standalone file generation, Slack/Claude Tag, voice, account memory, and surface-specific verification |
 | `custom-provider-transport.md` | diagnosing gateways, `ANTHROPIC_BASE_URL`, model/provider feature gaps, and MCP discovery differences |
 | `project-recognition-and-launch.md` | identifying static vs server-backed vs full-stack projects and constructing a launch contract |
 | `capability-model.md` | separating model, runtime, tool, provider, and environment responsibility |
 | `capability-catalog.md` | choosing among capability classes and local/cloud surfaces |
 | `capability-handshake.md` | discovering, probing, and freshness-checking capabilities |
-| `workspace-map.md` | modeling Desktop workspace/context/process/browser state |
+| `capability-probing.md` | proving an uncertain capability with the smallest safe probe and invalidating stale observations |
+| `runtime-boundary-matrix.md` | comparing cloud/local/browser/Chrome/computer/scheduled execution locations |
+| `tool-routing-matrix.md` | selecting the authoritative interface for structured, browser, code, GUI, and artifact tasks |
+| `workspace-map.md` | modeling Desktop workspace/context/process/browser state and worktree mismatches |
 | `runtime-boundaries.md` | crossing local/cloud, browser, authentication, or remote boundaries |
 | `activation-and-memory.md` | Skill slash activation and activation lifetime |
 | `session-memory.md` | maintaining and invalidating session capability state |
@@ -18,6 +23,7 @@ These documents are intentionally separated from `SKILL.md` so the agent can loa
 | `tool-use-patterns.md` | general tool-call, observation, retry, and idempotence discipline |
 | `browser-workflows.md` | browser/Chrome navigation, localhost, visual checks, and browser safety |
 | `webapp-verification.md` | building/fixing a web app and proving it works end-to-end |
+| `artifact-lifecycle.md` | creating, rendering, verifying, saving/versioning, and sharing artifacts |
 | `interactive-surfaces.md` | interactive connectors/apps and Artifacts |
 | `computer-use.md` | GUI escalation and screen-control workflows |
 | `code-and-shell.md` | deterministic execution, servers, tests, and process management |
