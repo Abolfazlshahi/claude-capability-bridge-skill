@@ -7,14 +7,41 @@ This document teaches procedural tool use without assuming Anthropic-specific hi
 Before a consequential tool call:
 
 1. Identify the intended outcome.
-2. Confirm the tool exists and is appropriate.
-3. Read the schema/description enough to supply valid arguments.
-4. Keep arguments minimal and explicit.
-5. Call once.
-6. Inspect the returned result.
-7. Decide the next action from evidence.
+2. Identify the capability family required (files, shell/process, browser, computer use, MCP/connector, Git, artifact, project, etc.).
+3. Confirm the tool exists and is appropriate.
+4. Read the schema/description enough to supply valid arguments.
+5. Keep arguments minimal and explicit.
+6. Call once.
+7. Inspect the returned result.
+8. Decide the next action from evidence.
 
 Never batch unrelated high-impact actions merely to reduce tool-call count.
+
+## Capability-trigger questions
+
+Do not select a tool merely because its name looks relevant. Ask the smallest set of routing questions first:
+
+```text
+What state must change?
+Where does that state live?
+Which interface is the authoritative way to change it?
+What evidence will prove the change?
+```
+
+Examples:
+
+| Task signal | Preferred first consideration |
+|---|---|
+| inspect/edit repository files | filesystem/file-edit interface |
+| run tests/build/start a server | shell/code/process interface |
+| inspect a rendered website | browser interface |
+| interact with an application whose UI is itself the target | computer use / GUI surface |
+| update a remote record/service with a structured API | MCP/connector/tool interface |
+| inspect version history or branch state | Git interface |
+| create a user-facing generated deliverable | artifact/document/file surface |
+| work with project-scoped instructions/knowledge | project context |
+
+These are routing triggers, not hard-coded tool names. The runtime's actual exposed surface always wins.
 
 ## Observation hierarchy
 
@@ -73,11 +100,14 @@ application healthy
 For browser actions:
 
 ```text
-current page/state
+execution model known
+→ actual URL/state
 → action
 → resulting page/state
 → assertion
 ```
+
+A browser is an observation and interaction surface, not a substitute for determining how the target application executes. For server-backed projects, use the real served route rather than a source/template file. Use `references/project-recognition-and-launch.md` and `references/webapp-verification.md` when relevant.
 
 Use stable semantic targets where the tool offers them. Avoid brittle coordinate-only automation when structured selectors or accessible labels are available.
 
