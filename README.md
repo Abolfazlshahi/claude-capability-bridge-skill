@@ -351,3 +351,167 @@ Claude Capability Bridge Skill is released under the **[MIT License](./LICENSE)*
 [GitHub](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [Issues](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/issues) · [Discussions](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/discussions) · [Telegram](https://t.me/pythash) · [MIT License](./LICENSE)
 
 </div>
+## 🧷 Always-on bootstrap
+
+A portable Skill cannot force its own invocation. For Claude Code the repository ships a small hook engine (`bootstrap/bridge_hook.py`) that decides *when* extra context is worth adding, instead of repeating one reminder on every turn.
+
+| Event | What the engine emits |
+|---|---|
+| `SessionStart` (startup / resume / fork) | the compact protocol kernel once per session, plus the card catalogue |
+| `SessionStart` (compact) | a short rehydration notice; earlier capability observations are marked stale |
+| `UserPromptSubmit` | nothing on ordinary turns; at most one capability card when the prompt clearly matches a task family |
+| `PostToolUseFailure` | the failure class, concrete next-step guidance, and the relevant card; bounded repeats, then silence |
+
+Delivery is selected with one environment variable:
+
+```text
+CLAUDE_CAPABILITY_BRIDGE_MODE = off | session-only | adaptive (default) | legacy-every-turn
+```
+
+`legacy-every-turn` reproduces the pre-0.9.0 always-on reminder, so the new default can be compared with data instead of preference.
+
+Registration examples live under [`bootstrap/`](./bootstrap/) and [`references/claude-code-bootstrap-kit.md`](./references/claude-code-bootstrap-kit.md); the layer contract is in [`docs/cache-contract.md`](./docs/cache-contract.md).
+
+The bootstrap does **not** create tools, bypass permissions, register itself, or make a third-party provider support an unsupported host feature. Hook delivery is best-effort: a hook cannot confirm that the host inserted its text, so nothing downstream assumes the model saw it.
+
+---
+
+## 🔬 Evaluation & benchmarking
+
+The repository deliberately does **not** claim that the Skill improves every model. Effectiveness should be demonstrated empirically.
+
+For forgetting, runtime-first behavior, and cost, compare four variants on one workload:
+
+```text
+A  control                    no Skill, no hooks
+B  skill only                 Skill installed, hooks not registered
+C  skill + adaptive           the shipped default
+D  skill + legacy-every-turn  the pre-0.9.0 always-on reminder
+```
+
+Keep model, host, tools, provider config, workspace, task wording, and success criteria constant. Grade the trajectory and final state separately, and report **cost per verified success** - tokens spent divided by successes confirmed with evidence - beside the raw counts. Cold and warm sessions are different experiments and must never be averaged together.
+
+Useful metrics include runtime identification before host-specific routing, tool-selection accuracy, schema-valid call rate, recovery quality, verification depth, false-success rate, unnecessary retries, and safety/authorization failures.
+
+See [`benchmarks/README.md`](./benchmarks/README.md), [`benchmarks/behavioral-benchmark.md`](./benchmarks/behavioral-benchmark.md), and [`evals/evals.json`](./evals/evals.json).
+
+> **No fake percentages:** until paired runs are recorded, improvement is an engineering hypothesis, not experimental data.
+
+---
+
+## 📦 Installation
+
+This repository is a distribution/project repository; the installed Skill name is `claude-capability-bridge`.
+
+**As an Agent Skill:**
+
+```bash
+python3 scripts/package_skill.py                 # -> dist/claude-capability-bridge/
+```
+
+Install that generated directory with your host's Agent Skills mechanism. When the host exposes Skills as slash commands:
+
+```text
+/claude-capability-bridge
+```
+
+**As a Claude Code plugin** (same content, plus the hooks):
+
+```bash
+python3 scripts/package_claude_code_plugin.py    # -> dist/claude-capability-bridge-plugin/
+```
+
+Both packages carry their own reference, profile, and card files, so no link inside a package points outside it. The packagers refuse to build if one does.
+
+**Hook registration** (only needed for the plain Skill install; the plugin registers its own): copy the entries from [`bootstrap/settings.json.example`](./bootstrap/settings.json.example) into your settings, then pick a mode:
+
+```bash
+export CLAUDE_CAPABILITY_BRIDGE_MODE=adaptive           # default: session start + routed cards + failure guidance
+export CLAUDE_CAPABILITY_BRIDGE_MODE=session-only       # session start only
+export CLAUDE_CAPABILITY_BRIDGE_MODE=legacy-every-turn  # pre-0.9.0 behaviour, for A/B comparison
+export CLAUDE_CAPABILITY_BRIDGE_MODE=off                # emit nothing
+```
+
+**Rollback:** set the mode to `off`, or drop the hook entries and keep the Skill, or delete the installed package. Nothing is written outside the package directory and one per-user state directory (`%LOCALAPPDATA%` on Windows, `$XDG_STATE_HOME` or `~/.local/state` elsewhere, each plus `claude-capability-bridge`). Deleting that directory resets all session state; the next session starts cold.
+
+Validate locally with:
+
+```bash
+python3 scripts/validate_skill.py
+```
+
+---
+
+## 📁 Repository structure
+
+```text
+claude-capability-bridge-skill/
+├── SKILL.md                   # always-on kernel: small and byte-stable
+├── profiles/                  # one per host runtime, loaded on demand
+├── cards/                     # task-family cards + generated index.json
+├── references/                # long-form background reading
+├── bootstrap/                 # hook engine, shell/PowerShell wrappers, settings examples
+├── config/                    # content budgets enforced by the validator
+├── docs/                      # cache contract, baseline audit
+├── scripts/                   # packagers, validator, card index, trace analyser, test runner
+├── tests/python/              # offline test suite
+├── benchmarks/                # scenarios, variants, metrics, synthetic fixtures
+├── evals/
+├── assets/
+├── i18n/
+├── CHANGELOG.md
+└── LICENSE
+```
+
+The project follows progressive disclosure:
+
+```text
+kernel → runtime profile → task card → reference → execution → verification
+```
+
+---
+
+## ✅ Validation
+
+Run the offline checks locally:
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+python3 scripts/validate_skill.py            # structure, budgets, reference graph, built packages
+python3 scripts/run_tests.py                 # full offline suite
+python3 bootstrap/bridge_hook.py --selftest  # hook engine
+python3 scripts/analyze_trace.py --selftest  # trace analyser, synthetic fixtures
+```
+
+**What those checks cover:** packaging and reference closure, content contracts, hook behaviour against real payloads, state lifecycle and recovery, safety invariants (hook input stays data, no secrets in state, no permission claims), and byte-stability of the shipped text.
+
+**What they do not cover:** live model behaviour, real Claude Code execution, Windows (see [`tests/windows-manual-checklist.md`](./tests/windows-manual-checklist.md), deliberately unfilled), and any provider's cache behaviour. That last one can only be read from live usage fields - see [`docs/cache-contract.md`](./docs/cache-contract.md).
+
+For strict Agent Skills conformance, validate the generated package with the official `skills-ref` validator when available.
+
+GitHub Actions runs the same checks plus the Agent Skills validator, version consistency across build outputs, and the benchmark-definition schema. The live behavioural benchmark is reported as skipped, never as passing.
+
+---
+
+## 📚 Documentation map
+
+| Document | Purpose |
+|---|---|
+| [`SKILL.md`](./SKILL.md) | Main runtime-first procedural bridge |
+| [`Runtime detection`](./references/runtime-detection-and-profiles.md) | Host/execution/provider profiling |
+| [`CLI operating model`](./references/claude-code-cli-operating-model.md) | CLI-first routing and browser/provider boundaries |
+| [`Bootstrap kit`](./references/claude-code-bootstrap-kit.md) | Always-on Claude Code context/hook path |
+| [`Capability remediation`](./references/capability-remediation.md) | Diagnose and repair missing integrations |
+| [`Custom Provider`](./references/custom-provider-transport.md) | Endpoint, gateway and provider boundaries |
+| [`Web App Verification`](./references/webapp-verification.md) | End-to-end web-app verification |
+| [`Browser Workflows`](./references/browser-workflows.md) | Browser / Chrome procedures |
+| [`MCP & Connectors`](./references/mcp-and-connectors.md) | Structured integration workflows |
+| [`Evaluation`](./references/evaluation-and-attribution.md) | Controlled behavioral attribution |
+| [`References`](./references/README.md) | Full reference map |
+| [`Cache contract`](./docs/cache-contract.md) | Which layer controls caching, and which claims need live data |
+| [`Migration`](./references/MIGRATION.md) | Where the 0.8.0 operating rules moved |
+| [`Changelog`](./CHANGELOG.md) | 0.9.0 changes, fixes, and upgrade steps |
+| [`Windows checklist`](./tests/windows-manual-checklist.md) | Unfilled manual verification for the PowerShell wrappers |
+
+---
+
