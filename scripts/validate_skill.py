@@ -79,7 +79,7 @@ def main() -> int:
         fail("description must be non-empty and <= 1024 characters")
     if when_match:
         when_to_use = when_match.group(1).strip().strip('"').lower()
-        for phrase in ("runtime", "capability", "browser", "cli"):
+        for phrase in ("runtime", "capabilit", "browser", "cli"):
             if phrase not in when_to_use:
                 fail(f"when_to_use should mention {phrase}")
 
@@ -204,7 +204,7 @@ def main() -> int:
             fail(f"generated plugin artifact missing: {required_path.relative_to(ROOT)}")
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        hooks = json.loads(hooks_path.read_text(encoding="utf-8"))
+        json.loads(hooks_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         fail(f"generated plugin JSON is invalid: {exc}")
     if manifest.get("name") != name:
