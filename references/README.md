@@ -1,14 +1,14 @@
 # Reference Map
 
-These documents are intentionally separated from `SKILL.md` so the agent can load only the procedure required for the current task. The canonical current-capability snapshot is `claude-desktop-current-map.md`; provider-specific boundaries are in `custom-provider-transport.md`; runtime detection and profiles are in `runtime-detection-and-profiles.md`; CLI behavior is in `claude-code-cli-operating-model.md`; project execution-model recognition is in `project-recognition-and-launch.md`; evidence provenance is kept in `source-notes.md`.
+These documents are intentionally separated from `SKILL.md` so the agent can load only the procedure required for the current task. The runtime-aware operating model is in `runtime-detection-and-profiles.md`; `claude-desktop-current-map.md` is a Desktop/Cowork capability snapshot, not a universal runtime contract. Provider-specific boundaries are in `custom-provider-transport.md`; CLI behavior is in `claude-code-cli-operating-model.md`; project execution-model recognition is in `project-recognition-and-launch.md`; evidence provenance is kept in `source-notes.md`.
 
 | Reference | Use when |
 |---|---|
 | `runtime-detection-and-profiles.md` | identify CLI/Desktop/Cowork/cloud/remote host, execution location, provider, and capability profile |
 | `claude-code-cli-operating-model.md` | CLI-first routing, shell/Git/process work, browser integration boundaries, provider-aware CLI recovery |
-| `claude-code-bootstrap-kit.md` | configure a compact always-on `CLAUDE.md`/lifecycle reminder and evaluate procedural forgetting |
+| `claude-code-bootstrap-kit.md` | configure a compact always-on `CLAUDE.md`/SessionStart/plugin bootstrap and evaluate procedural forgetting |
 | `capability-remediation.md` | classify missing integrations and repair/re-probe instead of stopping at “not connected” |
-| `claude-desktop-current-map.md` | checking the current public Claude Desktop/Cowork/Claude Code capability surface |
+| `claude-desktop-current-map.md` | checking the current public Claude Desktop/Cowork capability snapshot |
 | `claude-code-native-mechanisms.md` | hooks, CLAUDE.md/rules, slash commands, output styles, rewind, worktrees, teams, SDK/CI, IDE, and Remote Control boundaries |
 | `office-and-collaboration-surfaces.md` | native Office, standalone file generation, Slack/Claude Tag, voice, account memory, and surface-specific verification |
 | `custom-provider-transport.md` | diagnosing gateways, `ANTHROPIC_BASE_URL`, model/provider feature gaps, and MCP discovery differences |
@@ -48,4 +48,4 @@ These documents are intentionally separated from `SKILL.md` so the agent can loa
 
 ## Loading rule
 
-Do not load all references by default. Start with the smallest relevant set and cross the boundary only when the task actually enters another capability family. The current capability map is a maintained public snapshot, not a universal runtime contract.
+Do not load all references by default. Start with the smallest relevant set and cross the boundary only when the task actually enters another capability family. The runtime-aware detection/profile reference is the first stop; Desktop/Cowork snapshots are supporting context only.
