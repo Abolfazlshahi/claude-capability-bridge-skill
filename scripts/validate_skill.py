@@ -27,7 +27,9 @@ REQUIRED_REFS = {
     "session-memory.md", "skills-and-plugins.md", "source-notes.md", "task-recipes.md",
     "tool-routing-matrix.md", "tool-schema-literacy.md", "tool-use-patterns.md",
     "verification.md", "webapp-verification.md", "workspace-map.md", "artifact-lifecycle.md",
-    "claude-code-native-mechanisms.md", "office-and-collaboration-surfaces.md", "README.md",
+    "claude-code-native-mechanisms.md", "office-and-collaboration-surfaces.md",
+    "runtime-detection-and-profiles.md", "capability-remediation.md", "always-on-bootstrap.md",
+    "README.md",
 }
 
 
@@ -109,6 +111,8 @@ def main() -> int:
         ("browser operating kernel", "browser operating kernel"),
         ("smallest safe probe", "capability probing rule"),
         ("authoritative", "authoritative routing/verification rule"),
+        ("runtime detection", "runtime detection rule"),
+        ("remediation", "capability remediation rule"),
     ):
         if required_phrase not in lowered:
             fail(f"SKILL.md must contain the {label}")
@@ -150,12 +154,13 @@ def main() -> int:
         "custom-provider-transport.md", "project-recognition.md",
         "browser-operating-protocol.md", "capability-operating-kernel.md",
         "claude-code-native-mechanisms.md", "office-and-collaboration-surfaces.md",
+        "runtime-detection-and-remediation.md",
     }
     missing_tests = sorted(test for test in required_tests if not (ROOT / "tests" / test).is_file())
     if missing_tests:
         fail("missing regression tests: " + ", ".join(missing_tests))
 
-    print("PASS: Skill structure, capability probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, evals, behavioral benchmark, and regression tests passed")
+    print("PASS: Skill structure, runtime detection, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, evals, behavioral benchmark, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
