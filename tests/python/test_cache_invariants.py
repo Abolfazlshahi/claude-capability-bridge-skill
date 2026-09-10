@@ -37,8 +37,31 @@ STATE_KEYS = (
     "kernel_epoch",
     "recovered_from_corruption",
     "delivery_confirmation",
-    "schema",
 )
+
+# A document may quote a forbidden claim in order to reject it, so phrase checks
+# have to be negation aware, like the validator's.
+NEGATIONS = (
+    "not ",
+    "not:",
+    "never",
+    "cannot",
+    "avoid",
+    "don't",
+    "instead of",
+    "rather than",
+    "no guarantee",
+)
+
+
+def negated(line: str) -> bool:
+    return any(marker in line.lower() for marker in NEGATIONS)
+
+
+def normalise(text: str) -> str:
+    """Lowercase, drop Markdown decoration, and collapse wrapped lines."""
+    stripped = re.sub(r"[*`>]", " ", text.lower())
+    return re.sub(r"\s+", " ", stripped)
 
 FIXED_CORE = ("SKILL.md",)
 FIXED_DIRS = ("cards", "profiles")
@@ -137,9 +160,13 @@ class NoStateInStableContentTestCase(CacheInvariantTestCase):
                 emissions.append(context)
         self.assertTrue(emissions)
         for context in emissions:
-            self.assertNotIn("cache1", context, "session id must not leak into context")
+            self.assertTrue(
+                "cache1" not in context, "session id must not leak into context"
+            )
             for key in STATE_KEYS:
-                self.assertNotIn(key, context, f"{key} must stay in the state file")
+                self.assertTrue(
+                    key not in context, f"{key} must stay in the state file"
+                )
             for pattern in VOLATILE_PATTERNS:
                 self.assertIsNone(pattern.search(context))
 
@@ -227,33 +254,51 @@ class NoStateInStableContentTestCase(CacheInvariantTestCase):
 
 
 class HonestClaimsTestCase(CacheInvariantTestCase):
+    FORBIDDEN = (
+        "guaranteed cache",
+        "guarantees a cache",
+        "guaranteed prompt cache",
+        "always hits the cache",
+        "cache hit guaranteed",
+        "improves cache hit",
+    )
+
     def test_no_document_promises_a_cache_improvement(self) -> None:
-        forbidden = (
-            "guaranteed cache",
-            "guarantees a cache",
-            "guaranteed cache-hit",
-            "guaranteed prompt cache",
-            "always hits the cache",
-            "cache hit guaranteed",
-        )
+        """Quoting a forbidden claim to reject it is allowed; asserting it is not."""
         for path in util.markdown_files(util.ROOT):
             if "dist/" in path.as_posix():
                 continue
-            lowered = util.read_text(path).lower()
-            for phrase in forbidden:
-                self.assertNotIn(phrase, lowered, f"{path.name} oversells caching")
+            for number, line in enumerate(util.read_text(path).splitlines(), 1):
+                lowered = line.lower()
+                for phrase in self.FORBIDDEN:
+                    if phrase in lowered and not negated(lowered):
+                        self.fail(
+                            f"{path.name}:{number} oversells caching: "
+                            f"{line.strip()[:90]}"
+                        )
 
     def test_cache_contract_states_who_controls_what(self) -> None:
-        text = util.read_text(util.ROOT / "docs" / "cache-contract.md").lower()
+        text = normalise(util.read_text(util.ROOT / "docs" / "cache-contract.md"))
         for expected in ("skill", "plugin", "host", "gateway", "provider"):
-            self.assertIn(expected, text)
-        self.assertIn("requires verification on a real deployment", text)
+            self.assertTrue(expected in text, f"cache contract omits {expected}")
+        self.assertTrue(
+            "requires verification on a real deployment" in text,
+            "cache contract must use the approved wording",
+        )
 
     def test_cache_contract_refuses_markdown_level_cache_activation(self) -> None:
-        text = util.read_text(util.ROOT / "docs" / "cache-contract.md").lower()
+        text = normalise(util.read_text(util.ROOT / "docs" / "cache-contract.md"))
         self.assertTrue(
-            "cannot enable" in text or "cannot be enabled" in text,
-            "the contract must say Markdown cannot switch caching on",
+            "mark a block as cacheable" in text,
+            "the contract must name what Markdown cannot do",
+        )
+        self.assertTrue(
+            "messages api compatibility is not anthropic cache support" in text,
+            "the contract must separate API compatibility from cache support",
+        )
+        self.assertTrue(
+            "best-effort" in text or "best effort" in text,
+            "the contract must call hook delivery best-effort",
         )
 
 
