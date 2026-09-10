@@ -22,6 +22,17 @@
           }
         ]
       }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/bootstrap/post-tool-use-failure.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }
