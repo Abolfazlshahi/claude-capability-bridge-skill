@@ -62,7 +62,7 @@ AUTH/SESSION / REMOTE-OR-SCHEDULED
 
 `OBSERVED_AVAILABLE` means usable now; `UNKNOWN` means untested; `BLOCKED` means present but gated; `UNAVAILABLE` means evidence says this context cannot use it; `STALE` means a previous observation became invalid. Never silently convert `UNKNOWN` into `AVAILABLE`.
 
-CLI and Desktop are different execution profiles. Do not transplant a Desktop-only workflow into CLI, or force GUI work when a deterministic CLI/structured surface is authoritative and available.
+CLI and Desktop are different execution profiles. Do not transplant a Desktop-only workflow into CLI, or force GUI work when a deterministic CLI/structured surface is authoritative and available. For CLI-first routing, browser integration boundaries, local process work, and provider-aware recovery, load `references/claude-code-cli-operating-model.md`.
 
 Provider is a separate axis: `Claude Code CLI` does not imply a first-party provider. A host feature can exist while the current provider/session cannot use it. Treat that as a provider/runtime boundary, not as proof the Skill failed.
 
@@ -312,7 +312,7 @@ HOST-OWNED BOOTSTRAP → runtime reminder → CAPABILITY BRIDGE
 
 Bootstrap can improve procedural recall; it cannot grant tools, bypass permissions, make an unsupported provider support a host feature, or guarantee tool-calling.
 
-Deep dive: `references/always-on-bootstrap.md`.
+Deep dive: `references/always-on-bootstrap.md` and `references/claude-code-bootstrap-kit.md`.
 
 ## PROVIDER / GATEWAY DIAGNOSIS
 
@@ -362,6 +362,9 @@ Load only the smallest relevant local references:
 runtime-detection-and-profiles + capability-model + capability-handshake
 → identify host/execution/provider and capability state
 
+claude-code-cli-operating-model + claude-code-native-mechanisms + claude-code-bootstrap-kit
+→ CLI-first routing, Code host controls, browser/provider boundaries, bootstrap
+
 capability-probing + capability-remediation + tool-routing-matrix
 → probe, classify missing capability, repair when possible, route
 
@@ -386,8 +389,8 @@ skills-and-plugins + activation-and-memory + async-subagents-and-remote + always
 verification + failure-recovery + security-and-permissions
 → evidence, recovery, authorization, prompt injection
 
-claude-code-native-mechanisms + office-and-collaboration-surfaces
-→ host-owned Code controls and native collaboration surfaces
+office-and-collaboration-surfaces
+→ native collaboration surfaces and surface-specific verification
 ```
 
 Reference routing is a local loading decision, never a requirement to open an external website or ask the user to read documentation.
@@ -400,4 +403,4 @@ REAL TASK → RIGHT RUNTIME PROFILE → REAL CAPABILITIES
 → DIRECT VERIFICATION → SAFE RECOVERY → HONEST REPORT
 ```
 
-**Do not simulate competence. Identify the runtime first, recognize the project, probe uncertain capabilities safely, remediate repairable gaps, select the authoritative surface, execute in short observable loops, and prove the user's actual goal.**
+**Do not simulate competence. Detect the runtime, recognize the project, probe uncertain capabilities safely, repair only what the current context can affect, select the authoritative surface, execute in short observable loops, and prove the user's actual goal.**
