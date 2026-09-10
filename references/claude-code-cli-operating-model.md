@@ -41,7 +41,7 @@ browser verification → exposed browser surface
 GUI-only state → computer use when exposed
 ```
 
-Never turn a source/template file into browser testing merely because it is easy to open. Server-backed projects need a real process and served HTTP route.
+For standard app-running tasks, use native Claude Code run/verify workflows when they are exposed and suitable; do not assume they replace project-specific launch discovery for databases, env files, graphical sessions, or multi-service apps. Never turn a source/template file into browser testing merely because it is easy to open. Server-backed projects need a real process and served HTTP route.
 
 ## Browser in CLI
 
@@ -55,9 +55,13 @@ LOCAL BROWSER REACHABLE?
 CURRENT PROVIDER ALLOWS THE INTEGRATION?
 ```
 
-For Claude Code Chrome integration, use only the commands/surfaces actually exposed by the current host. Current official Claude Code documentation describes `--chrome` / `/chrome`, while also documenting provider limitations for third-party deployments. Do not fabricate the integration when the current provider/session does not expose it.
+For Claude Code Chrome integration, use only the commands/surfaces actually exposed by the current host. Current official Claude Code documentation describes `--chrome` / `/chrome`, while also documenting that Chrome integration is unavailable through third-party providers. Do not fabricate the integration when the current provider/session does not expose it.
 
 If Chrome is unavailable but Playwright/MCP is exposed and suitable, route there. If neither is exposed, use shell/project evidence for server health and report browser verification as blocked rather than pretending to have tested the UI.
+
+## Skill and host-control verification
+
+A Skill is still model-invoked procedural context. Do not confuse its availability with execution. In Claude Code, use host surfaces such as `/skills` or `/hooks` when exposed to inspect whether the Skill/hook is actually registered. `CLAUDE.md` is persistent advisory context; command hooks can provide stronger deterministic control where the host supports it. A bootstrap reminder is not a permission bypass.
 
 ## Local app verification
 
