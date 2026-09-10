@@ -63,7 +63,6 @@ def main() -> int:
     frontmatter = match.group(1)
     name_match = re.search(r"^name:\s*(.+)$", frontmatter, re.MULTILINE)
     desc_match = re.search(r"^description:\s*(.+)$", frontmatter, re.MULTILINE)
-    when_match = re.search(r"^when_to_use:\s*(.+)$", frontmatter, re.MULTILINE)
     compatibility_match = re.search(r"^compatibility:\s*(.+)$", frontmatter, re.MULTILINE)
     if not name_match:
         fail("frontmatter name is missing")
@@ -77,11 +76,6 @@ def main() -> int:
     description = desc_match.group(1).strip().strip('"')
     if not description or len(description) > 1024:
         fail("description must be non-empty and <= 1024 characters")
-    if when_match:
-        when_to_use = when_match.group(1).strip().strip('"').lower()
-        for phrase in ("runtime", "capabilit", "browser", "cli"):
-            if phrase not in when_to_use:
-                fail(f"when_to_use should mention {phrase}")
 
     if compatibility_match:
         compatibility = compatibility_match.group(1).strip().strip('"')
@@ -129,14 +123,15 @@ def main() -> int:
 
     if not BOOTSTRAP.is_dir():
         fail("bootstrap directory is missing")
-    bootstrap_files = ("session-start.sh", "session-start.ps1", "settings.json.example")
+    bootstrap_files = ("session-start.sh", "session-start.ps1", "settings.json.example", "user-prompt-submit.sh")
     missing_bootstrap = sorted(item for item in bootstrap_files if not (BOOTSTRAP / item).is_file())
     if missing_bootstrap:
         fail("missing bootstrap files: " + ", ".join(missing_bootstrap))
-    try:
-        subprocess.run(["bash", "-n", str(BOOTSTRAP / "session-start.sh")], check=True, capture_output=True, text=True)
-    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
-        fail(f"bootstrap/session-start.sh failed syntax validation: {exc}")
+    for shell_file in (BOOTSTRAP / "session-start.sh", BOOTSTRAP / "user-prompt-submit.sh"):
+        try:
+            subprocess.run(["bash", "-n", str(shell_file)], check=True, capture_output=True, text=True)
+        except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+            fail(f"{shell_file.relative_to(ROOT)} failed syntax validation: {exc}")
     try:
         json.loads((BOOTSTRAP / "settings.json.example").read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -198,13 +193,14 @@ def main() -> int:
     manifest_path = PLUGIN / ".claude-plugin" / "plugin.json"
     hooks_path = PLUGIN / "hooks" / "hooks.json"
     plugin_skill = PLUGIN / "SKILL.md"
-    plugin_hook = PLUGIN / "scripts" / "session-start.sh"
-    for required_path in (manifest_path, hooks_path, plugin_skill, plugin_hook):
+    plugin_session_hook = PLUGIN / "scripts" / "session-start.sh"
+    plugin_turn_hook = PLUGIN / "scripts" / "user-prompt-submit.sh"
+    for required_path in (manifest_path, hooks_path, plugin_skill, plugin_session_hook, plugin_turn_hook):
         if not required_path.is_file():
             fail(f"generated plugin artifact missing: {required_path.relative_to(ROOT)}")
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        json.loads(hooks_path.read_text(encoding="utf-8"))
+        hooks_json = json.loads(hooks_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         fail(f"generated plugin JSON is invalid: {exc}")
     if manifest.get("name") != name:
@@ -212,10 +208,12 @@ def main() -> int:
     if plugin_skill.read_text(encoding="utf-8") != text:
         fail("generated plugin SKILL.md differs from source SKILL.md")
     hook_text = hooks_path.read_text(encoding="utf-8")
-    if "SessionStart" not in hook_text or "${CLAUDE_PLUGIN_ROOT}" not in hook_text:
-        fail("generated plugin hook must use SessionStart and CLAUDE_PLUGIN_ROOT")
+    if "SessionStart" not in hook_text or "UserPromptSubmit" not in hook_text or "${CLAUDE_PLUGIN_ROOT}" not in hook_text:
+        fail("generated plugin hooks must use SessionStart, UserPromptSubmit, and CLAUDE_PLUGIN_ROOT")
+    if "UserPromptSubmit" not in hooks_json["hooks"]:
+        fail("generated plugin hooks.json is missing UserPromptSubmit")
 
-    print("PASS: Skill structure, runtime detection, CLI operating model, bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, plugin packaging, invocation trigger checks, evals, behavioral benchmark, and regression tests passed")
+    print("PASS: Skill structure, runtime detection, CLI operating model, session/per-turn bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, plugin packaging, invocation trigger checks, evals, behavioral benchmark, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
