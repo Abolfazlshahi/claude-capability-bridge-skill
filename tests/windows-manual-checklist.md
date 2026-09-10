@@ -2,7 +2,8 @@
 
 **Status: PARTIAL.** The automated Python suite has been run on Windows 11
 (Python 3.12.7, Git for Windows bash): `tests=156 failures=0 errors=0
-skipped=6`, with the `.sh` wrappers really executed. Nothing else here has
+skipped=2`, with the `.sh` wrappers really executed, including the no-Python
+fallback paths. Nothing else here has
 been verified: no manual step in the tables below has been performed, no
 `.ps1` wrapper has ever been executed, and no run inside Claude Code on
 Windows has been observed. Until somebody records those, that part of
@@ -26,7 +27,7 @@ is complete evidence without the several hundred lines of verbose output.
 | `bash` cannot run the wrappers after a CRLF checkout; exit code 127 | Reported by a user running the suite on Windows 11 with Git `core.autocrlf=true` | FIXED via `.gitattributes`; repair an old checkout with `git add --renormalize .` |
 | POSIX mode bits are not enforced on NTFS | `stat().st_mode & 0o077 == 0o66` on a file the engine created with `0o600` | Test skips on Windows; file privacy there depends on ACLs and is UNKNOWN |
 | Symlink creation usually needs a privilege | Python `OSError` when mirroring tools into a private bin directory | No longer fatal: on Windows the test drops every `PATH` entry that holds a python executable instead of mirroring, then verifies the result before using it |
-| Full suite on Windows 11, Python 3.12.7, Git for Windows bash | `posix shell for wrapper tests: C:\Program Files\Git\bin\bash.exe` and `tests=156 failures=0 errors=0 skipped=6` | PASS |
+| Full suite on Windows 11, Python 3.12.7, Git for Windows bash | `posix shell for wrapper tests: C:\Program Files\Git\bin\bash.exe` and `tests=156 failures=0 errors=0 skipped=2`; the two skips are the ACL and the directory-mode-bit checks, which NTFS cannot answer | PASS |
 | `bash` on `PATH` can start but cannot execute a wrapper by path; exit 127 | Reported on Windows 11 after line endings were fixed, so CRLF was ruled out | Test probe now runs a real script file and prefers Git for Windows' bash |
 | A resolvable `python3` alias that runs nothing | Windows Store alias behaviour | Wrappers now fall back when the engine emits nothing |
 | PowerShell wrappers | Never executed by CI or by this project | UNKNOWN |
