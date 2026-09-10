@@ -66,8 +66,8 @@ def run_json_hook(path: Path, expected_event: str) -> None:
     if hook_output.get("hookEventName") != expected_event:
         fail(f"bootstrap hook {path.relative_to(ROOT)} emitted wrong hookEventName")
     context = hook_output.get("additionalContext")
-    if not isinstance(context, str) or "runtime" not in context.lower() or "verify" not in context.lower():
-        fail(f"bootstrap hook {path.relative_to(ROOT)} must emit runtime/verification guidance")
+    if not isinstance(context, str) or not ("runtime" in context.lower() or "host" in context.lower()) or "verify" not in context.lower():
+        fail(f"bootstrap hook {path.relative_to(ROOT)} must emit host/runtime and verification guidance")
 
 
 def main() -> int:
