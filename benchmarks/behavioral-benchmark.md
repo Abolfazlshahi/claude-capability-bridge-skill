@@ -4,15 +4,17 @@ The benchmark measures whether the Skill changes agent behavior, not whether fil
 
 ## Method
 
-Run the same scenario in controlled conditions:
+Use fresh sessions and compare the same scenario under controlled conditions:
 
 ```text
 CONTROL: model + runtime without claude-capability-bridge
 TREATMENT A: same model + runtime + claude-capability-bridge
-TREATMENT B: same model + runtime + claude-capability-bridge + always-on bootstrap
+TREATMENT B: same model + runtime + bridge + always-on bootstrap
 ```
 
-Keep workspace, tool surface, permissions, provider, task wording, and success criteria constant. Grade trajectory and final state separately. Treatment B is optional when the host supports an always-on context/lifecycle mechanism.
+Keep the workspace, tool surface, permissions, provider, task wording, and success criteria constant. Grade **invocation**, **trajectory**, and **final state** separately. A skill appearing in the listing is not evidence that Claude invoked it, and invoking it is not evidence that the workflow was followed.
+
+For Claude Code, fresh sessions matter because already-loaded Skill content can mask activation gaps. When `/skill-doctor` is exposed, its usage report may supplement invocation evidence; it does not prove task correctness.
 
 ## Primary scenario: server-backed web app
 
@@ -40,11 +42,12 @@ detect reports.html
 ### Treatment target trajectory
 
 ```text
-identify runtime + execution context + provider when observable
+invoke/load bridge when relevant
+→ identify runtime + execution context + provider when observable
 → inspect workspace
 → recognize server-backed Python app
 → inspect declared environment/command
-→ launch server
+→ launch server (or use exposed /run or /verify workflow when suitable)
 → confirm readiness + actual URL/port
 → discover an actually exposed browser surface
 → open HTTP route
@@ -74,7 +77,7 @@ Grade as a regression if the agent repeatedly says “not connected” without c
 
 ## Forgetting / bootstrap scenario
 
-Use the same non-trivial task across three conditions. Measure the ordered trajectory:
+Use the same non-trivial task across all three conditions and record whether the bridge Skill is actually invoked. Measure the ordered trajectory:
 
 ```text
 runtime identification
@@ -84,7 +87,7 @@ runtime identification
 → verification
 ```
 
-Treatment B should be credited only for behavior actually changed by the always-on reminder/context. Do not attribute host-enforced behavior to the Skill, and do not claim bootstrap created capabilities.
+Credit Treatment B only for behavior that actually changes because of the always-on reminder/context. Do not attribute host-enforced behavior to the Skill, and do not claim bootstrap created capabilities.
 
 ## Secondary scenarios
 
@@ -137,6 +140,7 @@ Claude Tag, a normal Slack connector, voice mode, and cross-conversation memory 
 Score each 0–2:
 
 ```text
+skill invocation / activation
 runtime identification
 capability discovery
 project/execution-model recognition
@@ -152,12 +156,12 @@ collaboration / memory distinctions
 honest reporting
 ```
 
-A useful regression requires improvement in **trajectory and outcome**, not merely more text in the final response.
+A useful regression requires improvement in **invocation or runtime-first behavior**, **trajectory**, and **outcome**, not merely more text in the final response.
 
 ## Evidence to collect
 
-Record tool calls, selected surfaces, runtime/provider classification, important state transitions, verification evidence, failures, retries, and final outcome. If full traces are unavailable, grade observable actions and environment state rather than claimed reasoning.
+Record whether the Skill was actually invoked, tool calls, selected surfaces, runtime/provider classification, important state transitions, verification evidence, failures, retries, and final outcome. If full traces are unavailable, grade observable actions and environment state rather than claimed reasoning.
 
 For native mechanisms, record whether behavior came from a deterministic hook, model-mediated hook, advisory instruction, or Skill procedure. For Office/collaboration surfaces, record the active surface, permission scope, target state, and independent verification evidence.
 
-Do not report benchmark improvement until the same scenario has been run under the same model/runtime across the compared control and treatment conditions.
+Do not report benchmark improvement until the same scenario has been run under the required control/treatment conditions with fresh sessions.
