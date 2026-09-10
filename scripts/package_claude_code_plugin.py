@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "SKILL.md"
 SESSION_BOOTSTRAP = ROOT / "bootstrap" / "session-start.sh"
 TURN_BOOTSTRAP = ROOT / "bootstrap" / "user-prompt-submit.sh"
+FAILURE_BOOTSTRAP = ROOT / "bootstrap" / "post-tool-use-failure.sh"
 OUT = ROOT / "dist" / "claude-capability-bridge-plugin"
 
 
@@ -30,7 +31,7 @@ def skill_metadata() -> tuple[str, str, str]:
 
 
 def main() -> int:
-    for required in (SKILL, SESSION_BOOTSTRAP, TURN_BOOTSTRAP):
+    for required in (SKILL, SESSION_BOOTSTRAP, TURN_BOOTSTRAP, FAILURE_BOOTSTRAP):
         if not required.is_file():
             raise SystemExit(f"required file is missing: {required.relative_to(ROOT)}")
 
@@ -46,7 +47,7 @@ def main() -> int:
 
     plugin_manifest = {
         "name": name,
-        "description": "Runtime-aware procedural bridge for Claude Code and compatible agent runtimes, with session-start and per-turn capability reminders.",
+        "description": "Runtime-aware procedural bridge for Claude Code and compatible agent runtimes, with session, per-turn, and post-tool-failure capability reminders.",
         "version": version,
         "author": {"name": "Abolfazlshahi"},
         "repository": "https://github.com/Abolfazlshahi/claude-capability-bridge-skill",
@@ -57,9 +58,10 @@ def main() -> int:
     (OUT / "SKILL.md").write_text(SKILL.read_text(encoding="utf-8"), encoding="utf-8")
     shutil.copy2(SESSION_BOOTSTRAP, OUT / "scripts" / "session-start.sh")
     shutil.copy2(TURN_BOOTSTRAP, OUT / "scripts" / "user-prompt-submit.sh")
+    shutil.copy2(FAILURE_BOOTSTRAP, OUT / "scripts" / "post-tool-use-failure.sh")
 
     hooks = {
-        "description": "Keep the capability-bridge operating protocol present at session start and before each submitted prompt.",
+        "description": "Keep the capability-bridge operating protocol present at session start, before each submitted prompt, and after tool failures.",
         "hooks": {
             "SessionStart": [
                 {
@@ -83,6 +85,17 @@ def main() -> int:
                         }
                     ]
                 }
+            ],
+            "PostToolUseFailure": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/post-tool-use-failure.sh\"",
+                            "timeout": 5,
+                        }
+                    ]
+                }
             ]
         },
     }
@@ -90,7 +103,7 @@ def main() -> int:
 
     print(f"Built Claude Code plugin: {OUT}")
     print(f"Plugin: {name}@{version}")
-    print("Bootstrap: SessionStart + UserPromptSubmit")
+    print("Bootstrap: SessionStart + UserPromptSubmit + PostToolUseFailure")
     return 0
 
 
