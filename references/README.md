@@ -49,3 +49,24 @@ These documents are intentionally separated from `SKILL.md` so the agent can loa
 ## Loading rule
 
 Do not load all references by default. Start with the smallest relevant set and cross the boundary only when the task actually enters another capability family. The runtime-aware detection/profile reference is the first stop; Desktop/Cowork snapshots are supporting context only.
+---
+
+## Where the operating rules live now (0.9.0)
+
+This directory is the *deep reference* layer: background, edge cases, and
+troubleshooting. It is no longer the first thing to read.
+
+Read in this order instead:
+
+1. `SKILL.md` - the kernel: the small set of rules that always apply.
+2. `profiles/claude-code.md`, `profiles/desktop.md`, `profiles/cowork.md`, or
+   `profiles/generic.md` - the host contract you are actually running under.
+3. `cards/index.json` - routing: which task family maps to which card.
+4. The single matching card under `cards/` - the short procedure, its
+   verification step, and its recovery path.
+5. Only then a file in this directory, for depth.
+
+No file in this directory was removed in 0.9.0, so old links still resolve.
+For the full old-path to new-path mapping, see `references/MIGRATION.md`.
+
+If a reference here contradicts the kernel, the kernel wins.

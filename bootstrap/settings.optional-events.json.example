@@ -1,0 +1,44 @@
+{
+  "_comment_1": "OPTIONAL, HOST-VERSION-DEPENDENT hook events. Do NOT copy this file blindly.",
+  "_comment_2": "The plugin ships only the three events it can rely on: SessionStart, UserPromptSubmit, PostToolUseFailure. The events below exist in some Claude Code versions and not others. Verify against your installed host version and its own hooks documentation before enabling any of them.",
+  "_comment_3": "Coverage limit that motivated this file: PostToolUseFailure fires for calls that ran and failed. Pre-execution rejections (unknown tool name, schema validation failure, permission refusal before execution) are NOT guaranteed to reach it. PreToolUse observation only partially compensates, and it cannot rewrite a call the model already chose.",
+  "_comment_4": "Timing caveat: context delivered alongside or after a tool result cannot have corrected the tool choice that produced it. Do not read improved behaviour after these events as pre-execution correction.",
+  "_comment_5": "Every command below is the same engine with a different --event value. The engine stays silent for events it does not handle, and always exits 0.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/bridge_hook.py\" --event PreToolUse",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/bridge_hook.py\" --event PostToolUse",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/bridge_hook.py\" --event PreCompact",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
