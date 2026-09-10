@@ -11,6 +11,9 @@ The bridge Skill is installed in a Claude Code-compatible host. Start a fresh se
 4. A fresh-session test distinguishes Skill availability from actual invocation.
 5. A listing/availability signal is never treated as proof that the Skill was used.
 6. `/skill-doctor` or trace evidence is treated as supplementary invocation evidence when available.
+7. When the Claude Code bootstrap plugin is installed, `SessionStart` establishes the protocol and `UserPromptSubmit` re-injects a compact reminder before each turn.
+8. The per-turn bootstrap is treated as context reinforcement, not as proof that the Skill body loaded or that the task succeeded.
+9. Tests also cover the failure mode where a model forgets the Skill mid-session: with the bootstrap active, the prompt still receives the bridge operating reminder before processing.
 
 ## Failure signatures
 
@@ -20,4 +23,15 @@ Fail the test if:
 - its trigger description omits runtime/capability/tool-routing use cases;
 - a test claims success merely because the Skill appears in a listing;
 - stale context from an earlier run is used as proof of fresh-session invocation;
-- invocation is confused with successful task execution.
+- invocation is confused with successful task execution;
+- the plugin omits the per-turn `UserPromptSubmit` reinforcement;
+- the bootstrap is described as granting tools, fixing provider incompatibility, or otherwise creating capabilities it cannot create.
+
+## Verification notes
+
+Use Claude Code hook debug output or an equivalent host trace to confirm that `UserPromptSubmit` fired and its `additionalContext` reached the model. Keep this separate from evidence that the Skill itself was invoked. The two questions are:
+
+```text
+DID THE BRIDGE PROCEDURE GET INTO CONTEXT?
+DID THE MODEL ACTUALLY FOLLOW IT?
+```
