@@ -5,7 +5,7 @@
 ### Teach custom-provider models the **workflow knowledge** needed to operate agentic tools reliably.
 
 <p>
-  <img src="./assets/banner-hero-dark.svg" alt="Claude Capability Bridge overview" width="100%" />
+  <img src="./assets/social-preview.png" alt="Claude Capability Bridge overview" width="100%" />
 </p>
 
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-claude--capability--bridge-8b5cf6?style=for-the-badge)](./SKILL.md)
@@ -67,6 +67,10 @@ See [`references/runtime-detection-and-profiles.md`](./references/runtime-detect
 | May confuse a running process with a working app | Verifies readiness, rendered state, and critical behavior |
 | May claim success from partial evidence | Reports verified, blocked, failed, and unknown states separately |
 
+<p align="center">
+  <img src="./assets/before-after.svg" alt="Before and after workflow comparison" width="100%" />
+</p>
+
 > **Honesty note:** this table describes intended behavior, not measured performance. Empirical claims belong in the benchmark results.
 
 ---
@@ -103,6 +107,10 @@ A custom endpoint or gateway can be transport-compatible without making the unde
 
 The bridge explicitly distinguishes provider/runtime limits from procedural failures. A provider-unsupported browser integration should not trigger endless local setup attempts.
 
+<p align="center">
+  <img src="./assets/provider-architecture.svg" alt="Custom-provider architecture" width="100%" />
+</p>
+
 ---
 
 ## 🌐 Web-app verification
@@ -132,6 +140,10 @@ process running ≠ server ready ≠ page correct ≠ feature works
 ```
 
 A server-side template opened with `file://` is not equivalent to running the application.
+
+<p align="center">
+  <img src="./assets/webapp-verification.svg" alt="Web-app verification workflow" width="100%" />
+</p>
 
 ---
 
