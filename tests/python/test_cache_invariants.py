@@ -264,17 +264,20 @@ class HonestClaimsTestCase(CacheInvariantTestCase):
     )
 
     def test_no_document_promises_a_cache_improvement(self) -> None:
-        """Quoting a forbidden claim to reject it is allowed; asserting it is not."""
+        """Quoting a forbidden claim in order to reject it is allowed.
+
+        The scope is the paragraph, not the line: a rejection frequently sits on
+        the following wrapped line, so line scope produces false positives.
+        """
         for path in util.markdown_files(util.ROOT):
             if "dist/" in path.as_posix():
                 continue
-            for number, line in enumerate(util.read_text(path).splitlines(), 1):
-                lowered = line.lower()
+            for block in re.split(r"\n\s*\n", util.read_text(path)):
+                paragraph = normalise(block)
                 for phrase in self.FORBIDDEN:
-                    if phrase in lowered and not negated(lowered):
+                    if phrase in paragraph and not negated(paragraph):
                         self.fail(
-                            f"{path.name}:{number} oversells caching: "
-                            f"{line.strip()[:90]}"
+                            f"{path.name} oversells caching: {paragraph.strip()[:140]}"
                         )
 
     def test_cache_contract_states_who_controls_what(self) -> None:
