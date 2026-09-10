@@ -27,7 +27,8 @@ REQUIRED_REFS = {
     "session-memory.md", "skills-and-plugins.md", "source-notes.md", "task-recipes.md",
     "tool-routing-matrix.md", "tool-schema-literacy.md", "tool-use-patterns.md",
     "verification.md", "webapp-verification.md", "workspace-map.md", "artifact-lifecycle.md",
-    "claude-code-native-mechanisms.md", "office-and-collaboration-surfaces.md",
+    "claude-code-native-mechanisms.md", "claude-code-cli-operating-model.md",
+    "claude-code-bootstrap-kit.md", "office-and-collaboration-surfaces.md",
     "runtime-detection-and-profiles.md", "capability-remediation.md", "always-on-bootstrap.md",
     "README.md",
 }
@@ -153,14 +154,15 @@ def main() -> int:
     required_tests = {
         "custom-provider-transport.md", "project-recognition.md",
         "browser-operating-protocol.md", "capability-operating-kernel.md",
-        "claude-code-native-mechanisms.md", "office-and-collaboration-surfaces.md",
+        "claude-code-native-mechanisms.md", "claude-code-cli-operating-model.md",
+        "claude-code-bootstrap-kit.md", "office-and-collaboration-surfaces.md",
         "runtime-detection-and-remediation.md",
     }
     missing_tests = sorted(test for test in required_tests if not (ROOT / "tests" / test).is_file())
     if missing_tests:
         fail("missing regression tests: " + ", ".join(missing_tests))
 
-    print("PASS: Skill structure, runtime detection, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, evals, behavioral benchmark, and regression tests passed")
+    print("PASS: Skill structure, runtime detection, CLI operating model, bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, evals, behavioral benchmark, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
