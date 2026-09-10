@@ -18,7 +18,7 @@
 
 ---
 
-## 🎯 What problem does this solve?
+## What problem does this solve?
 
 A model can have access to the same browser, filesystem, shell, MCP tools, connectors, and other runtime capabilities as a strong native agent and still use them poorly.
 
@@ -30,7 +30,7 @@ This Skill turns those behaviors into reusable procedures for Claude Code CLI, C
 
 ---
 
-## 🧭 Runtime-first architecture
+## Runtime-first architecture
 
 Before routing a tool or launching a project, the bridge establishes the operating profile:
 
@@ -55,7 +55,7 @@ See [`references/runtime-detection-and-profiles.md`](./references/runtime-detect
 
 ---
 
-## 🧠 Before vs After
+## Before vs After
 
 | Without the bridge | With the bridge |
 |---|---|
@@ -75,7 +75,7 @@ See [`references/runtime-detection-and-profiles.md`](./references/runtime-detect
 
 ---
 
-## ⚙️ How it works
+## How it works
 
 ```text
 1. Runtime detection
@@ -93,7 +93,7 @@ The main `SKILL.md` stays compact. Detailed procedures are progressively loaded 
 
 ---
 
-## 🔌 Custom-provider support
+## Custom-provider support
 
 A custom endpoint or gateway can be transport-compatible without making the underlying model behaviorally equivalent to an Anthropic model.
 
@@ -113,7 +113,7 @@ The bridge explicitly distinguishes provider/runtime limits from procedural fail
 
 ---
 
-## 🌐 Web-app verification
+## Web-app verification
 
 The bridge is especially useful when an agent builds or repairs a web app and must prove that the **real user flow** works.
 
@@ -147,27 +147,27 @@ A server-side template opened with `file://` is not equivalent to running the ap
 
 ---
 
-## 🧩 Capability coverage
+## Capability coverage
 
 | Area | What the bridge teaches |
 |---|---|
-| 🧭 Runtime detection | CLI/Desktop/Cowork/cloud/remote classification and execution profiles |
-| 🌐 Browser & Chrome | surface selection, localhost testing, browser context separation |
-| 🧯 Capability remediation | classify → repair → re-probe → fallback instead of “not connected” |
-| 🖱️ Computer use | GUI escalation and short observable action loops |
-| 🔌 MCP & connectors | schema-first use, mutation/read-back, trust boundaries |
-| 📁 Projects & files | project knowledge vs live filesystem vs Git state |
-| 💻 Shell & code | deterministic commands, servers, tests, readiness |
-| 🧩 Skills & Plugins | progressive disclosure, host controls, invocation boundaries |
-| 🎨 Artifacts & interactive apps | creation vs rendered/behavioral verification |
-| 🤖 Subagents & long-running work | bounded delegation and context isolation |
-| ⏰ Scheduled / remote work | fresh execution context and local/cloud boundaries |
-| 🛡️ Security | permissions, authorization, prompt injection, least privilege |
-| ✅ Evidence & recovery | direct proof, failure classification, bounded retries |
+| Runtime detection | CLI/Desktop/Cowork/cloud/remote classification and execution profiles |
+| Browser & Chrome | surface selection, localhost testing, browser context separation |
+| Capability remediation | classify → repair → re-probe → fallback instead of “not connected” |
+| Computer use | GUI escalation and short observable action loops |
+| MCP & connectors | schema-first use, mutation/read-back, trust boundaries |
+| Projects & files | project knowledge vs live filesystem vs Git state |
+| Shell & code | deterministic commands, servers, tests, readiness |
+| Skills & Plugins | progressive disclosure, host controls, invocation boundaries |
+| Artifacts & interactive apps | creation vs rendered/behavioral verification |
+| Subagents & long-running work | bounded delegation and context isolation |
+| Scheduled / remote work | fresh execution context and local/cloud boundaries |
+| Security | permissions, authorization, prompt injection, least privilege |
+| Evidence & recovery | direct proof, failure classification, bounded retries |
 
 ---
 
-## 🧷 Always-on bootstrap
+## Always-on bootstrap
 
 A portable Skill cannot universally force its own invocation. For Claude Code, the repository includes a practical bootstrap path for host-owned persistent context and `SessionStart` hooks:
 
@@ -187,7 +187,7 @@ The bootstrap does **not** create tools, bypass permissions, or make a third-par
 
 ---
 
-## 🔬 Evaluation & benchmarking
+## Evaluation & benchmarking
 
 The repository deliberately does **not** claim that the Skill improves every model. Effectiveness should be demonstrated empirically.
 
@@ -209,7 +209,7 @@ See [`benchmarks/README.md`](./benchmarks/README.md), [`benchmarks/behavioral-be
 
 ---
 
-## 📦 Installation
+## Installation
 
 This repository is a distribution/project repository; the actual Skill name is `claude-capability-bridge`.
 
@@ -239,7 +239,7 @@ python3 scripts/validate_skill.py
 
 ---
 
-## 📁 Repository structure
+## Repository structure
 
 ```text
 claude-capability-bridge-skill/
@@ -263,7 +263,7 @@ metadata → SKILL.md → relevant reference → execution → verification
 
 ---
 
-## 🛡️ Design boundaries
+## Design boundaries
 
 ### The Skill can teach
 
@@ -277,7 +277,7 @@ That boundary is a core design rule.
 
 ---
 
-## ✅ Validation
+## Validation
 
 Run repository checks locally:
 
@@ -294,7 +294,7 @@ GitHub Actions runs the structural, packaging, Agent Skills, evaluation, and ben
 
 ---
 
-## 📚 Documentation map
+## Documentation map
 
 | Document | Purpose |
 |---|---|
@@ -312,31 +312,31 @@ GitHub Actions runs the structural, packaging, Agent Skills, evaluation, and ben
 
 ---
 
-## 📣 Telegram
+## Telegram
 
 Project updates, releases, experiments and more:
 
 <p align="center">
-  <a href="https://t.me/pythash"><strong>📲 @pythash</strong></a>
+  <a href="https://t.me/pythash"><strong>@pythash</strong></a>
 </p>
 
 ---
 
-## 🌍 Language versions
+## Language versions
 
 | Language | README |
 |---|---|
-| 🇬🇧 English | [`README.md`](./README.md) |
-| 🇨🇳 简体中文 | [`README_ZH.md`](./i18n/README_ZH.md) |
-| 🇪🇸 Español | [`README_ES.md`](./i18n/README_ES.md) |
-| 🇮🇳 हिन्दी | [`README_HI.md`](./i18n/README_HI.md) |
-| 🇸🇦 العربية | [`README_AR.md`](./i18n/README_AR.md) |
-| 🇫🇷 Français | [`README_FR.md`](./i18n/README_FR.md) |
-| 🇮🇷 فارسی | [`README_FA.md`](./i18n/README_FA.md) |
+| English | [`README.md`](./README.md) |
+| 简体中文 | [`README_ZH.md`](./i18n/README_ZH.md) |
+| Español | [`README_ES.md`](./i18n/README_ES.md) |
+| हिन्दी | [`README_HI.md`](./i18n/README_HI.md) |
+| العربية | [`README_AR.md`](./i18n/README_AR.md) |
+| Français | [`README_FR.md`](./i18n/README_FR.md) |
+| فارسی | [`README_FA.md`](./i18n/README_FA.md) |
 
 ---
 
-## 📄 License
+## License
 
 Claude Capability Bridge Skill is released under the **[MIT License](./LICENSE)**.
 
@@ -348,6 +348,6 @@ Claude Capability Bridge Skill is released under the **[MIT License](./LICENSE)*
 
 **Don't simulate agentic competence. Detect the real runtime, use the right surface, verify the real outcome, and recover safely.**
 
-[⭐ GitHub](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [🐛 Issues](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/issues) · [💬 Discussions](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/discussions) · [📣 Telegram](https://t.me/pythash) · [📄 MIT License](./LICENSE)
+[GitHub](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [Issues](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/issues) · [Discussions](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/discussions) · [Telegram](https://t.me/pythash) · [MIT License](./LICENSE)
 
 </div>
