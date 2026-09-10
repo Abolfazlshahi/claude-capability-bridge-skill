@@ -6,11 +6,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "SKILL.md"
 REFS = ROOT / "references"
+BOOTSTRAP = ROOT / "bootstrap"
 EVALS = ROOT / "evals" / "evals.json"
 BENCHMARKS = ROOT / "benchmarks" / "scenarios.yaml"
 BEHAVIORAL = ROOT / "benchmarks" / "behavioral-benchmark.md"
@@ -97,13 +99,11 @@ def main() -> int:
     if unknown:
         fail("SKILL.md references files not tracked by validator: " + ", ".join(unknown))
 
-    forbidden_external_dependency_phrases = (
+    for phrase in (
         "go read the documentation", "visit the documentation", "read this URL",
         "follow this link to learn", "open this URL to learn",
-    )
-    lowered = text.lower()
-    for phrase in forbidden_external_dependency_phrases:
-        if phrase in lowered:
+    ):
+        if phrase in text.lower():
             fail(f"SKILL.md contains forbidden external-dependency instruction: {phrase!r}")
 
     for required_phrase, label in (
@@ -115,8 +115,23 @@ def main() -> int:
         ("runtime detection", "runtime detection rule"),
         ("remediation", "capability remediation rule"),
     ):
-        if required_phrase not in lowered:
+        if required_phrase not in text.lower():
             fail(f"SKILL.md must contain the {label}")
+
+    if not BOOTSTRAP.is_dir():
+        fail("bootstrap directory is missing")
+    bootstrap_files = ("session-start.sh", "session-start.ps1", "settings.json.example")
+    missing_bootstrap = sorted(item for item in bootstrap_files if not (BOOTSTRAP / item).is_file())
+    if missing_bootstrap:
+        fail("missing bootstrap files: " + ", ".join(missing_bootstrap))
+    try:
+        subprocess.run(["bash", "-n", str(BOOTSTRAP / "session-start.sh")], check=True, capture_output=True, text=True)
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        fail(f"bootstrap/session-start.sh failed syntax validation: {exc}")
+    try:
+        json.loads((BOOTSTRAP / "settings.json.example").read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        fail(f"invalid bootstrap/settings.json.example: {exc}")
 
     if not EVALS.is_file():
         fail("evals/evals.json is missing")
@@ -162,13 +177,14 @@ def main() -> int:
     if missing_tests:
         fail("missing regression tests: " + ", ".join(missing_tests))
 
-    print("PASS: Skill structure, runtime detection, CLI operating model, bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, evals, behavioral benchmark, and regression tests passed")
+    print("PASS: Skill structure, runtime detection, CLI operating model, bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, bootstrap examples, evals, behavioral benchmark, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
     print(f"Evals: {len(payload['evals'])}")
     print("Behavioral benchmark: present")
     print(f"Regression tests: {len(required_tests)}")
+    print("Bootstrap examples: shell syntax + JSON validated")
     return 0
 
 
