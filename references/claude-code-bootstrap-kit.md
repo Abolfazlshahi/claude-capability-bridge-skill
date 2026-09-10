@@ -27,7 +27,7 @@ BRIDGE BOOT:
 - never treat “not connected” as a final diagnosis
 ```
 
-The hook should not dump the whole Skill or perform arbitrary setup on every session. `SessionStart` is a context-only event: it cannot block the session, so do not call the reminder deterministic enforcement. citeturn898186view0
+The hook should not dump the whole Skill or perform arbitrary setup on every session. `SessionStart` is a context-only event: it cannot block the session, so do not call the reminder deterministic enforcement. See the current Claude Code Hooks reference for the event semantics.
 
 ## 3. Plugin distribution
 
@@ -39,7 +39,7 @@ Test the generated plugin locally with:
 claude --plugin-dir ./dist/claude-capability-bridge-plugin
 ```
 
-Plugins can package Skills and hooks together, and plugin hooks live in `hooks/hooks.json`. citeturn818350view0turn936802view1
+Plugins can package Skills and hooks together, and plugin hooks live in `hooks/hooks.json`.
 
 ## 4. Stronger host enforcement
 
@@ -47,9 +47,9 @@ Use deterministic command hooks or permission controls for concrete safety rules
 
 ## 5. Skill invocation
 
-Keep the bridge Skill's normal model invocation enabled so Claude can load it when relevant. `disable-model-invocation: true` prevents automatic loading and would work against this Skill's purpose as background procedural knowledge. Claude's current docs also distinguish the Skill's always-present description from its full body, which loads only when invoked. citeturn898186view2
+Keep the bridge Skill's normal model invocation enabled so Claude can load it when relevant. `disable-model-invocation: true` prevents automatic loading and would work against this Skill's purpose as background procedural knowledge. Claude's current Skills reference also distinguishes the Skill's always-present description from its full body, which loads only when invoked.
 
-A host bootstrap can improve recall, but it does not guarantee that the Skill body is loaded on every turn. `/skill-doctor` can show whether skills are being invoked and should be used as supplementary evidence during local testing. citeturn898186view1
+A host bootstrap can improve recall, but it does not guarantee that the Skill body is loaded on every turn. `/skill-doctor` can show whether skills are being invoked and should be used as supplementary evidence during local testing.
 
 ## 6. Verification
 
@@ -72,7 +72,7 @@ identifies runtime before host-specific routing
 → verifies the requested outcome
 ```
 
-Do not report bootstrap effectiveness from static inspection alone. Claude's current skill-evaluation guidance explicitly recommends fresh-session comparison and separate measurement of invocation from what the skill does after invocation. citeturn898186view1
+Do not report bootstrap effectiveness from static inspection alone. Current Claude Code skill-evaluation guidance recommends fresh-session comparison and separate measurement of invocation from what the Skill does after invocation.
 
 ## Boundary
 
