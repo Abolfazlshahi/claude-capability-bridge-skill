@@ -31,10 +31,16 @@ This project models public, reproducible behavior. It does not claim to reproduc
   https://code.claude.com/docs/en/how-claude-code-works
 - Claude Code Docs — Tools reference
   https://code.claude.com/docs/en/tools-reference
+- Claude Code Docs — Extend Claude with skills
+  https://code.claude.com/docs/en/slash-commands
 - Claude Code Docs — Hooks reference
   https://code.claude.com/docs/en/hooks
 - Claude Code Docs — Automate workflows with hooks
   https://code.claude.com/docs/en/hooks-guide
+- Claude Code Docs — Create plugins
+  https://code.claude.com/docs/en/plugins
+- Claude Code Docs — Plugins reference
+  https://code.claude.com/docs/en/plugins-reference
 - Claude Code Docs — How Claude remembers your project
   https://code.claude.com/docs/en/memory
 - Claude Code Docs — Output styles
@@ -57,14 +63,8 @@ This project models public, reproducible behavior. It does not claim to reproduc
   https://code.claude.com/docs/en/mcp
 - Claude Code Docs — Claude Code on the web
   https://code.claude.com/docs/en/web-quickstart
-- Claude Code Docs — Automate work with routines
+- Claude Code Docs — Automate with routines
   https://code.claude.com/docs/en/routines
-- Claude Code Docs — Chrome integration
-  https://code.claude.com/docs/en/chrome
-- Claude Code Docs — Slash commands / Skills
-  https://code.claude.com/docs/en/slash-commands
-- Claude Code Docs — Claude Code overview
-  https://code.claude.com/docs/en/overview
 
 ### Provider and policy boundaries
 - Claude Code Docs — Configure server-managed settings
@@ -95,6 +95,8 @@ This project models public, reproducible behavior. It does not claim to reproduc
   https://support.claude.com/en/articles/12902405-claude-in-chrome-troubleshooting
 - Claude Help Center — Set up browser use in Claude Cowork for Team and Enterprise plans
   https://support.claude.com/en/articles/16635803-set-up-browser-use-in-claude-cowork-for-team-and-enterprise-plans
+- Claude Code Docs — Use Claude Code with Chrome
+  https://code.claude.com/docs/en/chrome
 
 ### Microsoft 365 / collaboration surfaces
 - Claude Help Center — Connect to Microsoft 365
@@ -111,6 +113,8 @@ This project models public, reproducible behavior. It does not claim to reproduc
   https://support.claude.com/en/articles/15594475-what-is-claude-tag
 
 ### Project recognition / coding workflow
+- Claude Code Docs — Extend Claude with skills (includes current `/run` and `/verify` app-running guidance)
+  https://code.claude.com/docs/en/slash-commands
 - Claude — Bringing automated preview, review, and merge to Claude Code on desktop — 2026-02-20
   https://claude.com/blog/preview-review-and-merge-with-claude-code
 - Claude Academy — Navigating the Claude desktop app: Chat, Claude Cowork, Claude Code
@@ -145,10 +149,8 @@ This project models public, reproducible behavior. It does not claim to reproduc
 5. A gateway can be protocol-compatible while the underlying model remains behaviorally different.
 6. When `ANTHROPIC_BASE_URL` or another provider routing mode changes runtime behavior, classify that as a transport/provider boundary before blaming the Skill.
 7. Never encode a private or undocumented tool name into the workflow contract merely because it appeared in an external example.
-8. Runtime identity comes before routing: distinguish Claude Code CLI, Desktop/Cowork, web/cloud, remote, and unknown execution contexts before selecting a host-specific workflow.
-9. Provider identity is a separate axis from host identity; a host-supported integration may still be blocked or unavailable for a third-party provider/endpoint.
-10. When a capability is missing, distinguish not exposed, not configured, not installed, not running, permission denied, provider unsupported, auth/session failure, protocol failure, and model/procedural failure before stopping.
-11. Before browser verification of a coding task, identify the project's execution model and launch contract; do not treat a template/source file as the application entry point unless the project is intentionally static.
-12. Native Claude Code mechanisms such as hooks, permissions, CLAUDE.md, output styles, teams, worktrees, Remote Control, and Chrome integration are release-sensitive; verify current host behavior rather than hardcoding an exhaustive catalog.
-13. Office and collaboration surfaces are also rollout-, client-, permission-, and plan-sensitive; distinguish native application state from standalone file creation and ordinary connector access.
-14. Re-check this source list and the capability map after significant Claude Desktop/Cowork/Claude Code releases.
+8. Before browser verification of a coding task, identify the project's execution model and launch contract; do not treat a template/source file as the application entry point unless the project is intentionally static.
+9. Native Claude Code mechanisms such as hooks, permissions, CLAUDE.md, output styles, teams, worktrees, Remote Control, plugins, and bundled run/verify workflows are release-sensitive; verify current host behavior rather than hardcoding an exhaustive catalog.
+10. Office and collaboration surfaces are also rollout-, client-, permission-, and plan-sensitive; distinguish native application state from standalone file creation and ordinary connector access.
+11. SessionStart hook output is context delivered by the host; it does not itself grant tools or permissions.
+12. Re-check this source list and the capability map after significant Claude Desktop/Cowork/Claude Code releases.
