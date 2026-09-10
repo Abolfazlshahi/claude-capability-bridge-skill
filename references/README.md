@@ -1,9 +1,12 @@
 # Reference Map
 
-These documents are intentionally separated from `SKILL.md` so the agent can load only the procedure required for the current task. The canonical current-capability snapshot is `claude-desktop-current-map.md`; provider-specific boundaries are in `custom-provider-transport.md`; project execution-model recognition is in `project-recognition-and-launch.md`; evidence provenance is kept in `source-notes.md`.
+These documents are intentionally separated from `SKILL.md` so the agent can load only the procedure required for the current task. Runtime identity is now the first execution gate; provider-specific boundaries and project execution models remain separate.
 
 | Reference | Use when |
 |---|---|
+| `runtime-detection-and-profiles.md` | identifying CLI/Desktop/Cowork/cloud/remote context, provider axis, and compact runtime profile |
+| `capability-remediation.md` | classifying missing integrations and attempting bounded repair before stopping |
+| `always-on-bootstrap.md` | keeping a tiny host-owned runtime reminder present when the host supports persistent context/hooks |
 | `claude-desktop-current-map.md` | checking the current public Claude Desktop/Cowork/Claude Code capability surface |
 | `claude-code-native-mechanisms.md` | hooks, CLAUDE.md/rules, slash commands, output styles, rewind, worktrees, teams, SDK/CI, IDE, and Remote Control boundaries |
 | `office-and-collaboration-surfaces.md` | native Office, standalone file generation, Slack/Claude Tag, voice, account memory, and surface-specific verification |
@@ -15,7 +18,7 @@ These documents are intentionally separated from `SKILL.md` so the agent can loa
 | `capability-probing.md` | proving an uncertain capability with the smallest safe probe and invalidating stale observations |
 | `runtime-boundary-matrix.md` | comparing cloud/local/browser/Chrome/computer/scheduled execution locations |
 | `tool-routing-matrix.md` | selecting the authoritative interface for structured, browser, code, GUI, and artifact tasks |
-| `workspace-map.md` | modeling Desktop workspace/context/process/browser state and worktree mismatches |
+| `workspace-map.md` | modeling workspace/context/process/browser state and worktree mismatches |
 | `runtime-boundaries.md` | crossing local/cloud, browser, authentication, or remote boundaries |
 | `activation-and-memory.md` | Skill slash activation and activation lifetime |
 | `session-memory.md` | maintaining and invalidating session capability state |
@@ -44,4 +47,4 @@ These documents are intentionally separated from `SKILL.md` so the agent can loa
 
 ## Loading rule
 
-Do not load all references by default. Start with the smallest relevant set and cross the boundary only when the task actually enters another capability family. The current capability map is a maintained public snapshot, not a universal runtime contract.
+Do not load all references by default. Start with runtime detection, then load the smallest relevant set for the task. Cross the boundary only when the task actually enters another capability family. The capability map is a maintained public snapshot, not a universal runtime contract.
