@@ -94,6 +94,71 @@ def run_script(
     return proc
 
 
+IS_WINDOWS = os.name == "nt"
+SHELL_WRAPPERS = (
+    "session-start.sh",
+    "user-prompt-submit.sh",
+    "post-tool-use-failure.sh",
+)
+
+_SHELL_PROBE: list = []
+
+
+def posix_shell() -> str | None:
+    """Path to a bash that can really run a script here, or None.
+
+    A host without a usable POSIX shell says nothing about the wrapper
+    contract, so tests skip instead of failing. The probe is cached.
+    """
+    if _SHELL_PROBE:
+        return _SHELL_PROBE[0]
+    exe = shutil.which("bash")
+    if exe:
+        try:
+            proc = subprocess.run(
+                [exe, "-c", "printf ok"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if proc.returncode != 0 or proc.stdout.strip() != "ok":
+                exe = None
+        except OSError:
+            exe = None
+    _SHELL_PROBE.append(exe)
+    return exe
+
+
+def has_crlf(path: Path) -> bool:
+    return b"\r\n" in path.read_bytes()
+
+
+def shell_scripts() -> list[Path]:
+    """Every tracked-source .sh file, excluding build output and git internals."""
+    return sorted(
+        path
+        for path in ROOT.rglob("*.sh")
+        if DIST not in path.parents and ".git" not in path.parts
+    )
+
+
+def require_posix_shell(test, scripts=()) -> str:
+    """Skip a test that must execute a .sh wrapper when that cannot work here."""
+    exe = posix_shell()
+    if exe is None:
+        test.skipTest(
+            "no working POSIX shell on this host; the .sh wrappers cannot be executed"
+        )
+    broken = sorted(path.name for path in scripts if has_crlf(path))
+    if broken:
+        test.skipTest(
+            "checkout has CRLF line endings in "
+            + ", ".join(broken)
+            + "; bash cannot run those. Fix with: git add --renormalize ."
+        )
+    return exe
+
+
 def run_hook(
     script: Path,
     payload: str,
@@ -105,7 +170,7 @@ def run_hook(
     env.pop("CLAUDE_CAPABILITY_BRIDGE_MODE", None)
     env.pop("CLAUDE_CAPABILITY_BRIDGE_STATE_DIR", None)
     env.update(env_overrides or {})
-    interpreter = "bash" if script.suffix == ".sh" else sys.executable
+    interpreter = (posix_shell() or "bash") if script.suffix == ".sh" else sys.executable
     return subprocess.run(
         [interpreter, str(script)],
         input=payload,

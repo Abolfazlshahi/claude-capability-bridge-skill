@@ -1,0 +1,17 @@
+# Line endings are part of the runtime contract here.
+#
+# A Windows checkout with core.autocrlf=true rewrites the shell wrappers to
+# CRLF, and bash then fails on the carriage return with exit code 127 before
+# the hook can emit anything. Pinning LF keeps the wrappers executable on
+# every platform, including Git Bash and WSL on Windows.
+* text=auto eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.ps1 text eol=lf
+*.bundle -text
+*.zip -text
+*.png -text

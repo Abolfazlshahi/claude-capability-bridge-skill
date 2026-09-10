@@ -23,6 +23,8 @@ BUDGET = json.loads(
     (util.ROOT / "config" / "content-budgets.json").read_text(encoding="utf-8")
 )["budgets"]["hook_output_chars"]
 
+WRAPPERS = util.SHELL_WRAPPERS
+
 
 class HookTestCase(unittest.TestCase):
     """Base class: every test gets its own throwaway state directory."""
@@ -366,6 +368,16 @@ class FailureGuidanceTestCase(HookTestCase):
 
 
 class WrapperTestCase(HookTestCase):
+    """Tests that actually execute the POSIX wrappers.
+
+    Skipped, never silently passed, on a host that cannot run them: an absent
+    shell or a CRLF checkout is a fact about the machine, not about the code.
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        util.require_posix_shell(self, [self.wrapper(name) for name in WRAPPERS])
+
     def wrapper(self, name: str) -> Path:
         return util.BOOTSTRAP / name
 
@@ -406,11 +418,21 @@ class WrapperTestCase(HookTestCase):
         """A PATH that has a shell but no Python, to exercise the fallback."""
         fake = self.state_dir / "bin"
         fake.mkdir(exist_ok=True)
+        linked = 0
         for tool in ("bash", "sh", "cat", "dirname", "env"):
             for base in ("/usr/bin", "/bin", "/usr/local/bin"):
                 source = Path(base) / tool
-                if source.exists() and not (fake / tool).exists():
+                if not source.exists() or (fake / tool).exists():
+                    continue
+                try:
                     (fake / tool).symlink_to(source)
+                except OSError:
+                    # Windows refuses symlinks without the privilege; a PATH we
+                    # cannot control proves nothing, so skip rather than guess.
+                    break
+                linked += 1
+        if not linked:
+            self.skipTest("cannot build a Python-less PATH on this platform")
         return fake
 
     def test_session_start_has_a_static_fallback_without_python(self) -> None:
@@ -423,16 +445,6 @@ class WrapperTestCase(HookTestCase):
         context = util.hook_context(proc)
         self.assertIsNotNone(context, "session start must still say something")
         self.assertIn("static fallback", context.lower())
-
-    def test_no_python_never_auto_installs_anything(self) -> None:
-        for name in (
-            "session-start.sh",
-            "user-prompt-submit.sh",
-            "post-tool-use-failure.sh",
-        ):
-            text = util.read_text(self.wrapper(name))
-            for forbidden in ("pip ", "pip3 ", "apt-get", "dnf ", "brew ", "curl ", "wget "):
-                self.assertNotIn(forbidden, text, f"{name} must not install anything")
 
     def test_prompt_wrapper_stays_silent_without_python_in_adaptive(self) -> None:
         proc = util.run_hook(
@@ -493,6 +505,30 @@ class DiagnosticsTestCase(HookTestCase):
         self.assertIn("best-effort", out)
         for mode in ("off", "session-only", "adaptive", "legacy-every-turn"):
             self.assertIn(mode, out)
+
+
+class WrapperStaticTestCase(HookTestCase):
+    """Checks on the wrapper *files*. These are platform-independent."""
+
+    def wrapper(self, name: str) -> Path:
+        return util.BOOTSTRAP / name
+
+    def test_no_python_never_auto_installs_anything(self) -> None:
+        for name in WRAPPERS:
+            text = util.read_text(self.wrapper(name))
+            for forbidden in ("pip ", "pip3 ", "apt-get", "dnf ", "brew ", "curl ", "wget "):
+                self.assertNotIn(forbidden, text, f"{name} must not install anything")
+
+    def test_shell_wrappers_are_checked_out_with_lf_endings(self) -> None:
+        """CRLF makes bash die with exit 127 before the hook can emit anything."""
+        offenders = sorted(p.name for p in util.shell_scripts() if util.has_crlf(p))
+        self.assertEqual(
+            offenders,
+            [],
+            "CRLF line endings break the shell wrappers. .gitattributes pins *.sh "
+            "to LF; repair an existing checkout with: git add --renormalize . "
+            "&& git checkout -- .",
+        )
 
 
 if __name__ == "__main__":

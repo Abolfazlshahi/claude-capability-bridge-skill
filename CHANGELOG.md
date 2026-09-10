@@ -11,6 +11,21 @@ stance; the way that guidance reaches the model changed.
 
 ### Fixed
 
+- **A Windows checkout silently disabled every shell wrapper.** With Git's
+  default `core.autocrlf=true`, `*.sh` was checked out with CRLF and `bash`
+  aborted on the carriage return with exit code 127 before the hook could
+  emit anything. `.gitattributes` now pins those files to LF, and a test
+  fails loudly with the repair command instead of the failure looking like
+  a code bug.
+- **The state-directory refusal used a POSIX path on Windows.** When an
+  override pointed inside the package, the engine fell back to
+  `~/.local/state`, which is not where Windows keeps per-user state. The
+  fallback is now the platform default (`%LOCALAPPDATA%` on Windows).
+- **Platform-dependent tests reported failures instead of skips.** Tests
+  that must execute a POSIX wrapper, build a Python-less `PATH`, or read
+  POSIX mode bits now skip with an explicit reason on hosts where those
+  things do not exist. A skip states what was not verified; a false failure
+  hides it.
 - **Plugin packages shipped broken links.** The built Claude Code plugin
   contained six files and no `references/`, while the instructions pointed at
   ten reference documents. Every packaged build now carries its own reference

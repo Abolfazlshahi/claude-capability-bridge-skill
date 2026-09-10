@@ -65,6 +65,9 @@ class InputIsDataTestCase(SafetyTestCase):
             self.assertFalse(marker.exists(), f"executed: {template}")
 
     def test_wrappers_do_not_execute_injected_payloads(self) -> None:
+        util.require_posix_shell(
+            self, [util.BOOTSTRAP / name for name in util.SHELL_WRAPPERS]
+        )
         for name in (
             "session-start.sh",
             "user-prompt-submit.sh",

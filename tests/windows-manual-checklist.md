@@ -8,6 +8,15 @@ UNKNOWN, and no README, release note, or issue reply may claim otherwise.
 Record results by editing the Result column: `PASS`, `FAIL`, or `UNKNOWN`.
 Leave `UNKNOWN` when a step could not be run. Do not infer one row from another.
 
+## Known Windows findings (observed, not inferred)
+
+| Finding | Evidence | Status |
+| --- | --- | --- |
+| `bash` cannot run the wrappers after a CRLF checkout; exit code 127 | Reported by a user running the suite on Windows 11 with Git `core.autocrlf=true` | FIXED via `.gitattributes`; repair an old checkout with `git add --renormalize .` |
+| POSIX mode bits are not enforced on NTFS | `stat().st_mode & 0o077 == 0o66` on a file the engine created with `0o600` | Test skips on Windows; file privacy there depends on ACLs and is UNKNOWN |
+| Symlink creation usually needs a privilege | Python `OSError` when building a Python-less `PATH` | Test skips; the no-Python fallback path is UNVERIFIED on Windows |
+| PowerShell wrappers | Never executed by CI or by this project | UNKNOWN |
+
 ## Environment to record first
 
 | Field | Value |

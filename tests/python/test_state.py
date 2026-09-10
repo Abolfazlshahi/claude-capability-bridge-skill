@@ -51,6 +51,8 @@ class StateLifecycleTestCase(StateTestCase):
             self.assertIn(key, state)
 
     def test_state_file_is_private(self) -> None:
+        if os.name == "nt":
+            self.skipTest("POSIX mode bits are not enforced on Windows; ACLs govern access")
         self.run_event("SessionStart", {"session_id": "abc"})
         mode = (self.state_dir / "session-abc.json").stat().st_mode
         self.assertEqual(stat.S_IMODE(mode) & 0o077, 0, "state must not be group/world readable")
@@ -169,17 +171,24 @@ class StateIsolationTestCase(StateTestCase):
         forbidden = util.ROOT / ".state-must-not-exist"
         fake_home = self.root / "home"
         fake_home.mkdir()
+        # The refusal must land where this OS actually keeps per-user state.
+        if os.name == "nt":
+            base = fake_home / "AppData" / "Local"
+            env = {"LOCALAPPDATA": str(base)}
+        else:
+            base = fake_home / ".local" / "state"
+            env = {"XDG_STATE_HOME": str(base)}
+        env["CLAUDE_CAPABILITY_BRIDGE_STATE_DIR"] = str(forbidden)
+        env["HOME"] = str(fake_home)
+        env["USERPROFILE"] = str(fake_home)
         proc = util.run_engine(
             "SessionStart",
             json.dumps({"session_id": "inside", "source": "startup"}),
-            {
-                "CLAUDE_CAPABILITY_BRIDGE_STATE_DIR": str(forbidden),
-                "HOME": str(fake_home),
-            },
+            env,
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertFalse(forbidden.exists(), "engine wrote state into the package tree")
-        fallback = fake_home / ".local" / "state" / "claude-capability-bridge"
+        fallback = base / "claude-capability-bridge"
         self.assertTrue(fallback.exists(), "expected an OS-appropriate fallback location")
 
 

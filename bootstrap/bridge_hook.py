@@ -170,22 +170,27 @@ def package_home() -> Path:
     return HERE.parent
 
 
+def default_state_dir() -> Path:
+    """The per-user state location for this platform, ignoring any override."""
+    if os.name == "nt":
+        base = env("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
+    else:
+        base = env("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
+    return Path(base) / "claude-capability-bridge"
+
+
 def state_dir() -> Path:
     """Writable state location. Never inside the installed package or the repo."""
     override = env("CLAUDE_CAPABILITY_BRIDGE_STATE_DIR")
-    if override:
-        candidate = Path(override).expanduser()
-    elif os.name == "nt":
-        base = env("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
-        candidate = Path(base) / "claude-capability-bridge"
-    else:
-        base = env("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
-        candidate = Path(base) / "claude-capability-bridge"
+    candidate = Path(override).expanduser() if override else default_state_dir()
     home = package_home().resolve()
     try:
         resolved = candidate.resolve()
         if resolved == home or home in resolved.parents:
-            return Path.home() / ".local" / "state" / "claude-capability-bridge"
+            # An override pointing into the package is refused, and the refusal
+            # must land somewhere the host OS actually uses: a POSIX-shaped
+            # ~/.local/state path is wrong on Windows.
+            return default_state_dir()
     except OSError:
         pass
     return candidate
