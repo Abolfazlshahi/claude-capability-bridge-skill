@@ -1,0 +1,253 @@
+{
+  "synthetic": true,
+  "note": "SYNTHETIC FIXTURE. Hand-written, never captured from a provider. Every number is invented and must not be quoted as a measurement. It exists only to exercise scripts/analyze_trace.py offline.",
+  "records": [
+    {
+      "label": "synthetic turn 1 (cold)",
+      "request": {
+        "model": "example-model-v1",
+        "tools": [
+          {
+            "name": "Bash",
+            "description": "run a shell command",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "command"
+              ]
+            }
+          },
+          {
+            "name": "Read",
+            "description": "read a file",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        ],
+        "system": [
+          {
+            "type": "text",
+            "text": "You are an agent operating inside an example host."
+          },
+          {
+            "type": "text",
+            "text": "CAPABILITY BRIDGE ACTIVE for this session. Identify the host runtime from live evidence before non-trivial work, and verify outcomes instead of assuming them."
+          }
+        ],
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "list the files in this repository"
+              }
+            ]
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 1840,
+        "output_tokens": 96,
+        "cache_creation_input_tokens": 1792,
+        "cache_read_input_tokens": 0
+      }
+    },
+    {
+      "label": "synthetic turn 2 (warm, messages appended)",
+      "request": {
+        "model": "example-model-v1",
+        "tools": [
+          {
+            "name": "Bash",
+            "description": "run a shell command",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "command"
+              ]
+            }
+          },
+          {
+            "name": "Read",
+            "description": "read a file",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        ],
+        "system": [
+          {
+            "type": "text",
+            "text": "You are an agent operating inside an example host."
+          },
+          {
+            "type": "text",
+            "text": "CAPABILITY BRIDGE ACTIVE for this session. Identify the host runtime from live evidence before non-trivial work, and verify outcomes instead of assuming them."
+          }
+        ],
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "list the files in this repository"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "There are 12 files at the top level."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "now run the test suite"
+              }
+            ]
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 2010,
+        "output_tokens": 120,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 1792
+      }
+    },
+    {
+      "label": "synthetic turn 3 (provider reported no cache fields)",
+      "request": {
+        "model": "example-model-v1",
+        "tools": [
+          {
+            "name": "Bash",
+            "description": "run a shell command",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "command"
+              ]
+            }
+          },
+          {
+            "name": "Read",
+            "description": "read a file",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        ],
+        "system": [
+          {
+            "type": "text",
+            "text": "You are an agent operating inside an example host."
+          },
+          {
+            "type": "text",
+            "text": "CAPABILITY BRIDGE ACTIVE for this session. Identify the host runtime from live evidence before non-trivial work, and verify outcomes instead of assuming them."
+          }
+        ],
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "list the files in this repository"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "There are 12 files at the top level."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "now run the test suite"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "132 tests passed."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "summarise what changed"
+              }
+            ]
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 2260,
+        "output_tokens": 210
+      }
+    }
+  ]
+}
