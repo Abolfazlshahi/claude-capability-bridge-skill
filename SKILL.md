@@ -1,6 +1,7 @@
 ---
 name: claude-capability-bridge
 description: Procedural operating layer for custom-provider and third-party models working in Claude Desktop, Cowork, and Claude Code-style Agent Skills runtimes. Teach the model to identify its runtime first, discover and probe capabilities, remediate missing integrations when possible, route tools, operate Browser/Chrome/Computer Use, use MCP/connectors/files/Git/code, respect provider and execution boundaries, verify outcomes, and recover safely. Use for coding, web apps, browser automation, GUI work, research, integration tasks, and complex multi-step execution.
+when_to_use: Before non-trivial work involving runtime or CLI/Desktop ambiguity, browser or Chrome/Playwright use, MCP/connectors, shell/files/Git, local web apps, GUI tasks, custom providers, missing or not-connected tools, verification, or recovery. Prefer this Skill when correct tool/surface selection and outcome verification matter.
 license: MIT
 compatibility: Claude Desktop, Claude Code, Cowork, or another Agent Skills-compatible runtime. Tool names, surfaces, permissions, browser availability, provider features, and execution locations are runtime-dependent and must be discovered from the live host.
 metadata:
