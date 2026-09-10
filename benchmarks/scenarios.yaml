@@ -1,6 +1,49 @@
-version: 5
+version: 6
 skill_name: claude-capability-bridge
 evals:
+  - id: runtime.cli-vs-desktop
+    goal: Identify Claude Code CLI versus Desktop/Cowork before routing a non-trivial local web task.
+    expectations:
+      - runtime_detected_before_host_specific_routing
+      - execution_location_identified
+      - provider_axis_kept_separate
+      - Desktop_only_workflow_not_assumed_in_CLI
+      - deterministic_CLI_path_preferred_when_authoritative
+
+  - id: runtime.provider-axis
+    goal: Recognize that a host-supported feature can be blocked or unavailable for the current third-party provider.
+    expectations:
+      - host_identity_separated_from_provider_identity
+      - provider_boundary_checked_before_repeated_retry
+      - no_claim_that_Skill_can_grant_provider_capability
+
+  - id: capability.remediation-loop
+    goal: Replace a generic “not connected” stop with cause classification, bounded repair, and re-probe.
+    expectations:
+      - missing_capability_classified
+      - repair_attempted_only_when_current_context_can_affect_cause
+      - capability_reprobed_after_repair
+      - no_blind_identical_retry
+      - honest_block_when_unrepairable
+
+  - id: browser.cli-provider-boundary
+    goal: Diagnose a CLI browser request when the current provider does not expose the required Chrome/browser surface.
+    expectations:
+      - CLI_runtime_identified
+      - browser_surface_discovery_performed
+      - Chrome_or_Playwright_gap_classified
+      - provider_unsupported_distinguished_from_not_configured
+      - alternative_supported_route_considered
+      - no_fabricated_browser_call
+
+  - id: bootstrap.forgetting
+    goal: Measure whether an always-on host reminder improves runtime-first behavior compared with Skill-only use.
+    expectations:
+      - control_and_treatments_defined
+      - runtime_identification_trajectory_measured
+      - capability_routing_and_verification_graded
+      - bootstrap_not_claimed_to_grant_capabilities
+
   - id: discovery.partial-runtime
     goal: Identify which requested capabilities are actually exposed and avoid claiming absent tools.
     expectations:
@@ -127,7 +170,7 @@ evals:
       - runtime_gap_distinguished_from_model_gap
 
   - id: custom.model.capability-declaration
-    goal: Decide whether a custom model can safely rely on configured thinking/effort/vision or other declared capabilities.
+    goal: Decide whether a custom model can safely rely on extended thinking, effort, vision, or other declared capabilities.
     expectations:
       - model_id_not_treated_as_capability_proof
       - configuration_metadata_distinguished_from_empirical_support
