@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 
@@ -13,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "SKILL.md"
 REFS = ROOT / "references"
 BOOTSTRAP = ROOT / "bootstrap"
+DIST = ROOT / "dist"
+PLUGIN = DIST / "claude-capability-bridge-plugin"
 EVALS = ROOT / "evals" / "evals.json"
 BENCHMARKS = ROOT / "benchmarks" / "scenarios.yaml"
 BEHAVIORAL = ROOT / "benchmarks" / "behavioral-benchmark.md"
@@ -170,14 +173,42 @@ def main() -> int:
         "custom-provider-transport.md", "project-recognition.md",
         "browser-operating-protocol.md", "capability-operating-kernel.md",
         "claude-code-native-mechanisms.md", "claude-code-cli-operating-model.md",
-        "claude-code-bootstrap-kit.md", "office-and-collaboration-surfaces.md",
-        "runtime-detection-and-remediation.md",
+        "claude-code-bootstrap-kit.md", "claude-code-plugin-packaging.md",
+        "office-and-collaboration-surfaces.md", "runtime-detection-and-remediation.md",
     }
     missing_tests = sorted(test for test in required_tests if not (ROOT / "tests" / test).is_file())
     if missing_tests:
         fail("missing regression tests: " + ", ".join(missing_tests))
 
-    print("PASS: Skill structure, runtime detection, CLI operating model, bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, bootstrap examples, evals, behavioral benchmark, and regression tests passed")
+    package_script = ROOT / "scripts" / "package_claude_code_plugin.py"
+    if not package_script.is_file():
+        fail("scripts/package_claude_code_plugin.py is missing")
+    try:
+        subprocess.run([sys.executable, str(package_script)], check=True, capture_output=True, text=True)
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        fail(f"Claude Code plugin packaging failed: {exc}")
+
+    manifest_path = PLUGIN / ".claude-plugin" / "plugin.json"
+    hooks_path = PLUGIN / "hooks" / "hooks.json"
+    plugin_skill = PLUGIN / "SKILL.md"
+    plugin_hook = PLUGIN / "scripts" / "session-start.sh"
+    for required_path in (manifest_path, hooks_path, plugin_skill, plugin_hook):
+        if not required_path.is_file():
+            fail(f"generated plugin artifact missing: {required_path.relative_to(ROOT)}")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        hooks = json.loads(hooks_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        fail(f"generated plugin JSON is invalid: {exc}")
+    if manifest.get("name") != name:
+        fail("generated plugin name does not match Skill name")
+    if plugin_skill.read_text(encoding="utf-8") != text:
+        fail("generated plugin SKILL.md differs from source SKILL.md")
+    hook_text = hooks_path.read_text(encoding="utf-8")
+    if "SessionStart" not in hook_text or "${CLAUDE_PLUGIN_ROOT}" not in hook_text:
+        fail("generated plugin hook must use SessionStart and CLAUDE_PLUGIN_ROOT")
+
+    print("PASS: Skill structure, runtime detection, CLI operating model, bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, plugin packaging, evals, behavioral benchmark, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
@@ -185,6 +216,8 @@ def main() -> int:
     print("Behavioral benchmark: present")
     print(f"Regression tests: {len(required_tests)}")
     print("Bootstrap examples: shell syntax + JSON validated")
+    print("Claude Code plugin: generated and source-synced")
+    shutil.rmtree(DIST, ignore_errors=True)
     return 0
 
 
