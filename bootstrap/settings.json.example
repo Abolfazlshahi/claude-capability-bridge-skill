@@ -11,6 +11,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/bootstrap/user-prompt-submit.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }
