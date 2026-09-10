@@ -76,20 +76,44 @@ class StateLifecycleTestCase(StateTestCase):
         self.assertTrue(state["recovered_from_corruption"])
         self.assertEqual(state["cards"], {})
 
-    def test_unwritable_state_directory_never_blocks_the_turn(self) -> None:
-        locked = self.root / "locked"
-        locked.mkdir()
-        os.chmod(locked, 0o500)
-        self.addCleanup(os.chmod, locked, 0o700)
+    def test_uncreatable_state_directory_never_blocks_the_turn(self) -> None:
+        """State that cannot be created must degrade, not fail the turn.
+
+        A regular file is used as the parent so the failure is filesystem
+        independent: chmod bits are not honoured on every sandbox.
+        """
+        blocker = self.root / "blocker"
+        blocker.write_text("not a directory", encoding="utf-8")
         proc = util.run_engine(
             "SessionStart",
             json.dumps({"session_id": "ro", "source": "startup"}),
-            {"CLAUDE_CAPABILITY_BRIDGE_STATE_DIR": str(locked)},
+            {"CLAUDE_CAPABILITY_BRIDGE_STATE_DIR": str(blocker / "state")},
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIsNotNone(
             util.hook_context(proc), "guidance must survive an unwritable state dir"
         )
+        self.assertEqual(blocker.read_text("utf-8"), "not a directory")
+
+    def test_read_only_state_directory_never_blocks_the_turn(self) -> None:
+        locked = self.root / "locked"
+        locked.mkdir()
+        os.chmod(locked, 0o500)
+        self.addCleanup(os.chmod, locked, 0o700)
+        probe = locked / ".probe"
+        try:
+            probe.write_text("x", encoding="utf-8")
+            probe.unlink()
+            self.skipTest("filesystem ignores directory mode bits")
+        except OSError:
+            pass
+        proc = util.run_engine(
+            "SessionStart",
+            json.dumps({"session_id": "ro2", "source": "startup"}),
+            {"CLAUDE_CAPABILITY_BRIDGE_STATE_DIR": str(locked)},
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIsNotNone(util.hook_context(proc))
         self.assertEqual(list(locked.glob("*")), [])
 
     def test_no_temporary_files_are_left_behind(self) -> None:
