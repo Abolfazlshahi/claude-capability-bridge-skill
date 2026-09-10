@@ -63,6 +63,7 @@ def main() -> int:
     frontmatter = match.group(1)
     name_match = re.search(r"^name:\s*(.+)$", frontmatter, re.MULTILINE)
     desc_match = re.search(r"^description:\s*(.+)$", frontmatter, re.MULTILINE)
+    when_match = re.search(r"^when_to_use:\s*(.+)$", frontmatter, re.MULTILINE)
     compatibility_match = re.search(r"^compatibility:\s*(.+)$", frontmatter, re.MULTILINE)
     if not name_match:
         fail("frontmatter name is missing")
@@ -76,6 +77,11 @@ def main() -> int:
     description = desc_match.group(1).strip().strip('"')
     if not description or len(description) > 1024:
         fail("description must be non-empty and <= 1024 characters")
+    if when_match:
+        when_to_use = when_match.group(1).strip().strip('"').lower()
+        for phrase in ("runtime", "capability", "browser", "cli"):
+            if phrase not in when_to_use:
+                fail(f"when_to_use should mention {phrase}")
 
     if compatibility_match:
         compatibility = compatibility_match.group(1).strip().strip('"')
@@ -174,7 +180,8 @@ def main() -> int:
         "browser-operating-protocol.md", "capability-operating-kernel.md",
         "claude-code-native-mechanisms.md", "claude-code-cli-operating-model.md",
         "claude-code-bootstrap-kit.md", "claude-code-plugin-packaging.md",
-        "office-and-collaboration-surfaces.md", "runtime-detection-and-remediation.md",
+        "skill-invocation-triggering.md", "office-and-collaboration-surfaces.md",
+        "runtime-detection-and-remediation.md",
     }
     missing_tests = sorted(test for test in required_tests if not (ROOT / "tests" / test).is_file())
     if missing_tests:
@@ -208,7 +215,7 @@ def main() -> int:
     if "SessionStart" not in hook_text or "${CLAUDE_PLUGIN_ROOT}" not in hook_text:
         fail("generated plugin hook must use SessionStart and CLAUDE_PLUGIN_ROOT")
 
-    print("PASS: Skill structure, runtime detection, CLI operating model, bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, plugin packaging, evals, behavioral benchmark, and regression tests passed")
+    print("PASS: Skill structure, runtime detection, CLI operating model, bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, plugin packaging, invocation trigger checks, evals, behavioral benchmark, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
