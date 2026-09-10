@@ -4,14 +4,15 @@ The benchmark measures whether the Skill changes agent behavior, not whether fil
 
 ## Method
 
-Run the same scenario in two conditions:
+Run the same scenario in controlled conditions:
 
 ```text
 CONTROL: model + runtime without claude-capability-bridge
-TREATMENT: same model + runtime + claude-capability-bridge
+TREATMENT A: same model + runtime + claude-capability-bridge
+TREATMENT B: same model + runtime + claude-capability-bridge + always-on bootstrap
 ```
 
-Keep the workspace, tool surface, permissions, provider, task wording, and success criteria constant. Grade the trajectory and final state separately.
+Keep workspace, tool surface, permissions, provider, task wording, and success criteria constant. Grade trajectory and final state separately. Treatment B is optional when the host supports an always-on context/lifecycle mechanism.
 
 ## Primary scenario: server-backed web app
 
@@ -39,16 +40,51 @@ detect reports.html
 ### Treatment target trajectory
 
 ```text
-inspect workspace
+identify runtime + execution context + provider when observable
+→ inspect workspace
 → recognize server-backed Python app
 → inspect declared environment/command
 → launch server
 → confirm readiness + actual URL/port
-→ open HTTP route in available browser
+→ discover an actually exposed browser surface
+→ open HTTP route
 → perform representative user action
 → observe result
 → verify acceptance criteria
 ```
+
+## CLI browser/provider scenario
+
+Run inside Claude Code CLI with a third-party provider and a task requiring local server launch plus Chrome/Playwright verification.
+
+Expected trajectory:
+
+```text
+detect CLI
+→ keep provider separate from host
+→ inspect browser/Chrome/Playwright/MCP exposure
+→ classify provider restriction vs configuration vs missing executable vs no tool
+→ repair only an actionable class
+→ re-probe
+→ use supported browser route when available
+→ otherwise report browser verification blocked with evidence
+```
+
+Grade as a regression if the agent repeatedly says “not connected” without classification, invents a browser call, or retries a provider-unsupported path without changing a relevant variable.
+
+## Forgetting / bootstrap scenario
+
+Use the same non-trivial task across three conditions. Measure the ordered trajectory:
+
+```text
+runtime identification
+→ capability discovery
+→ remediation classification
+→ routing
+→ verification
+```
+
+Treatment B should be credited only for behavior actually changed by the always-on reminder/context. Do not attribute host-enforced behavior to the Skill, and do not claim bootstrap created capabilities.
 
 ## Secondary scenarios
 
@@ -101,6 +137,7 @@ Claude Tag, a normal Slack connector, voice mode, and cross-conversation memory 
 Score each 0–2:
 
 ```text
+runtime identification
 capability discovery
 project/execution-model recognition
 tool/surface selection
@@ -119,8 +156,8 @@ A useful regression requires improvement in **trajectory and outcome**, not mere
 
 ## Evidence to collect
 
-Record tool calls, selected surfaces, important state transitions, verification evidence, failures, retries, and final outcome. If full traces are unavailable, grade observable actions and environment state rather than claimed reasoning.
+Record tool calls, selected surfaces, runtime/provider classification, important state transitions, verification evidence, failures, retries, and final outcome. If full traces are unavailable, grade observable actions and environment state rather than claimed reasoning.
 
-For native mechanisms, record whether the behavior came from a deterministic hook, model-mediated hook, advisory instruction, or Skill procedure. For Office/collaboration surfaces, record the active surface, permission scope, target state, and independent verification evidence.
+For native mechanisms, record whether behavior came from a deterministic hook, model-mediated hook, advisory instruction, or Skill procedure. For Office/collaboration surfaces, record the active surface, permission scope, target state, and independent verification evidence.
 
-Do not report benchmark improvement until the same scenario has been run under both control and treatment conditions.
+Do not report benchmark improvement until the same scenario has been run under the same model/runtime across the compared control and treatment conditions.
