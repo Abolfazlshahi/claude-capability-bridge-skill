@@ -1,4 +1,4 @@
-version: 7
+version: 8
 skill_name: claude-capability-bridge
 evals:
   - id: runtime.cli-vs-desktop
@@ -44,6 +44,7 @@ evals:
       - capability_routing_and_verification_graded
       - session_start_reminder_present
       - per_turn_reminder_present
+      - post_tool_failure_reminder_present
       - bootstrap_not_claimed_to_grant_capabilities
 
   - id: discovery.partial-runtime
