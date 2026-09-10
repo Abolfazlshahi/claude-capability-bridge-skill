@@ -1,6 +1,6 @@
 # Research Source Notes
 
-_Last reviewed: 2026-09-09._
+_Last reviewed: 2026-09-10._
 
 This project models public, reproducible behavior. It does not claim to reproduce private system prompts, weights, internal classifiers, undocumented orchestration, private tool names, or implementation details that are not observable.
 
@@ -59,6 +59,12 @@ This project models public, reproducible behavior. It does not claim to reproduc
   https://code.claude.com/docs/en/web-quickstart
 - Claude Code Docs — Automate work with routines
   https://code.claude.com/docs/en/routines
+- Claude Code Docs — Chrome integration
+  https://code.claude.com/docs/en/chrome
+- Claude Code Docs — Slash commands / Skills
+  https://code.claude.com/docs/en/slash-commands
+- Claude Code Docs — Claude Code overview
+  https://code.claude.com/docs/en/overview
 
 ### Provider and policy boundaries
 - Claude Code Docs — Configure server-managed settings
@@ -139,7 +145,10 @@ This project models public, reproducible behavior. It does not claim to reproduc
 5. A gateway can be protocol-compatible while the underlying model remains behaviorally different.
 6. When `ANTHROPIC_BASE_URL` or another provider routing mode changes runtime behavior, classify that as a transport/provider boundary before blaming the Skill.
 7. Never encode a private or undocumented tool name into the workflow contract merely because it appeared in an external example.
-8. Before browser verification of a coding task, identify the project's execution model and launch contract; do not treat a template/source file as the application entry point unless the project is intentionally static.
-9. Native Claude Code mechanisms such as hooks, permissions, CLAUDE.md, output styles, teams, worktrees, and Remote Control are release-sensitive; verify current host behavior rather than hardcoding an exhaustive catalog.
-10. Office and collaboration surfaces are also rollout-, client-, permission-, and plan-sensitive; distinguish native application state from standalone file creation and ordinary connector access.
-11. Re-check this source list and the capability map after significant Claude Desktop/Cowork/Claude Code releases.
+8. Runtime identity comes before routing: distinguish Claude Code CLI, Desktop/Cowork, web/cloud, remote, and unknown execution contexts before selecting a host-specific workflow.
+9. Provider identity is a separate axis from host identity; a host-supported integration may still be blocked or unavailable for a third-party provider/endpoint.
+10. When a capability is missing, distinguish not exposed, not configured, not installed, not running, permission denied, provider unsupported, auth/session failure, protocol failure, and model/procedural failure before stopping.
+11. Before browser verification of a coding task, identify the project's execution model and launch contract; do not treat a template/source file as the application entry point unless the project is intentionally static.
+12. Native Claude Code mechanisms such as hooks, permissions, CLAUDE.md, output styles, teams, worktrees, Remote Control, and Chrome integration are release-sensitive; verify current host behavior rather than hardcoding an exhaustive catalog.
+13. Office and collaboration surfaces are also rollout-, client-, permission-, and plan-sensitive; distinguish native application state from standalone file creation and ordinary connector access.
+14. Re-check this source list and the capability map after significant Claude Desktop/Cowork/Claude Code releases.
