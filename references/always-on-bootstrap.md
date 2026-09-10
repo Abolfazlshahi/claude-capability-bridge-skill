@@ -1,6 +1,6 @@
 # Always-On Bootstrap
 
-A portable Agent Skill is procedural knowledge; it is not a universal lifecycle hook. If the host supports an always-on context or lifecycle mechanism, use that mechanism to remind the model to enter the bridge protocol before complex execution.
+A portable Agent Skill is procedural knowledge; it is not a universal lifecycle hook. When the host supports lifecycle hooks, use them to keep the bridge protocol present before work starts and, where appropriate, before each submitted turn.
 
 ## Architecture
 
@@ -26,11 +26,11 @@ A useful bootstrap should tell the model:
 6. Verify the requested outcome with direct evidence.
 ```
 
-Keep this reminder advisory unless the host mechanism itself provides deterministic enforcement.
+A session-start reminder establishes the operating protocol once. A per-turn reminder is stronger against model procedural forgetting because it is injected immediately before the submitted prompt. Keep both reminders short and factual; the Skill body remains the source of the full procedure.
 
 ## Claude Code-style hosts
 
-Claude Code exposes host-owned lifecycle/configuration mechanisms such as `CLAUDE.md` and hooks. These mechanisms are distinct from Skills. `CLAUDE.md` is suitable for a concise persistent operating rule; a lifecycle hook can prepare or inject a small session-start capability reminder when the host configuration permits it.
+Claude Code exposes host-owned lifecycle/configuration mechanisms such as `CLAUDE.md` and hooks. `CLAUDE.md` is suitable for concise persistent project rules. `SessionStart` can inject a small bootstrap at session start/resume, while `UserPromptSubmit` can inject a compact reminder before every submitted prompt. `UserPromptSubmit` runs before Claude processes the prompt and can add `additionalContext`; it cannot replace the prompt itself.
 
 Example persistent rule:
 
@@ -38,7 +38,7 @@ Example persistent rule:
 Before non-trivial work, identify runtime and execution context. Discover required capabilities from the live host, classify missing integrations, attempt authorized remediation when possible, then verify the requested outcome. Never assume Desktop, CLI, browser, Chrome, MCP, or provider capabilities from Skill text alone.
 ```
 
-A SessionStart-style hook may generate a similarly small reminder or capability snapshot. Keep host-specific syntax in host configuration, not in the portable Skill kernel, because hook schemas and available events are runtime/version dependent.
+Keep host-specific syntax in host configuration or a plugin rather than in the portable Skill kernel. Hook schemas and available events are runtime/version dependent. The bundled Claude Code plugin therefore packages a `SessionStart` hook and a `UserPromptSubmit` hook around the same authoritative Skill.
 
 ## What bootstrap cannot do
 
@@ -46,16 +46,16 @@ Bootstrap does not:
 
 `grant tools | bypass permissions | create browser access | make a third-party provider support a host feature | repair invalid tool protocols | guarantee model tool-calling`.
 
-If the model still forgets after an always-on reminder and the capability is visibly exposed, classify that as a procedural/model behavior issue and prefer deterministic structured interfaces where possible.
+A per-turn reminder improves procedural recall but is still context, not a new capability. If the model still forgets after the reminder and the capability is visibly exposed, classify that as a procedural/model behavior issue. Prefer deterministic structured interfaces or host-enforced hooks for requirements that must not depend on model compliance.
 
 ## Evaluation
 
-Compare three conditions when testing forgetting:
+Compare at least three conditions when testing forgetting:
 
 ```text
 CONTROL: no bridge
 TREATMENT A: Skill only
-TREATMENT B: Skill + always-on bootstrap
+TREATMENT B: Skill + session/per-turn bootstrap
 ```
 
-Measure whether the agent identifies the runtime, enters the capability loop before acting, distinguishes missing configuration from provider limits, and verifies the result. Do not claim bootstrap effectiveness without a controlled behavioral run.
+Use fresh sessions. Measure Skill invocation separately from task execution, and record whether the agent identifies the runtime, enters the capability loop before acting, distinguishes missing configuration from provider limits, and verifies the result. Do not claim bootstrap effectiveness without a controlled behavioral run.
