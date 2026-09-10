@@ -48,6 +48,28 @@ def warn(message: str) -> None:
     print(f"WARN: {message}")
 
 
+def run_json_hook(path: Path, expected_event: str) -> None:
+    sample = json.dumps({"hook_event_name": expected_event, "cwd": str(ROOT)})
+    try:
+        result = subprocess.run(
+            ["bash", str(path)],
+            input=sample,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        )
+        payload = json.loads(result.stdout)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+        fail(f"bootstrap hook {path.relative_to(ROOT)} did not emit valid JSON: {exc}")
+    hook_output = payload.get("hookSpecificOutput", {})
+    if hook_output.get("hookEventName") != expected_event:
+        fail(f"bootstrap hook {path.relative_to(ROOT)} emitted wrong hookEventName")
+    context = hook_output.get("additionalContext")
+    if not isinstance(context, str) or "runtime" not in context.lower() or "verify" not in context.lower():
+        fail(f"bootstrap hook {path.relative_to(ROOT)} must emit runtime/verification guidance")
+
+
 def main() -> int:
     if not SKILL.is_file():
         fail("SKILL.md is missing")
@@ -132,10 +154,14 @@ def main() -> int:
             subprocess.run(["bash", "-n", str(shell_file)], check=True, capture_output=True, text=True)
         except (subprocess.CalledProcessError, FileNotFoundError) as exc:
             fail(f"{shell_file.relative_to(ROOT)} failed syntax validation: {exc}")
+    run_json_hook(BOOTSTRAP / "session-start.sh", "SessionStart")
+    run_json_hook(BOOTSTRAP / "user-prompt-submit.sh", "UserPromptSubmit")
     try:
-        json.loads((BOOTSTRAP / "settings.json.example").read_text(encoding="utf-8"))
+        settings = json.loads((BOOTSTRAP / "settings.json.example").read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         fail(f"invalid bootstrap/settings.json.example: {exc}")
+    if "SessionStart" not in settings.get("hooks", {}) or "UserPromptSubmit" not in settings.get("hooks", {}):
+        fail("bootstrap settings example must register SessionStart and UserPromptSubmit")
 
     if not EVALS.is_file():
         fail("evals/evals.json is missing")
@@ -213,14 +239,14 @@ def main() -> int:
     if "UserPromptSubmit" not in hooks_json["hooks"]:
         fail("generated plugin hooks.json is missing UserPromptSubmit")
 
-    print("PASS: Skill structure, runtime detection, CLI operating model, session/per-turn bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, plugin packaging, invocation trigger checks, evals, behavioral benchmark, and regression tests passed")
+    print("PASS: Skill structure, runtime detection, CLI operating model, executable session/per-turn bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, plugin packaging, invocation trigger checks, evals, behavioral benchmark, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
     print(f"Evals: {len(payload['evals'])}")
     print("Behavioral benchmark: present")
     print(f"Regression tests: {len(required_tests)}")
-    print("Bootstrap examples: shell syntax + JSON validated")
+    print("Bootstrap examples: shell syntax + JSON output + settings registration validated")
     print("Claude Code plugin: generated and source-synced")
     shutil.rmtree(DIST, ignore_errors=True)
     return 0
