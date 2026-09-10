@@ -11,6 +11,13 @@ stance; the way that guidance reaches the model changed.
 
 ### Fixed
 
+- The no-Python fallback tests no longer skip on Windows. Mirroring tools
+  into a private directory needs the symlink privilege; dropping every
+  `PATH` entry that holds a python executable does not, and it works
+  because Windows keeps its interpreters in their own directories. The
+  constructed `PATH` is probed before use, so an unusable one still skips
+  rather than passing quietly.
+
 - `scripts/run_tests.py --summary` reports a run in a few lines: the host
   facts, every failing test id with its assertion, the skip reasons grouped
   by count, and the totals. The verbose per-test log is the default, but it

@@ -461,8 +461,13 @@ class WrapperTestCase(HookTestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(proc.stdout.strip(), "")
 
-    def _bin_without_python(self) -> Path:
-        """A PATH that has a shell but no Python, to exercise the fallback."""
+    def _mirrored_bin_without_python(self):
+        """POSIX: mirror the tools the wrapper needs, leaving Python behind.
+
+        On Linux and macOS the interpreters share a directory with cat and
+        bash, so the only way to drop one without the others is to build a
+        private directory of symlinks.
+        """
         fake = self.state_dir / "bin"
         fake.mkdir(exist_ok=True)
         linked = 0
@@ -474,13 +479,64 @@ class WrapperTestCase(HookTestCase):
                 try:
                     (fake / tool).symlink_to(source)
                 except OSError:
-                    # Windows refuses symlinks without the privilege; a PATH we
-                    # cannot control proves nothing, so skip rather than guess.
                     break
                 linked += 1
-        if not linked:
+        return str(fake) if linked else None
+
+    def _path_without_python_dirs(self):
+        """Windows: keep every PATH entry that holds no python executable.
+
+        Windows refuses symlinks without a privilege, but it does not need
+        them: the interpreters live in their own directories, including the
+        Store alias under WindowsApps, so dropping those directories leaves
+        the Git tools the wrapper actually calls intact.
+        """
+        kept = []
+        for entry in os.environ.get("PATH", "").split(os.pathsep):
+            if not entry:
+                continue
+            try:
+                names = {item.name.lower() for item in Path(entry).iterdir()}
+            except OSError:
+                continue
+            if any(
+                stem + suffix in names
+                for stem in ("python", "python3")
+                for suffix in ("", ".exe", ".bat", ".cmd")
+            ):
+                continue
+            kept.append(entry)
+        return os.pathsep.join(kept) if kept else None
+
+    def _bin_without_python(self) -> str:
+        """A PATH that still has a shell but no Python at all.
+
+        The result is verified before it is used: if python still resolves, or
+        if the tools the wrapper needs stopped resolving, the test skips. A
+        PATH we cannot control proves nothing.
+        """
+        candidate = (
+            self._path_without_python_dirs()
+            if util.IS_WINDOWS
+            else self._mirrored_bin_without_python()
+        )
+        if candidate is None:
             self.skipTest("cannot build a Python-less PATH on this platform")
-        return fake
+        probe = subprocess.run(
+            [
+                util.posix_shell() or "bash",
+                "-c",
+                "command -v python3 python; command -v cat",
+            ],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "PATH": candidate},
+            timeout=60,
+        )
+        found = probe.stdout.lower()
+        if "python" in found or "cat" not in found:
+            self.skipTest("cannot build a Python-less PATH on this platform")
+        return candidate
 
     def test_session_start_has_a_static_fallback_without_python(self) -> None:
         proc = util.run_hook(
