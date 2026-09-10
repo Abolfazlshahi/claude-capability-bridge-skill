@@ -27,7 +27,8 @@ foreach ($candidate in @('python3', 'python', 'py')) {
 }
 
 if ($python -and (Test-Path $engine)) {
-  $payload | & $python $engine --event PostToolUseFailure 2>$null
+  $output = $payload | & $python $engine --event PostToolUseFailure 2>$null
+  if ($output) { $output }
   exit 0
 }
 

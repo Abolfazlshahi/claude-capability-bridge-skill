@@ -13,6 +13,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -104,29 +105,73 @@ SHELL_WRAPPERS = (
 _SHELL_PROBE: list = []
 
 
-def posix_shell() -> str | None:
-    """Path to a bash that can really run a script here, or None.
+def _dedupe(items) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for item in items:
+        if item and item not in seen:
+            seen.add(item)
+            ordered.append(item)
+    return ordered
 
-    A host without a usable POSIX shell says nothing about the wrapper
-    contract, so tests skip instead of failing. The probe is cached.
+
+def _shell_candidates() -> list[str]:
+    """Every bash worth trying, best first.
+
+    On Windows the bash on PATH is frequently the WSL launcher in System32. It
+    starts fine, so a naive "bash -c" probe answers yes, yet it cannot open the
+    drive-letter path the tests hand it and exits 127. Git for Windows ships a
+    bash that can, so it is preferred when present. Set BRIDGE_TEST_BASH to
+    force a specific interpreter.
     """
-    if _SHELL_PROBE:
-        return _SHELL_PROBE[0]
-    exe = shutil.which("bash")
-    if exe:
+    candidates = [os.environ.get("BRIDGE_TEST_BASH", "")]
+    if IS_WINDOWS:
+        roots = []
+        git = shutil.which("git")
+        if git:
+            roots.append(Path(git).resolve().parent.parent)
+        for variable in (
+            "ProgramFiles",
+            "ProgramW6432",
+            "ProgramFiles(x86)",
+            "LOCALAPPDATA",
+        ):
+            base = os.environ.get(variable)
+            if base:
+                roots.append(Path(base) / "Git")
+                roots.append(Path(base) / "Programs" / "Git")
+        for root in roots:
+            for relative in ("bin/bash.exe", "usr/bin/bash.exe"):
+                candidate = root / relative
+                if candidate.exists():
+                    candidates.append(str(candidate))
+    candidates.append(shutil.which("bash") or "")
+    return _dedupe(candidates)
+
+
+def _can_execute_a_script(exe: str) -> bool:
+    """Probe the way a host really invokes a wrapper: a script file by path."""
+    with tempfile.TemporaryDirectory() as tmp:
+        probe = Path(tmp) / "probe.sh"
+        probe.write_bytes(b"#!/usr/bin/env bash\nprintf ok\n")
         try:
             proc = subprocess.run(
-                [exe, "-c", "printf ok"],
-                capture_output=True,
-                text=True,
-                timeout=30,
+                [exe, str(probe)], capture_output=True, text=True, timeout=60
             )
-            if proc.returncode != 0 or proc.stdout.strip() != "ok":
-                exe = None
         except OSError:
-            exe = None
-    _SHELL_PROBE.append(exe)
-    return exe
+            return False
+    return proc.returncode == 0 and proc.stdout.strip() == "ok"
+
+
+def posix_shell() -> str | None:
+    """A bash that can execute a script by path here, or None. Cached."""
+    if _SHELL_PROBE:
+        return _SHELL_PROBE[0]
+    chosen = next(
+        (exe for exe in _shell_candidates() if _can_execute_a_script(exe)), None
+    )
+    _SHELL_PROBE.append(chosen)
+    return chosen
 
 
 def has_crlf(path: Path) -> bool:
@@ -147,7 +192,9 @@ def require_posix_shell(test, scripts=()) -> str:
     exe = posix_shell()
     if exe is None:
         test.skipTest(
-            "no working POSIX shell on this host; the .sh wrappers cannot be executed"
+            "no bash on this host can execute a script by path (on Windows the "
+            "System32 bash.exe is the WSL launcher and cannot open a drive-letter "
+            "path); install Git for Windows or point BRIDGE_TEST_BASH at a bash"
         )
     broken = sorted(path.name for path in scripts if has_crlf(path))
     if broken:

@@ -414,6 +414,53 @@ class WrapperTestCase(HookTestCase):
             )
             self.assertEqual(proc.stdout.strip(), "", name)
 
+    def _bin_with_broken_python(self) -> str:
+        """A PATH whose python3/python resolve but fail immediately.
+
+        This is the Windows Store "python3" alias in miniature: discoverable,
+        resolvable, and unable to run anything.
+        """
+        fake = self.state_dir / "brokenbin"
+        fake.mkdir(exist_ok=True)
+        for name in ("python3", "python"):
+            shim = fake / name
+            shim.write_text("#!/bin/sh\nexit 9009\n", encoding="utf-8")
+            shim.chmod(0o755)
+        path = str(fake) + os.pathsep + os.environ.get("PATH", "")
+        probe = subprocess.run(
+            [util.posix_shell() or "bash", "-c", "command -v python3 || true"],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "PATH": path},
+            timeout=60,
+        )
+        if fake.name not in probe.stdout:
+            self.skipTest("cannot put a broken interpreter first on PATH here")
+        return path
+
+    def test_broken_interpreter_still_delivers_the_session_start_fallback(self) -> None:
+        """A found-but-broken Python must degrade, not silence the hook."""
+        proc = util.run_hook(
+            self.wrapper("session-start.sh"),
+            json.dumps({"session_id": "w8", "source": "startup"}),
+            self.env(PATH=self._bin_with_broken_python()),
+        )
+        self.assertEqual(proc.returncode, 0)
+        context = util.hook_context(proc)
+        self.assertIsNotNone(
+            context, "a broken interpreter must not silence session start"
+        )
+        self.assertIn("static fallback", context.lower())
+
+    def test_broken_interpreter_keeps_the_prompt_hook_silent_in_adaptive(self) -> None:
+        proc = util.run_hook(
+            self.wrapper("user-prompt-submit.sh"),
+            json.dumps({"session_id": "w9", "prompt": "anything"}),
+            self.env(PATH=self._bin_with_broken_python()),
+        )
+        self.assertEqual(proc.returncode, 0)
+        self.assertEqual(proc.stdout.strip(), "")
+
     def _bin_without_python(self) -> Path:
         """A PATH that has a shell but no Python, to exercise the fallback."""
         fake = self.state_dir / "bin"

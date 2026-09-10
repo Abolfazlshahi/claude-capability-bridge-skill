@@ -30,8 +30,13 @@ for candidate in python3 python; do
 done
 
 if [ -n "$PYTHON" ] && [ -f "$ENGINE" ]; then
-  printf '%s' "$PAYLOAD" | "$PYTHON" "$ENGINE" --event UserPromptSubmit 2>/dev/null
-  exit 0
+  OUTPUT="$(printf '%s' "$PAYLOAD" | "$PYTHON" "$ENGINE" --event UserPromptSubmit 2>/dev/null || true)"
+  if [ -n "$OUTPUT" ]; then
+    printf '%s\n' "$OUTPUT"
+    exit 0
+  fi
+  # Silence is the normal adaptive outcome, so an empty result is only
+  # treated as a runtime problem by the legacy branch below.
 fi
 
 if [ "$MODE" = "legacy-every-turn" ]; then

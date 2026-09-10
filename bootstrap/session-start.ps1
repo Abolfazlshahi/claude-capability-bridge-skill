@@ -26,8 +26,13 @@ foreach ($candidate in @('python3', 'python', 'py')) {
 }
 
 if ($python -and (Test-Path $engine)) {
-  $payload | & $python $engine --event SessionStart 2>$null
-  exit 0
+  $output = $payload | & $python $engine --event SessionStart 2>$null
+  if ($output) {
+    $output
+    exit 0
+  }
+  # Discoverable but broken interpreter (a Windows Store "python3" alias is
+  # the common case): fall through to the static fallback below.
 }
 
 # Fallback: no Python runtime. Static, minimal, session-scoped only.

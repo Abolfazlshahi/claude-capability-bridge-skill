@@ -15,6 +15,8 @@ Leave `UNKNOWN` when a step could not be run. Do not infer one row from another.
 | `bash` cannot run the wrappers after a CRLF checkout; exit code 127 | Reported by a user running the suite on Windows 11 with Git `core.autocrlf=true` | FIXED via `.gitattributes`; repair an old checkout with `git add --renormalize .` |
 | POSIX mode bits are not enforced on NTFS | `stat().st_mode & 0o077 == 0o66` on a file the engine created with `0o600` | Test skips on Windows; file privacy there depends on ACLs and is UNKNOWN |
 | Symlink creation usually needs a privilege | Python `OSError` when building a Python-less `PATH` | Test skips; the no-Python fallback path is UNVERIFIED on Windows |
+| `bash` on `PATH` can start but cannot execute a wrapper by path; exit 127 | Reported on Windows 11 after line endings were fixed, so CRLF was ruled out | Test probe now runs a real script file and prefers Git for Windows' bash |
+| A resolvable `python3` alias that runs nothing | Windows Store alias behaviour | Wrappers now fall back when the engine emits nothing |
 | PowerShell wrappers | Never executed by CI or by this project | UNKNOWN |
 
 ## Environment to record first

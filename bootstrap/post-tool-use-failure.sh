@@ -31,7 +31,10 @@ for candidate in python3 python; do
 done
 
 if [ -n "$PYTHON" ] && [ -f "$ENGINE" ]; then
-  printf '%s' "$PAYLOAD" | "$PYTHON" "$ENGINE" --event PostToolUseFailure 2>/dev/null
+  OUTPUT="$(printf '%s' "$PAYLOAD" | "$PYTHON" "$ENGINE" --event PostToolUseFailure 2>/dev/null || true)"
+  if [ -n "$OUTPUT" ]; then
+    printf '%s\n' "$OUTPUT"
+  fi
   exit 0
 fi
 

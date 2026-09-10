@@ -37,6 +37,21 @@ def main() -> int:
     sys.path.insert(0, str(TESTS))
     sys.path.insert(0, str(ROOT / "scripts"))
 
+    # Report the host facts that decide which tests can run at all, so a
+    # skip can be read as evidence instead of guessed at.
+    try:
+        import bridge_test_utils as util
+
+        shell = util.posix_shell()
+    except Exception:  # diagnostics must never decide a run
+        shell = None
+    print(f"python: {sys.version.split()[0]} on {sys.platform}")
+    print(
+        "posix shell for wrapper tests: "
+        + (shell or "NONE (wrapper execution tests will skip, not pass)")
+    )
+    print()
+
     suite = unittest.TestLoader().discover(
         str(TESTS), pattern=args.pattern, top_level_dir=str(TESTS)
     )

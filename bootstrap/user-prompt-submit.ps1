@@ -23,8 +23,13 @@ foreach ($candidate in @('python3', 'python', 'py')) {
 }
 
 if ($python -and (Test-Path $engine)) {
-  $payload | & $python $engine --event UserPromptSubmit 2>$null
-  exit 0
+  $output = $payload | & $python $engine --event UserPromptSubmit 2>$null
+  if ($output) {
+    $output
+    exit 0
+  }
+  # Silence is the normal adaptive outcome; only the legacy branch below
+  # treats an empty result as a runtime problem.
 }
 
 if ($mode -eq 'legacy-every-turn') {

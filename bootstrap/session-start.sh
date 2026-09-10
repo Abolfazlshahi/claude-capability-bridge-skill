@@ -28,8 +28,15 @@ for candidate in python3 python; do
 done
 
 if [ -n "$PYTHON" ] && [ -f "$ENGINE" ]; then
-  printf '%s' "$PAYLOAD" | "$PYTHON" "$ENGINE" --event SessionStart 2>/dev/null
-  exit 0
+  OUTPUT="$(printf '%s' "$PAYLOAD" | "$PYTHON" "$ENGINE" --event SessionStart 2>/dev/null || true)"
+  if [ -n "$OUTPUT" ]; then
+    printf '%s\n' "$OUTPUT"
+    exit 0
+  fi
+  # An interpreter can be discoverable and still useless: a Windows Store
+  # "python3" alias resolves, runs nothing, and prints nothing. Empty output
+  # at session start is a malfunction, so fall through to the static
+  # fallback below rather than open a session with no protocol at all.
 fi
 
 # Fallback: no Python runtime available. Static, minimal, session-scoped only.

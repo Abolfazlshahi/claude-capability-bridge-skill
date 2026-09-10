@@ -11,6 +11,16 @@ stance; the way that guidance reaches the model changed.
 
 ### Fixed
 
+- **A discoverable but broken Python silenced the hooks completely.** The
+  wrappers selected the first `python3`/`python` on `PATH` and trusted it.
+  A Windows Store alias resolves, runs nothing, and prints nothing, so the
+  session opened with no protocol at all. The wrappers now check whether
+  the engine actually produced output and fall back when it did not.
+- **The test suite trusted `bash -c` as proof that wrappers can run.** On
+  Windows, `bash` on `PATH` is often the WSL launcher, which starts fine but
+  cannot open a drive-letter path and exits 127. The probe now executes a
+  real script file, prefers the bash shipped with Git for Windows, honours
+  `BRIDGE_TEST_BASH`, and the runner prints which shell it selected.
 - **A Windows checkout silently disabled every shell wrapper.** With Git's
   default `core.autocrlf=true`, `*.sh` was checked out with CRLF and `bash`
   aborted on the carriage return with exit code 127 before the hook could
