@@ -145,23 +145,32 @@ def main() -> int:
 
     if not BOOTSTRAP.is_dir():
         fail("bootstrap directory is missing")
-    bootstrap_files = ("session-start.sh", "session-start.ps1", "settings.json.example", "user-prompt-submit.sh")
+    bootstrap_files = (
+        "session-start.sh", "session-start.ps1", "settings.json.example",
+        "user-prompt-submit.sh", "post-tool-use-failure.sh",
+    )
     missing_bootstrap = sorted(item for item in bootstrap_files if not (BOOTSTRAP / item).is_file())
     if missing_bootstrap:
         fail("missing bootstrap files: " + ", ".join(missing_bootstrap))
-    for shell_file in (BOOTSTRAP / "session-start.sh", BOOTSTRAP / "user-prompt-submit.sh"):
+    for shell_file in (
+        BOOTSTRAP / "session-start.sh",
+        BOOTSTRAP / "user-prompt-submit.sh",
+        BOOTSTRAP / "post-tool-use-failure.sh",
+    ):
         try:
             subprocess.run(["bash", "-n", str(shell_file)], check=True, capture_output=True, text=True)
         except (subprocess.CalledProcessError, FileNotFoundError) as exc:
             fail(f"{shell_file.relative_to(ROOT)} failed syntax validation: {exc}")
     run_json_hook(BOOTSTRAP / "session-start.sh", "SessionStart")
     run_json_hook(BOOTSTRAP / "user-prompt-submit.sh", "UserPromptSubmit")
+    run_json_hook(BOOTSTRAP / "post-tool-use-failure.sh", "PostToolUseFailure")
     try:
         settings = json.loads((BOOTSTRAP / "settings.json.example").read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         fail(f"invalid bootstrap/settings.json.example: {exc}")
-    if "SessionStart" not in settings.get("hooks", {}) or "UserPromptSubmit" not in settings.get("hooks", {}):
-        fail("bootstrap settings example must register SessionStart and UserPromptSubmit")
+    for hook_name in ("SessionStart", "UserPromptSubmit", "PostToolUseFailure"):
+        if hook_name not in settings.get("hooks", {}):
+            fail(f"bootstrap settings example must register {hook_name}")
 
     if not EVALS.is_file():
         fail("evals/evals.json is missing")
@@ -221,7 +230,11 @@ def main() -> int:
     plugin_skill = PLUGIN / "SKILL.md"
     plugin_session_hook = PLUGIN / "scripts" / "session-start.sh"
     plugin_turn_hook = PLUGIN / "scripts" / "user-prompt-submit.sh"
-    for required_path in (manifest_path, hooks_path, plugin_skill, plugin_session_hook, plugin_turn_hook):
+    plugin_failure_hook = PLUGIN / "scripts" / "post-tool-use-failure.sh"
+    for required_path in (
+        manifest_path, hooks_path, plugin_skill,
+        plugin_session_hook, plugin_turn_hook, plugin_failure_hook,
+    ):
         if not required_path.is_file():
             fail(f"generated plugin artifact missing: {required_path.relative_to(ROOT)}")
     try:
@@ -234,12 +247,14 @@ def main() -> int:
     if plugin_skill.read_text(encoding="utf-8") != text:
         fail("generated plugin SKILL.md differs from source SKILL.md")
     hook_text = hooks_path.read_text(encoding="utf-8")
-    if "SessionStart" not in hook_text or "UserPromptSubmit" not in hook_text or "${CLAUDE_PLUGIN_ROOT}" not in hook_text:
-        fail("generated plugin hooks must use SessionStart, UserPromptSubmit, and CLAUDE_PLUGIN_ROOT")
-    if "UserPromptSubmit" not in hooks_json["hooks"]:
-        fail("generated plugin hooks.json is missing UserPromptSubmit")
+    for required in ("SessionStart", "UserPromptSubmit", "PostToolUseFailure", "${CLAUDE_PLUGIN_ROOT}"):
+        if required not in hook_text:
+            fail(f"generated plugin hooks are missing {required}")
+    for hook_name in ("SessionStart", "UserPromptSubmit", "PostToolUseFailure"):
+        if hook_name not in hooks_json["hooks"]:
+            fail(f"generated plugin hooks.json is missing {hook_name}")
 
-    print("PASS: Skill structure, runtime detection, CLI operating model, executable session/per-turn bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, plugin packaging, invocation trigger checks, evals, behavioral benchmark, and regression tests passed")
+    print("PASS: Skill structure, runtime detection, CLI operating model, executable session/per-turn/failure bootstrap, capability remediation, probing, routing, browser/project/provider/native/collaboration references, external-dependency guard, plugin packaging, invocation trigger checks, evals, behavioral benchmark, and regression tests passed")
     print(f"Skill: {name}")
     print(f"SKILL.md body lines: {len(body_lines)}")
     print(f"References: {len(REQUIRED_REFS)}")
