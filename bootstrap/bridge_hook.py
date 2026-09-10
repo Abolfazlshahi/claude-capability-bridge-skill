@@ -78,7 +78,11 @@ FAILURE_RULES = (
         "USER_CANCELLED",
         "The user or host declined this call. This is not an execution error: do not retry, "
         "do not reword the same call. Ask what to change, or continue without that step.",
-        r"user (?:rejected|denied|declined)|cancell?ed by user|operation cancell?ed|interrupted by user",
+        r"(?:the )?user (?:rejected|denied|declined|interrupted|aborted|cancell?ed)"
+        r"|cancell?ed by user|abort(?:ed)? by user|interrupted by user"
+        r"|operation (?:cancell?ed|aborted|interrupted)"
+        r"|request (?:was )?(?:cancell?ed|interrupted|aborted)"
+        r"|keyboardinterrupt|\bsigint\b|user (?:did not|didn't) (?:approve|confirm)",
     ),
     (
         "PERMISSION_DENIED",
