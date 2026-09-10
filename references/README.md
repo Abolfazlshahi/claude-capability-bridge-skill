@@ -1,12 +1,13 @@
 # Reference Map
 
-These documents are intentionally separated from `SKILL.md` so the agent can load only the procedure required for the current task. Runtime identity is now the first execution gate; provider-specific boundaries and project execution models remain separate.
+These documents are intentionally separated from `SKILL.md` so the agent can load only the procedure required for the current task. The canonical current-capability snapshot is `claude-desktop-current-map.md`; provider-specific boundaries are in `custom-provider-transport.md`; runtime detection and profiles are in `runtime-detection-and-profiles.md`; CLI behavior is in `claude-code-cli-operating-model.md`; project execution-model recognition is in `project-recognition-and-launch.md`; evidence provenance is kept in `source-notes.md`.
 
 | Reference | Use when |
 |---|---|
-| `runtime-detection-and-profiles.md` | identifying CLI/Desktop/Cowork/cloud/remote context, provider axis, and compact runtime profile |
-| `capability-remediation.md` | classifying missing integrations and attempting bounded repair before stopping |
-| `always-on-bootstrap.md` | keeping a tiny host-owned runtime reminder present when the host supports persistent context/hooks |
+| `runtime-detection-and-profiles.md` | identify CLI/Desktop/Cowork/cloud/remote host, execution location, provider, and capability profile |
+| `claude-code-cli-operating-model.md` | CLI-first routing, shell/Git/process work, browser integration boundaries, provider-aware CLI recovery |
+| `claude-code-bootstrap-kit.md` | configure a compact always-on `CLAUDE.md`/lifecycle reminder and evaluate procedural forgetting |
+| `capability-remediation.md` | classify missing integrations and repair/re-probe instead of stopping at “not connected” |
 | `claude-desktop-current-map.md` | checking the current public Claude Desktop/Cowork/Claude Code capability surface |
 | `claude-code-native-mechanisms.md` | hooks, CLAUDE.md/rules, slash commands, output styles, rewind, worktrees, teams, SDK/CI, IDE, and Remote Control boundaries |
 | `office-and-collaboration-surfaces.md` | native Office, standalone file generation, Slack/Claude Tag, voice, account memory, and surface-specific verification |
@@ -47,4 +48,4 @@ These documents are intentionally separated from `SKILL.md` so the agent can loa
 
 ## Loading rule
 
-Do not load all references by default. Start with runtime detection, then load the smallest relevant set for the task. Cross the boundary only when the task actually enters another capability family. The capability map is a maintained public snapshot, not a universal runtime contract.
+Do not load all references by default. Start with the smallest relevant set and cross the boundary only when the task actually enters another capability family. The current capability map is a maintained public snapshot, not a universal runtime contract.
