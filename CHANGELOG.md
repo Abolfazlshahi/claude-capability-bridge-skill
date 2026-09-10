@@ -11,6 +11,11 @@ stance; the way that guidance reaches the model changed.
 
 ### Fixed
 
+- `scripts/run_tests.py --summary` reports a run in a few lines: the host
+  facts, every failing test id with its assertion, the skip reasons grouped
+  by count, and the totals. The verbose per-test log is the default, but it
+  is not something a human can paste into a bug report.
+
 - **A discoverable but broken Python silenced the hooks completely.** The
   wrappers selected the first `python3`/`python` on `PATH` and trusted it.
   A Windows Store alias resolves, runs nothing, and prints nothing, so the

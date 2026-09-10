@@ -8,6 +8,13 @@ UNKNOWN, and no README, release note, or issue reply may claim otherwise.
 Record results by editing the Result column: `PASS`, `FAIL`, or `UNKNOWN`.
 Leave `UNKNOWN` when a step could not be run. Do not infer one row from another.
 
+## Reporting a run
+
+Run `python scripts/run_tests.py --summary`. It prints the interpreter, the
+shell selected for the wrapper tests, each failing test with its assertion,
+and the grouped skip reasons. Paste that block into the issue or the PR; it
+is complete evidence without the several hundred lines of verbose output.
+
 ## Known Windows findings (observed, not inferred)
 
 | Finding | Evidence | Status |
