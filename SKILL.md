@@ -2,7 +2,7 @@
 name: claude-capability-bridge
 description: Use when running as a third-party or non-default model inside Claude Code, Claude desktop/web, or any Claude-compatible host and the task needs real capabilities - files and git, shell and builds, browsers and web apps, MCP connectors, artifact delivery, GUI control, delegation, or provider/gateway diagnosis. Supplies evidence-first operating procedure - identify the host from live evidence, confirm what is actually exposed and permitted before acting, route to the matching capability card, verify the requested outcome instead of trusting tool success, and report UNKNOWN honestly. Also use when a tool call failed, a capability seems missing or "not connected", or context was compacted and the operating procedure must be re-established. This Skill creates no tools and grants no permissions.
 license: MIT
-compatibility: Works in Claude Code, Claude desktop/web, and Claude-compatible hosts. Procedural context only - it installs no tools, grants no permissions, and changes no provider behaviour. The optional Claude Code plugin adds lifecycle hooks that need a local Python 3 runtime; without Python a small static session fallback is used and adaptive routing is disabled.
+compatibility: Works in Claude Code, Claude desktop/web, and Claude-compatible hosts. Procedural context only - it installs no tools, grants no permissions, and changes no provider behaviour. The optional Claude Code plugin or explicitly registered host hooks add lifecycle delivery; those hooks need a local Python 3 runtime, while the plugin also ships a small static session fallback for Python-less hosts.
 metadata:
   project: claude-capability-bridge
   version: 0.9.0
@@ -192,4 +192,5 @@ See `references/cache-and-context-economy.md` and, for the ownership split,
 - `references/` - deep material and specialist troubleshooting;
   `references/README.md` maps the old routing to this structure.
 - `docs/` - cache contract, baseline audit, migration notes.
-- `bootstrap/` - optional Claude Code hook runtime (plugin install only).
+- `bootstrap/` - optional Claude Code hook runtime, available through the
+  plugin or explicit host hook registration.
