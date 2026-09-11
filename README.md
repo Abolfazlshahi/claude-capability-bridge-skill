@@ -305,6 +305,15 @@ For strict Agent Skills conformance, validate the generated package with the off
 | Français | [`README_FR.md`](./i18n/README_FR.md) |
 | فارسی | [`README_FA.md`](./i18n/README_FA.md) |
 
+## Support the project
+
+If this project saves you time or helps you ship reliable agentic workflows, you can support its maintenance and future development.
+
+- [GitHub Sponsors](https://github.com/sponsors/Abolfazlshahi)
+- [Telegram](https://t.me/pythash) for project updates and direct contact
+
+Small support helps fund maintenance, testing, documentation, and continued work on the bridge.
+
 ## License
 
 Claude Capability Bridge Skill is released under the **[MIT License](./LICENSE)**.
