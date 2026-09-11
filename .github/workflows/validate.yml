@@ -16,11 +16,90 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install development dependencies
+        run: python3 -m pip install --disable-pip-version-check -r requirements-dev.txt
+
       - name: Validate repository structure
         run: python3 scripts/validate_skill.py
 
+      - name: Run offline test suite
+        run: python3 scripts/run_tests.py
+
+      - name: Hook engine selftest
+        run: python3 bootstrap/bridge_hook.py --selftest
+
+      - name: Trace analyser selftest (synthetic fixtures)
+        run: python3 scripts/analyze_trace.py --selftest
+
+      - name: Shell wrapper syntax
+        run: |
+          for script in bootstrap/*.sh; do
+            bash -n "$script"
+            echo "bash -n ok: $script"
+          done
+
+      - name: PowerShell wrapper syntax
+        shell: bash
+        run: |
+          if ! command -v pwsh >/dev/null 2>&1; then
+            echo "UNKNOWN: pwsh is unavailable on this runner; PowerShell wrappers were not parsed."
+            exit 0
+          fi
+          pwsh -NoProfile -File scripts/check_powershell_syntax.ps1 bootstrap
+
+      - name: JSON validity
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+
+          skip = {".git", "dist", "__pycache__", ".pytest_cache"}
+          checked = 0
+          for path in sorted(pathlib.Path(".").rglob("*.json")):
+              if any(part in skip for part in path.parts):
+                  continue
+              json.loads(path.read_text(encoding="utf-8"))
+              checked += 1
+          for path in sorted(pathlib.Path("bootstrap").glob("*.json.example")):
+              json.loads(path.read_text(encoding="utf-8"))
+              checked += 1
+          print(f"{checked} JSON documents parse")
+          PY
+
+      - name: Card index is up to date
+        run: python3 scripts/build_card_index.py --check
+
       - name: Package strict Skill directory
         run: python3 scripts/package_skill.py
+
+      - name: Package Claude Code plugin
+        run: python3 scripts/package_claude_code_plugin.py
+
+      - name: Check version consistency across build outputs
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          sys.path.insert(0, "scripts")
+          from bridgelib.frontmatter import load_skill_metadata
+
+          source = load_skill_metadata(pathlib.Path("SKILL.md"))
+          built = load_skill_metadata(pathlib.Path("dist/claude-capability-bridge/SKILL.md"))
+          manifest = json.loads(
+              pathlib.Path(
+                  "dist/claude-capability-bridge-plugin/.claude-plugin/plugin.json"
+              ).read_text(encoding="utf-8")
+          )
+          versions = {
+              "SKILL.md": source.version,
+              "built Skill": built.version,
+              "plugin manifest": manifest["version"],
+          }
+          assert len(set(versions.values())) == 1, versions
+          print(f"version {source.version} is consistent across {', '.join(versions)}")
+          PY
 
       - name: Install Agent Skills reference validator
         run: python3 -m pip install --disable-pip-version-check skills-ref
@@ -43,3 +122,36 @@ jobs:
           print(f"Validated {len(data['evals'])} structured evals")
           print('Benchmark definitions present')
           PY
+
+      - name: Validate benchmark scenario schema
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          import yaml
+
+          document = yaml.safe_load(
+              pathlib.Path("benchmarks/scenarios.yaml").read_text(encoding="utf-8")
+          )
+          assert document["skill_name"] == "claude-capability-bridge"
+          scenarios = document["evals"]
+          assert scenarios, "no scenarios defined"
+          seen = set()
+          for scenario in scenarios:
+              for key in ("id", "goal", "expectations"):
+                  assert key in scenario, f"{scenario.get('id', '?')} is missing {key}"
+              assert scenario["id"] not in seen, f"duplicate id {scenario['id']}"
+              seen.add(scenario["id"])
+              assert scenario["expectations"], f"{scenario['id']} has no expectations"
+          variants = document.get("variants") or []
+          assert variants, "benchmark must define comparison variants"
+          print(f"{len(scenarios)} scenarios and {len(variants)} variants are well formed")
+          PY
+
+      - name: Live behavioural benchmark
+        run: |
+          echo "SKIPPED: the live behavioural benchmark needs paid provider access, a real host,"
+          echo "and a human grader. CI cannot run it, so it is never reported as passing."
+          echo
+          echo "SCOPE OF THIS WORKFLOW: offline structure, content, packaging, and hook behaviour."
+          echo "It proves nothing about live model behaviour, real Claude Code execution,"
+          echo "Windows support, or provider cache behaviour."

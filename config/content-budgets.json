@@ -1,0 +1,20 @@
+{
+  "budget_version": 1,
+  "unit": "characters",
+  "unit_note": "These are CHARACTER budgets, not token counts. No tokenizer ships with this repository, so character counts are used as a stable, honest proxy. Do not present a character count as a token count. If a real tokenizer is available in your environment, measure tokens with it and report that number as the token count.",
+  "budgets": {
+    "skill_body_chars": 12000,
+    "profile_chars": 9000,
+    "card_chars": 9000,
+    "hook_output_chars": 2600,
+    "card_index_chars": 30000
+  },
+  "runtime_overrides": {
+    "hook_output_chars": "CLAUDE_CAPABILITY_BRIDGE_MAX_CONTEXT_CHARS"
+  },
+  "enforcement": {
+    "checked_by": "scripts/validate_skill.py",
+    "tested_by": "tests/python/test_content.py",
+    "policy": "A budget overrun is a signal to move detail into references/, never a reason to make a safety, honesty, or permission rule vague or unreadable."
+  }
+}

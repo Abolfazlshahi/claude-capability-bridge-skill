@@ -1,43 +1,44 @@
 #!/usr/bin/env python3
-"""Build a spec-shaped distributable Skill directory from this repository."""
+"""Build the standalone, installable Skill directory.
+
+The payload itself is defined once in scripts/bridgelib/payload.py and shared
+with the Claude Code plugin build, so the two outputs cannot drift.
+"""
 
 from __future__ import annotations
 
-import shutil
+import argparse
+import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-NAME = "claude-capability-bridge"
-OUT = ROOT / "dist" / NAME
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-# Repository-only material stays outside the installable Skill. The package keeps
-# the actual Skill contract (SKILL.md, references, scripts, assets if added).
-INCLUDE = ["SKILL.md", "references", "scripts", "LICENSE"]
-EXCLUDE_SCRIPT_NAMES = {Path(__file__).name, "package_skill.py"}
+from bridgelib.frontmatter import FrontmatterError  # noqa: E402
+from bridgelib.payload import BuildError, build_skill_package  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
-    if OUT.exists():
-        shutil.rmtree(OUT)
-    OUT.mkdir(parents=True)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="output directory (default: dist/<skill-name>)",
+    )
+    args = parser.parse_args()
 
-    for item in INCLUDE:
-        src = ROOT / item
-        dst = OUT / item
-        if item == "scripts":
-            dst.mkdir()
-            for child in src.iterdir():
-                if child.name in EXCLUDE_SCRIPT_NAMES:
-                    continue
-                if child.is_file():
-                    shutil.copy2(child, dst / child.name)
-        elif src.is_dir():
-            shutil.copytree(src, dst, dirs_exist_ok=True)
-        else:
-            shutil.copy2(src, dst)
+    try:
+        result = build_skill_package(ROOT, args.out)
+    except (BuildError, FrontmatterError) as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 1
 
-    print(f"Packaged Skill: {OUT}")
-    print(f"Install directory name: {OUT.name}")
+    print(f"Packaged Skill: {result.out}")
+    print(f"Skill: {result.name}@{result.version}")
+    print(f"Files: {result.file_count}")
+    print("Local reference closure: verified inside the built package")
     return 0
 
 

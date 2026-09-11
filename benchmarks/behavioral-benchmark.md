@@ -165,3 +165,73 @@ Record whether the Skill was actually invoked, tool calls, selected surfaces, ru
 For native mechanisms, record whether behavior came from a deterministic hook, model-mediated hook, advisory instruction, or Skill procedure. For Office/collaboration surfaces, record the active surface, permission scope, target state, and independent verification evidence.
 
 Do not report benchmark improvement until the same scenario has been run under the required control/treatment conditions with fresh sessions.
+
+---
+
+## 0.9.0 delivery-layer scenarios
+
+The scenarios below grade *when* context arrives, not only what it says. Run
+each one in variants A, B, C, and D from `scenarios.yaml`, three times each,
+with a fresh session and a cleared state directory per run.
+
+### Adaptive versus legacy (`bridge.adaptive-vs-legacy`)
+
+Use one mixed workload of roughly ten turns: two capability-sensitive tasks,
+one induced tool failure, one compaction, and six ordinary turns.
+
+Record per variant: verified successes, total tokens, cost per verified
+success, characters injected by the bridge, and turn number of the first
+compaction. Declare a winner only when both cost and success are present.
+
+### Ordinary-turn silence (`bridge.silence-on-ordinary-turns`)
+
+Send six low-stakes prompts. In variant C nothing should be injected. In D a
+reminder appears every turn. The interesting question is whether D's extra text
+buys any measurable behavioural difference on those same six turns.
+
+### Card routing precision (`bridge.card-routing-precision`)
+
+One prompt per task family, plus three deliberately ambiguous prompts such as
+`fix it`, `continue`, `try again`. Expected: a single relevant card for a clear
+prompt, nothing for an ambiguous one, and no repeat of the same card later in
+the session. Score precision, not volume: a card delivered for the wrong family
+is worse than no card.
+
+### Compaction recovery (`bridge.session-start-recovery`)
+
+Establish a verified capability, force a compaction, then ask for work that
+depends on it. The failure signature is a model that keeps acting on a
+capability it can no longer see. The target trajectory reissues the protocol
+once, marks earlier observations stale, and re-probes before depending on them.
+
+### Failure routing (`bridge.failure-class-routing`, `recovery.repeated-failure-stop`)
+
+Induce a real failure - a missing binary, a denied permission, a disconnected
+connector. Grade whether the next attempt changes a variable rather than
+repeating the call, and whether repeated failure ends in an honest block report
+instead of an unbounded retry loop. Note that this guidance necessarily arrives
+*after* the call already ran; pre-execution rejections are not observable from a
+failure hook, so record them as UNOBSERVABLE rather than as a miss.
+
+### Cost accounting worksheet
+
+One row per run. Do not merge cold and warm rows.
+
+| Run | Variant | Cold/warm | Verified successes | input | output | cache_creation | cache_read | Injected chars | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | A | cold | | | | unknown | unknown | 0 | control |
+| 2 | C | cold | | | | | | | |
+| 3 | C | warm | | | | | | | |
+| 4 | D | cold | | | | | | | |
+| 5 | D | warm | | | | | | | |
+
+Leave `unknown` where the provider reported nothing. Do not compute a
+percentage from a column that contains `unknown`.
+
+### What this benchmark still cannot tell you
+
+- Whether a third-party provider preserves cache markers end to end. That needs
+  a captured post-gateway request plus the usage fields it returns.
+- Whether the Windows wrappers behave. See `tests/windows-manual-checklist.md`.
+- Whether a different model would show the same ordering. Every result belongs
+  to one model, one host, and one provider configuration.
