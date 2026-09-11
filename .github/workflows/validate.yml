@@ -45,11 +45,7 @@ jobs:
             echo "UNKNOWN: pwsh is unavailable on this runner; PowerShell wrappers were not parsed."
             exit 0
           fi
-          for script in bootstrap/*.ps1; do
-            pwsh -NoProfile -Command "\$null = [System.Management.Automation.Language.Parser]::ParseFile('$script', [ref]\$null, [ref]\$errors); if (\$errors) { \$errors; exit 1 }"
-            echo "parse ok: $script"
-          done
-          echo "NOTE: parsing is not execution. Windows behaviour stays UNKNOWN until tests/windows-manual-checklist.md is filled in."
+          pwsh -NoProfile -File scripts/check_powershell_syntax.ps1 bootstrap
 
       - name: JSON validity
         run: |

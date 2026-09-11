@@ -10,6 +10,13 @@ Structural release. The Skill keeps its name, its purpose, and its behavioural
 stance; the way that guidance reaches the model changed.
 
 ### Fixed
+- CI: the `PowerShell wrapper syntax` step wrapped `[ref]` around an
+  undeclared `$errors`, which PowerShell rejects at runtime, so the step
+  failed on every runner that ships pwsh. Parsing now runs through
+  `scripts/check_powershell_syntax.ps1`, which declares both out-parameters
+  and reports file, line, and column. `tests/python/test_ci.py` checks the
+  `[ref]` contract statically on any host and executes the checker wherever
+  a PowerShell exists.
 
 - The no-Python fallback tests no longer skip on Windows. Mirroring tools
   into a private directory needs the symlink privilege; dropping every
