@@ -18,6 +18,26 @@
 
 ---
 
+## 💖 Support the project
+
+Financial support is optional and helps with continued development.
+
+The wallet addresses below are taken from the author's [Chat-management-bot-and-AI-assistant](https://github.com/Abolfazlshahi/Chat-management-bot-and-AI-assistant) repository.
+
+| Network | Address |
+|---|---|
+| **TON** | `UQDfjVk2UdpiMg-bsxqoLa0O_icuaF20D-wWJgIJwK1Ha2Ul` |
+| **USDT — TRC20** | `TR8ibZGKutPKoDm5nMbHFwGPFBuMKwjG6j` |
+| **USDT — BEP20** | `0x8c45d6bae8a5a572b2a776779fe0bcae3d3f9107` |
+
+<p align="center">
+  <a href="https://nowpayments.io/donation?api_key=724be14f-9bdf-4318-99d0-0a837b5493b6" target="_blank" rel="noreferrer noopener">
+    <img src="https://nowpayments.io/images/embeds/donation-button-white.svg" alt="Cryptocurrency & Bitcoin donation button by NOWPayments">
+  </a>
+</p>
+
+---
+
 ## The problem
 
 Models can have access to the same browser, filesystem, shell, MCP tools, connectors, and other runtime capabilities as a strong native agent and still use them badly.
@@ -304,15 +324,6 @@ For strict Agent Skills conformance, validate the generated package with the off
 | العربية | [`README_AR.md`](./i18n/README_AR.md) |
 | Français | [`README_FR.md`](./i18n/README_FR.md) |
 | فارسی | [`README_FA.md`](./i18n/README_FA.md) |
-
-## Support the project
-
-If this project saves you time or helps you ship reliable agentic workflows, you can support its maintenance and future development.
-
-- [GitHub Sponsors](https://github.com/sponsors/Abolfazlshahi)
-- [Telegram](https://t.me/pythash) for project updates and direct contact
-
-Small support helps fund maintenance, testing, documentation, and continued work on the bridge.
 
 ## License
 
