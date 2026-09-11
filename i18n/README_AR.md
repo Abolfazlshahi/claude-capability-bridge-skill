@@ -4,7 +4,7 @@
 
 [🇬🇧 English](../README.md) · [🇨🇳 中文](./README_ZH.md) · [🇪🇸 Español](./README_ES.md) · [🇮🇳 हिन्दी](./README_HI.md) · **🇸🇦 العربية** · [🇫🇷 Français](./README_FR.md) · [🇮🇷 فارسی](./README_FA.md)
 
-## 🎯 الفكرة
+## الفكرة
 
 قد يوفّر الـRuntime أدوات للملفات وShell والمتصفح وChrome وComputer Use وMCP وConnectors وProjects وSkills وPlugins وArtifacts وSubagents. لكن وجود الأداة لا يعني أن النموذج يعرف متى يستخدمها، أو بأي ترتيب، أو كيف يثبت أن المهمة اكتملت فعلاً.
 
@@ -16,7 +16,7 @@ Discover → Select → Execute → Observe → Verify → Recover → Report
 
 المهارة لا تنشئ صلاحيات أو أدوات جديدة؛ بل تعلّم النموذج استخدام ما يتيحه الـRuntime فعلياً.
 
-## 🧠 قبل وبعد
+## قبل وبعد
 
 | بدون Skill | مع Skill |
 |---|---|
@@ -28,7 +28,7 @@ Discover → Select → Execute → Observe → Verify → Recover → Report
 
 هذه توقعات هندسية وليست نسب Benchmark مقاسة مسبقاً.
 
-## 🔌 بنية Custom Provider
+## بنية Custom Provider
 
 ```text
 Claude Desktop / Claude Code
@@ -44,7 +44,7 @@ Claude Desktop / Claude Code
 
 إعدادات مثل `ANTHROPIC_BASE_URL` تغيّر endpoint أو مسار النقل، لكنها لا تجعل النموذج الخارجي مطابقاً تلقائياً لنموذج Anthropic. يجب التحقق بشكل مستقل من Tool Calling وVision وContext وReasoning وتوافق البروتوكول.
 
-## 🌐 التحقق من Web Apps
+## التحقق من Web Apps
 
 ```text
 Inspect Repo → Baseline → Implement / Fix
@@ -55,9 +55,9 @@ Inspect Repo → Baseline → Implement / Fix
 → Deterministic Checks → Visual Verification → Evidence Report
 ```
 
-تشغيل العملية، الاستماع على المنفذ، استجابة HTTP، ظهور الواجهة وعمل الميزة هي حالات مختلفة.
+تشغيل العملية، الاستماع على المنفذ، استجابة HTTP، ظهور الواجهة وعمل الميزة هي حالات مختلفة. فتح قالب خادم عبر `file://` لا يعادل تشغيل التطبيق الحقيقي.
 
-## 🧩 القدرات المشمولة
+## القدرات المشمولة
 
 - Browser / Claude in Chrome
 - Computer Use
@@ -72,29 +72,98 @@ Inspect Repo → Baseline → Implement / Fix
 - Recovery والتحقق القائم على الأدلة
 - Custom Provider / Gateway behavior
 
-## 📊 التقييم
+## التسليم التكيفي في Claude Code
 
-قارن باستخدام نفس النموذج والمزوّد والـHost والأدوات والمهمة:
+لا يستطيع الـSkill إجبار كل Host على استدعائه. لذلك يتضمن المستودع لـClaude Code محرك hooks اختيارياً يضيف السياق فقط عندما يكون مفيداً بدلاً من تكرار التذكير في كل دورة.
+
+| الحدث | السلوك |
+|---|---|
+| `SessionStart` | إصدار kernel المختصر وكتالوج البطاقات مرة واحدة لكل session |
+| `SessionStart` بعد compact | إعادة الحد الأدنى من البروتوكول ووضع الملاحظات السابقة كـstale |
+| `UserPromptSubmit` | غالباً لا يخرج شيئاً، وبحد أقصى يحقن capability card واحدة مطابقة |
+| `PostToolUseFailure` | تصنيف الفشل وتقديم إرشاد محدود للخطوة التالية |
+
+الأنماط: `adaptive` (الافتراضي)، `session-only`، `legacy-every-turn`، `off`.
+
+تسليم hook هو best-effort ولا يستطيع الـhook إثبات أن الـHost أدخل النص فعلاً في سياق النموذج.
+
+## التقييم وBenchmarking
+
+لا يدّعي المشروع أن الـSkill يحسن كل نموذج. يجب إثبات ذلك بتشغيلات مضبوطة:
 
 ```text
-Bridge OFF  ↔  Bridge ON
+A  control                    بدون Skill وبدون hooks
+B  skill only                 تثبيت Skill بدون تسجيل hooks
+C  skill + adaptive           الإعداد الافتراضي
+D  skill + legacy-every-turn  تذكير كل دورة للمقارنة
 ```
 
-قس Tool Selection وSchema Validity وSequencing وVerification وRecovery وFalse Success وEfficiency وSafety.
+يجب تثبيت النموذج والـHost والأدوات والـprovider والـworkspace ونص المهمة ومعايير النجاح. افصل بين جلسات cold وwarm. قس Tool Selection وSchema Validity وSequencing وVerification وRecovery وFalse Success وEfficiency وSafety.
 
-## 📦 التثبيت
+> **بدون نسب مختلقة:** قبل وجود paired live runs، أي تحسن مجرد فرضية هندسية وليس نتيجة تجريبية.
+
+## التثبيت
+
+### Agent Skill
 
 ```bash
 python3 scripts/package_skill.py
 ```
 
-سيتم إنشاء `dist/claude-capability-bridge/`. ثبّت المجلد عبر آلية Agent Skills الخاصة بالـHost، ثم استخدم عند دعم Slash Commands:
+ينتج `dist/claude-capability-bridge/` ليتم تثبيته عبر آلية Agent Skills الخاصة بالـHost.
 
-```text
-/claude-capability-bridge
+### Claude Code Plugin
+
+```bash
+python3 scripts/package_claude_code_plugin.py
 ```
 
-## 💖 دعم المشروع
+ينتج `dist/claude-capability-bridge-plugin/` ويضم الـSkill نفسه مع runtime اختياري للـhooks.
+
+### التسجيل اليدوي للـhooks
+
+انسخ الإدخالات من [`bootstrap/settings.json.example`](../bootstrap/settings.json.example) إلى إعدادات الـHost واختر `CLAUDE_CAPABILITY_BRIDGE_MODE`. الـPlugin يسجل hooks الخاصة به تلقائياً.
+
+## هيكل المشروع
+
+```text
+claude-capability-bridge-skill/
+├── SKILL.md
+├── profiles/
+├── cards/
+├── references/
+├── bootstrap/
+├── config/
+├── docs/
+├── scripts/
+├── tests/python/
+├── benchmarks/
+├── evals/
+├── assets/
+├── i18n/
+├── CHANGELOG.md
+└── LICENSE
+```
+
+مسار الكشف التدريجي:
+
+```text
+kernel → runtime profile → task card → reference → execution → verification
+```
+
+## التحقق
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+python3 scripts/validate_skill.py
+python3 scripts/run_tests.py
+python3 bootstrap/bridge_hook.py --selftest
+python3 scripts/analyze_trace.py --selftest
+```
+
+هذه الفحوصات تغطي البنية والمراجع والحزم وعقود المحتوى والـhooks ودورة حياة الحالة وتحليل trace الاصطناعي. لكنها لا تثبت سلوك النموذج الحي أو التنفيذ الحقيقي داخل Claude Code أو دعم Windows الكامل أو سلوك cache لدى provider.
+
+## دعم المشروع
 
 عناوين التبرع مأخوذة من مستودع [Chat-management-bot-and-AI-assistant](https://github.com/Abolfazlshahi/Chat-management-bot-and-AI-assistant).
 
@@ -104,14 +173,16 @@ python3 scripts/package_skill.py
 | USDT TRC20 | `TR8ibZGKutPKoDm5nMbHFwGPFBuMKwjG6j` |
 | USDT BEP20 | `0x8c45d6bae8a5a572b2a776779fe0bcae3d3f9107` |
 
-## 📣 Telegram
+<a href="https://nowpayments.io/donation?api_key=724be14f-9bdf-4318-99d0-0a837b5493b6" target="_blank" rel="noreferrer noopener"><img src="https://nowpayments.io/images/embeds/donation-button-white.svg" alt="Cryptocurrency & Bitcoin donation button by NOWPayments"></a>
+
+## Telegram
 
 تابع [@pythash](https://t.me/pythash).
 
-## 📄 الترخيص
+## الترخيص
 
 المشروع منشور بموجب [MIT License](../LICENSE).
 
-## 🔗 روابط
+## روابط
 
 [Repository](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [SKILL.md](../SKILL.md) · [Benchmarks](../benchmarks/README.md) · [References](../references/README.md) · [License](../LICENSE) · [Telegram](https://t.me/pythash)
