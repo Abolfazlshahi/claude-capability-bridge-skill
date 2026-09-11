@@ -4,7 +4,7 @@
 
 [🇬🇧 English](../README.md) · [🇨🇳 中文](./README_ZH.md) · [🇪🇸 Español](./README_ES.md) · **🇮🇳 हिन्दी** · [🇸🇦 العربية](./README_AR.md) · [🇫🇷 Français](./README_FR.md) · [🇮🇷 فارسی](./README_FA.md)
 
-## 🎯 उद्देश्य
+## उद्देश्य
 
 Runtime files, shell, browser, Chrome, Computer Use, MCP, Connectors, Projects, Skills, Plugins, Artifacts और Subagents जैसी capabilities दे सकता है। लेकिन tool उपलब्ध होना और model का यह जानना कि उसे कब, क्यों और किस क्रम में इस्तेमाल करना है—एक ही बात नहीं है।
 
@@ -16,7 +16,7 @@ Discover → Select → Execute → Observe → Verify → Recover → Report
 
 यह कोई नया tool, permission या runtime capability नहीं बनाता।
 
-## 🧠 पहले vs बाद में
+## पहले vs बाद में
 
 | Skill के बिना | Skill के साथ |
 |---|---|
@@ -28,7 +28,7 @@ Discover → Select → Execute → Observe → Verify → Recover → Report
 
 ये engineering expectations हैं, measured benchmark percentages नहीं।
 
-## 🔌 Custom Provider Architecture
+## Custom Provider Architecture
 
 ```text
 Claude Desktop / Claude Code
@@ -44,7 +44,7 @@ Claude Desktop / Claude Code
 
 `ANTHROPIC_BASE_URL` जैसे configuration endpoint/transport बदल सकते हैं, लेकिन third-party model को अपने-आप Anthropic model नहीं बनाते। Tool Calling, Vision, Context, Reasoning और protocol compatibility अलग-अलग verify करनी चाहिए।
 
-## 🌐 Web App Verification
+## Web App Verification
 
 ```text
 Inspect Repo → Baseline → Implement / Fix
@@ -55,9 +55,9 @@ Inspect Repo → Baseline → Implement / Fix
 → Deterministic Checks → Visual Verification → Evidence Report
 ```
 
-Process चलना, port listen करना, HTTP response देना, UI render होना और feature का सही काम करना अलग-अलग states हैं।
+Process चलना, port listen करना, HTTP response देना, UI render होना और feature का सही काम करना अलग-अलग states हैं। `file://` से कोई server-side template खोलना वास्तविक application चलाने के बराबर नहीं है।
 
-## 🧩 Covered Capabilities
+## Covered Capabilities
 
 - Browser / Claude in Chrome
 - Computer Use
@@ -72,29 +72,98 @@ Process चलना, port listen करना, HTTP response देना, UI r
 - Recovery और evidence-based verification
 - Custom Provider / Gateway behavior
 
-## 📊 Evaluation
+## Claude Code Adaptive Delivery
 
-एक ही model, provider, host, tools और task पर तुलना करें:
+Skill किसी host को सार्वभौमिक रूप से अपने invocation के लिए मजबूर नहीं कर सकता। Claude Code के लिए repository में optional hook engine है जो हर turn पर reminder दोहराने के बजाय तभी context जोड़ता है जब वह उपयोगी हो।
+
+| Event | व्यवहार |
+|---|---|
+| `SessionStart` | session में compact kernel और card catalogue एक बार देता है |
+| `SessionStart` after compact | minimum protocol फिर देता है और पुराने observations को stale mark करता है |
+| `UserPromptSubmit` | सामान्यतः कुछ नहीं; अधिकतम एक matching capability card inject करता है |
+| `PostToolUseFailure` | failure classify करके bounded next-step guidance देता है |
+
+Modes: `adaptive` (default), `session-only`, `legacy-every-turn`, `off`।
+
+Hook delivery best-effort है; hook यह साबित नहीं कर सकता कि host ने text को model context में डाल दिया।
+
+## Evaluation और Benchmarking
+
+Skill को हर model के लिए बेहतर होने का दावा नहीं किया जाता। Controlled runs से प्रभाव मापना चाहिए:
 
 ```text
-Bridge OFF  ↔  Bridge ON
+A  control                    बिना Skill और बिना hooks
+B  skill only                 Skill installed, hooks registered नहीं
+C  skill + adaptive           default configuration
+D  skill + legacy-every-turn  comparison के लिए हर-turn reminder
 ```
 
-Tool selection, schema validity, sequencing, verification, recovery, false-success, efficiency और safety मापें।
+Model, host, tools, provider, workspace, task wording और success criteria स्थिर रखें। cold और warm sessions अलग experiments हैं। Tool Selection, Schema Validity, Sequencing, Verification, Recovery, False Success, Efficiency और Safety मापें।
 
-## 📦 Installation
+> **Fake percentages नहीं:** paired live runs के बिना improvement सिर्फ engineering hypothesis है।
+
+## Installation
+
+### Agent Skill
 
 ```bash
 python3 scripts/package_skill.py
 ```
 
-यह `dist/claude-capability-bridge/` बनाता है। Host के Agent Skills mechanism से install करें और supported environment में:
+`dist/claude-capability-bridge/` बनता है। इसे host के Agent Skills mechanism से install करें।
 
-```text
-/claude-capability-bridge
+### Claude Code Plugin
+
+```bash
+python3 scripts/package_claude_code_plugin.py
 ```
 
-## 💖 समर्थन / Donations
+`dist/claude-capability-bridge-plugin/` बनता है जिसमें वही Skill और optional hook runtime होता है।
+
+### Manual hook registration
+
+[`bootstrap/settings.json.example`](../bootstrap/settings.json.example) की entries host settings में copy करें और `CLAUDE_CAPABILITY_BRIDGE_MODE` चुनें। Plugin अपने hooks खुद register करता है।
+
+## Project Structure
+
+```text
+claude-capability-bridge-skill/
+├── SKILL.md
+├── profiles/
+├── cards/
+├── references/
+├── bootstrap/
+├── config/
+├── docs/
+├── scripts/
+├── tests/python/
+├── benchmarks/
+├── evals/
+├── assets/
+├── i18n/
+├── CHANGELOG.md
+└── LICENSE
+```
+
+Progressive disclosure:
+
+```text
+kernel → runtime profile → task card → reference → execution → verification
+```
+
+## Validation
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+python3 scripts/validate_skill.py
+python3 scripts/run_tests.py
+python3 bootstrap/bridge_hook.py --selftest
+python3 scripts/analyze_trace.py --selftest
+```
+
+ये checks structure, references, packaging, content contracts, hooks, state lifecycle और synthetic trace analysis को cover करते हैं। ये live model behavior, real Claude Code execution, full Windows support या provider cache behavior साबित नहीं करते।
+
+## समर्थन / Donations
 
 Donation addresses [Chat-management-bot-and-AI-assistant](https://github.com/Abolfazlshahi/Chat-management-bot-and-AI-assistant) repository से लिए गए हैं।
 
@@ -104,14 +173,16 @@ Donation addresses [Chat-management-bot-and-AI-assistant](https://github.com/Abo
 | USDT TRC20 | `TR8ibZGKutPKoDm5nMbHFwGPFBuMKwjG6j` |
 | USDT BEP20 | `0x8c45d6bae8a5a572b2a776779fe0bcae3d3f9107` |
 
-## 📣 Telegram
+<a href="https://nowpayments.io/donation?api_key=724be14f-9bdf-4318-99d0-0a837b5493b6" target="_blank" rel="noreferrer noopener"><img src="https://nowpayments.io/images/embeds/donation-button-white.svg" alt="Cryptocurrency & Bitcoin donation button by NOWPayments"></a>
+
+## Telegram
 
 [@pythash](https://t.me/pythash)
 
-## 📄 License
+## License
 
 यह project [MIT License](../LICENSE) के अंतर्गत है।
 
-## 🔗 Links
+## Links
 
 [Repository](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [SKILL.md](../SKILL.md) · [Benchmarks](../benchmarks/README.md) · [References](../references/README.md) · [License](../LICENSE) · [Telegram](https://t.me/pythash)
