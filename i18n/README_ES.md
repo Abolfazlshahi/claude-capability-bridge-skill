@@ -4,7 +4,7 @@
 
 [🇬🇧 English](../README.md) · [🇨🇳 中文](./README_ZH.md) · **🇪🇸 Español** · [🇮🇳 हिन्दी](./README_HI.md) · [🇸🇦 العربية](./README_AR.md) · [🇫🇷 Français](./README_FR.md) · [🇮🇷 فارسی](./README_FA.md)
 
-## 🎯 Objetivo
+## Objetivo
 
 Un runtime puede exponer archivos, Shell, navegador, Chrome, Computer Use, MCP, Connectors, Projects, Skills, Plugins, Artifacts y Subagents. Tener esas herramientas disponibles no significa que el modelo sepa cuándo usarlas, cómo encadenarlas ni qué evidencia demuestra que el trabajo terminó correctamente.
 
@@ -16,7 +16,7 @@ Discover → Select → Execute → Observe → Verify → Recover → Report
 
 No crea herramientas ni permisos; enseña a usar correctamente las capacidades que el runtime realmente expone.
 
-## 🧠 Antes vs Después
+## Antes vs Después
 
 | Sin el Skill | Con el Skill |
 |---|---|
@@ -28,7 +28,7 @@ No crea herramientas ni permisos; enseña a usar correctamente las capacidades q
 
 Estas son expectativas de ingeniería, no porcentajes de benchmark ya medidos.
 
-## 🔌 Arquitectura de Custom Provider
+## Arquitectura de Custom Provider
 
 ```text
 Claude Desktop / Claude Code
@@ -44,7 +44,7 @@ Claude Desktop / Claude Code
 
 Configuraciones como `ANTHROPIC_BASE_URL` cambian el endpoint o transporte, pero no hacen que un modelo de terceros sea equivalente a un modelo Anthropic. Tool Calling, Vision, Context, Reasoning y compatibilidad con funciones de protocolo deben verificarse por separado.
 
-## 🌐 Verificación de Web Apps
+## Verificación de Web Apps
 
 ```text
 Inspect Repo → Baseline → Implement / Fix
@@ -55,9 +55,9 @@ Inspect Repo → Baseline → Implement / Fix
 → Deterministic Checks → Visual Verification → Evidence Report
 ```
 
-Un proceso en ejecución, un puerto escuchando, una respuesta HTTP, una UI renderizada y una funcionalidad correcta son estados diferentes.
+Un proceso en ejecución, un puerto escuchando, una respuesta HTTP, una UI renderizada y una funcionalidad correcta son estados diferentes. Una plantilla abierta con `file://` no equivale a ejecutar la aplicación real.
 
-## 🧩 Capacidades cubiertas
+## Capacidades cubiertas
 
 - Browser / Claude in Chrome
 - Computer Use
@@ -72,32 +72,117 @@ Un proceso en ejecución, un puerto escuchando, una respuesta HTTP, una UI rende
 - Recuperación de errores y verificación basada en evidencias
 - Comportamiento de Custom Providers y gateways
 
-## 📊 Evaluación
+## Entrega adaptativa en Claude Code
 
-Usa el mismo modelo, provider, host, herramientas y tarea:
+El Skill no puede obligar universalmente a un host a invocarlo. Para Claude Code, el repositorio incluye un motor de hooks opcional que añade contexto solo cuando resulta útil, en lugar de repetir un recordatorio en cada turno.
+
+| Evento | Comportamiento |
+|---|---|
+| `SessionStart` | Emite una vez el kernel compacto y el catálogo de cards |
+| `SessionStart` tras compact | Rehidrata el protocolo mínimo y marca observaciones anteriores como obsoletas |
+| `UserPromptSubmit` | Normalmente no emite nada; como máximo inyecta una card relevante |
+| `PostToolUseFailure` | Clasifica el fallo y proporciona orientación limitada para el siguiente paso |
+
+Modos: `adaptive` (predeterminado), `session-only`, `legacy-every-turn` y `off`.
+
+La entrega del hook es best-effort: el hook no puede demostrar que el host realmente insertó su texto en el contexto del modelo.
+
+## Evaluación y benchmarking
+
+La eficacia no se afirma de forma universal. Debe demostrarse con ejecuciones controladas:
 
 ```text
-Bridge OFF  ↔  Bridge ON
+A  control                    sin Skill y sin hooks
+B  skill only                 Skill instalado, hooks no registrados
+C  skill + adaptive           configuración predeterminada
+D  skill + legacy-every-turn  recordatorio de cada turno para comparación
 ```
 
-Mide selección de herramientas, validez del schema, secuenciación, profundidad de verificación, recuperación, falsos positivos de éxito, eficiencia y seguridad.
+Mantén constantes el modelo, host, herramientas, provider, workspace, texto de tarea y criterio de éxito. Separa sesiones cold y warm. Mide Tool Selection, Schema Validity, Sequencing, Verification, Recovery, False Success, Efficiency y Safety.
 
-## 📦 Instalación
+> **Sin porcentajes inventados:** hasta que existan ejecuciones live emparejadas, cualquier mejora es una hipótesis de ingeniería, no un resultado experimental.
+
+## Instalación
+
+### Agent Skill
 
 ```bash
 python3 scripts/package_skill.py
 ```
 
-Genera `dist/claude-capability-bridge/`. Instálalo mediante el mecanismo Agent Skills del host y, cuando exista Slash Command:
+Genera `dist/claude-capability-bridge/`. Instálalo mediante el mecanismo Agent Skills del host.
 
-```text
-/claude-capability-bridge
+### Plugin de Claude Code
+
+```bash
+python3 scripts/package_claude_code_plugin.py
 ```
 
-## 📄 Licencia
+Genera `dist/claude-capability-bridge-plugin/`, con el mismo Skill y el runtime opcional de hooks.
+
+### Registro manual de hooks
+
+Copia las entradas de [`bootstrap/settings.json.example`](../bootstrap/settings.json.example) en la configuración del host y selecciona `CLAUDE_CAPABILITY_BRIDGE_MODE`. El plugin registra sus propios hooks.
+
+## Estructura del proyecto
+
+```text
+claude-capability-bridge-skill/
+├── SKILL.md
+├── profiles/
+├── cards/
+├── references/
+├── bootstrap/
+├── config/
+├── docs/
+├── scripts/
+├── tests/python/
+├── benchmarks/
+├── evals/
+├── assets/
+├── i18n/
+├── CHANGELOG.md
+└── LICENSE
+```
+
+El proyecto usa divulgación progresiva:
+
+```text
+kernel → runtime profile → task card → reference → execution → verification
+```
+
+## Validación
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+python3 scripts/validate_skill.py
+python3 scripts/run_tests.py
+python3 bootstrap/bridge_hook.py --selftest
+python3 scripts/analyze_trace.py --selftest
+```
+
+Estas comprobaciones cubren estructura, referencias, packaging, contratos de contenido, hooks, ciclo de vida del estado y análisis de traces sintéticos. No demuestran el comportamiento live del modelo, una ejecución real dentro de Claude Code, Windows completo ni el comportamiento de caché de un provider.
+
+## Apoyar el proyecto
+
+Las direcciones de donación proceden del repositorio [Chat-management-bot-and-AI-assistant](https://github.com/Abolfazlshahi/Chat-management-bot-and-AI-assistant).
+
+| Red | Dirección |
+|---|---|
+| TON | `UQDfjVk2UdpiMg-bsxqoLa0O_icuaF20D-wWJgIJwK1Ha2Ul` |
+| USDT TRC20 | `TR8ibZGKutPKoDm5nMbHFwGPFBuMKwjG6j` |
+| USDT BEP20 | `0x8c45d6bae8a5a572b2a776779fe0bcae3d3f9107` |
+
+<a href="https://nowpayments.io/donation?api_key=724be14f-9bdf-4318-99d0-0a837b5493b6" target="_blank" rel="noreferrer noopener"><img src="https://nowpayments.io/images/embeds/donation-button-white.svg" alt="Cryptocurrency & Bitcoin donation button by NOWPayments"></a>
+
+## Telegram
+
+[@pythash](https://t.me/pythash)
+
+## Licencia
 
 Publicado bajo [MIT License](../LICENSE).
 
-## 🔗 Enlaces
+## Enlaces
 
 [Repository](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [SKILL.md](../SKILL.md) · [Benchmarks](../benchmarks/README.md) · [References](../references/README.md) · [License](../LICENSE) · [Telegram](https://t.me/pythash)
