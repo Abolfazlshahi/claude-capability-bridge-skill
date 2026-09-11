@@ -2,7 +2,7 @@
 
 # Claude Capability Bridge Skill
 
-### Teach custom-provider models the **workflow knowledge** needed to operate agentic tools reliably.
+### A procedural operating layer for custom-provider and third-party models using real agentic capabilities.
 
 <p>
   <img src="./assets/banner.jpeg" alt="Claude Capability Bridge overview" width="100%" />
@@ -12,27 +12,25 @@
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088ff?style=for-the-badge&logo=githubactions&logoColor=white)](./.github/workflows/validate.yml)
 [![License](https://img.shields.io/badge/license-MIT-34d399?style=for-the-badge)](./LICENSE)
 
-**Detect Runtime → Discover → Remediate → Route → Execute → Verify → Recover**
+**Detect → Discover → Remediate → Route → Execute → Verify → Recover**
 
 </div>
 
 ---
 
-## What problem does this solve?
+## The problem
 
-A model can have access to the same browser, filesystem, shell, MCP tools, connectors, and other runtime capabilities as a strong native agent and still use them poorly.
+Models can have access to the same browser, filesystem, shell, MCP tools, connectors, and other runtime capabilities as a strong native agent and still use them badly.
 
-The missing piece is often **procedural knowledge**: first identifying the actual runtime and execution boundary, then choosing the right interface, preserving state, diagnosing missing capabilities, and gathering enough evidence to say *done*.
-
-This Skill turns those behaviors into reusable procedures for Claude Code CLI, Claude Desktop/Cowork-style, and other Agent Skills-compatible runtimes.
+The missing layer is often procedural knowledge: identify the real host and execution boundary, inspect what is actually exposed and permitted, choose the right interface, preserve state, recover from failures, and gather enough evidence to say *done*.
 
 > **Core invariant:** capability exposed ≠ capability understood ≠ task completed ≠ task verified.
 
----
+This Skill turns that discipline into reusable procedures for Claude Code, Claude Desktop/Cowork-style hosts, and other Agent Skills-compatible runtimes.
 
 ## Runtime-first architecture
 
-Before routing a tool or launching a project, the bridge establishes the operating profile:
+Before using a capability, establish the minimum operating profile needed for the task:
 
 ```text
 HOST: CLI / Desktop / Cowork / Cloud / Remote / Other
@@ -42,18 +40,16 @@ CAPABILITIES: shell / files / Git / browser / Chrome / MCP / GUI / etc.
              ↓
        discover relevant capability
              ↓
-       classify missing capability
+       classify what is missing
              ↓
-       repair only when possible
+       repair only when justified
              ↓
        route → execute → verify
 ```
 
-CLI is treated as a first-class profile rather than a Desktop variant. Browser/Chrome availability is checked separately from shell or project execution, and provider restrictions remain a separate axis.
+CLI is a first-class host profile rather than a Desktop variant. Browser/Chrome availability is checked separately from shell or project execution, and provider restrictions remain a separate axis.
 
 See [`references/runtime-detection-and-profiles.md`](./references/runtime-detection-and-profiles.md), [`references/claude-code-cli-operating-model.md`](./references/claude-code-cli-operating-model.md), and [`references/capability-remediation.md`](./references/capability-remediation.md).
-
----
 
 ## Before vs After
 
@@ -71,27 +67,23 @@ See [`references/runtime-detection-and-profiles.md`](./references/runtime-detect
   <img src="./assets/before-after.svg" alt="Before and after workflow comparison" width="100%" />
 </p>
 
-> **Honesty note:** this table describes intended behavior, not measured performance. Empirical claims belong in the benchmark results.
-
----
+> This is an intended-behavior comparison, not measured benchmark data.
 
 ## How it works
 
 ```text
 1. Runtime detection
-2. Execution/provider profile
-3. Capability discovery + safe probing
-4. Missing-capability classification/remediation
-5. Authoritative tool/surface selection
+2. Execution and provider profile
+3. Capability discovery and safe probing
+4. Missing-capability classification and remediation
+5. Authoritative tool or surface selection
 6. Short observable execution loops
 7. Direct verification
-8. Recovery / fallback
+8. Recovery or fallback
 9. Evidence-backed report
 ```
 
-The main `SKILL.md` stays compact. Detailed procedures are progressively loaded from [`references/`](./references/) only when a task enters that capability family.
-
----
+The main `SKILL.md` is the stable kernel. Task-specific procedures are progressively loaded from `cards/`, `profiles/`, and `references/` only when the task needs them.
 
 ## Custom-provider support
 
@@ -99,23 +91,21 @@ A custom endpoint or gateway can be transport-compatible without making the unde
 
 | Layer | Question |
 |---|---|
-| **Model** | Can the model reason, use required modalities, and emit reliable tool calls? |
-| **Skill** | Does it have the procedural knowledge required by the workflow? |
-| **Runtime** | Are tools, context, permissions, and dispatch exposed? |
-| **Transport / provider** | Does the gateway preserve the required protocol features? |
-| **Environment** | Do files, processes, browser state, network, and services actually exist? |
-
-The bridge explicitly distinguishes provider/runtime limits from procedural failures. A provider-unsupported browser integration should not trigger endless local setup attempts.
+| Model | Can it reason, use the required modalities, and emit reliable tool calls? |
+| Skill | Does it have the procedural knowledge required by the workflow? |
+| Runtime | Are tools, context, permissions, and dispatch exposed? |
+| Transport / provider | Does the gateway preserve the protocol features the task needs? |
+| Environment | Do files, processes, browser state, network, and services actually exist? |
 
 <p align="center">
   <img src="./assets/provider-architecture.svg" alt="Custom-provider architecture" width="100%" />
 </p>
 
----
+The bridge separates provider/runtime limits from procedural failures. A provider-unsupported browser integration should not trigger endless local setup attempts.
 
 ## Web-app verification
 
-The bridge is especially useful when an agent builds or repairs a web app and must prove that the **real user flow** works.
+When an agent builds or repairs a web app, process success is not enough:
 
 ```text
 project recognition
@@ -133,8 +123,6 @@ critical user journey exercised
 feature behavior verified
 ```
 
-So:
-
 ```text
 process running ≠ server ready ≠ page correct ≠ feature works
 ```
@@ -145,317 +133,104 @@ A server-side template opened with `file://` is not equivalent to running the ap
   <img src="./assets/webapp-verification.svg" alt="Web-app verification workflow" width="100%" />
 </p>
 
----
-
 ## Capability coverage
 
 | Area | What the bridge teaches |
 |---|---|
-| Runtime detection | CLI/Desktop/Cowork/cloud/remote classification and execution profiles |
-| Browser & Chrome | surface selection, localhost testing, browser context separation |
-| Capability remediation | classify → repair → re-probe → fallback instead of “not connected” |
+| Runtime detection | Host, execution, and provider profiling |
+| Browser and Chrome | Surface selection, localhost testing, context separation |
+| Capability remediation | Classify → repair → re-probe → fallback |
 | Computer use | GUI escalation and short observable action loops |
-| MCP & connectors | schema-first use, mutation/read-back, trust boundaries |
-| Projects & files | project knowledge vs live filesystem vs Git state |
-| Shell & code | deterministic commands, servers, tests, readiness |
-| Skills & Plugins | progressive disclosure, host controls, invocation boundaries |
-| Artifacts & interactive apps | creation vs rendered/behavioral verification |
-| Subagents & long-running work | bounded delegation and context isolation |
-| Scheduled / remote work | fresh execution context and local/cloud boundaries |
-| Security | permissions, authorization, prompt injection, least privilege |
-| Evidence & recovery | direct proof, failure classification, bounded retries |
+| MCP and connectors | Schema-first calls, mutation/read-back, trust boundaries |
+| Projects and files | Project knowledge vs live filesystem vs Git state |
+| Shell and code | Deterministic commands, servers, tests, readiness |
+| Skills and plugins | Progressive disclosure, host controls, invocation boundaries |
+| Artifacts and interactive apps | Creation vs rendered and behavioral verification |
+| Delegation and long-running work | Bounded delegation and context isolation |
+| Scheduled and remote work | Fresh execution context and local/cloud boundaries |
+| Security | Permissions, authorization, prompt-injection resistance, least privilege |
+| Evidence and recovery | Direct proof, failure classification, bounded retries |
 
----
+## Adaptive delivery
 
-## Always-on bootstrap
+A portable Skill cannot universally force its own invocation. For Claude Code, this repository includes an optional hook engine that adds context only when it is useful instead of repeating a reminder every turn.
 
-A portable Skill cannot universally force its own invocation. For Claude Code, the repository includes a practical bootstrap path for host-owned persistent context and `SessionStart` hooks:
+| Event | Adaptive behaviour |
+|---|---|
+| `SessionStart` | Emit the compact kernel once per session, plus the card catalogue |
+| `SessionStart` after compact | Rehydrate the minimum protocol and mark earlier observations stale |
+| `UserPromptSubmit` | Usually emit nothing; inject at most one matching capability card |
+| `PostToolUseFailure` | Classify the failure and emit bounded next-step guidance |
 
-```text
-CLAUDE.md reminder
-        +
-SessionStart hook (when configured)
-        ↓
-bridge protocol is present before complex work
-        ↓
-Skill supplies the detailed procedure when invoked
-```
-
-Concrete examples live under [`bootstrap/`](./bootstrap/) and [`references/claude-code-bootstrap-kit.md`](./references/claude-code-bootstrap-kit.md).
-
-The bootstrap does **not** create tools, bypass permissions, or make a third-party provider support an unsupported host feature.
-
----
-
-## Evaluation & benchmarking
-
-The repository deliberately does **not** claim that the Skill improves every model. Effectiveness should be demonstrated empirically.
-
-For forgetting and runtime-first behavior, compare:
+Modes are selected with `CLAUDE_CAPABILITY_BRIDGE_MODE`:
 
 ```text
-CONTROL: no bridge
-TREATMENT A: bridge Skill only
-TREATMENT B: bridge Skill + always-on bootstrap
+adaptive (default) | session-only | legacy-every-turn | off
 ```
 
-Keep model, host, tools, provider config, workspace, task wording, and success criteria constant. Grade the trajectory and final state separately.
+The legacy mode exists for A/B comparison with the pre-0.9.0 always-on reminder. Hook delivery is best-effort: the hook cannot prove that the host inserted its text, so downstream logic must not assume the model saw it.
 
-Useful metrics include runtime identification before host-specific routing, tool-selection accuracy, schema-valid call rate, recovery quality, verification depth, false-success rate, unnecessary retries, and safety/authorization failures.
+See [`bootstrap/`](./bootstrap/), [`references/claude-code-bootstrap-kit.md`](./references/claude-code-bootstrap-kit.md), and [`docs/cache-contract.md`](./docs/cache-contract.md).
+
+## Evaluation and benchmarking
+
+The repository deliberately does not claim that the Skill improves every model. That should be demonstrated with controlled runs.
+
+For forgetting, runtime-first behavior, and delivery cost, compare:
+
+```text
+A  control                    no Skill, no hooks
+B  skill only                 Skill installed, hooks not registered
+C  skill + adaptive           shipped default
+D  skill + legacy-every-turn pre-0.9.0 reminder
+```
+
+Keep model, host, tools, provider config, workspace, task wording, and success criteria constant. Grade the trajectory and final state separately, and report cost per verified success alongside the raw counts. Cold and warm sessions are separate experiments.
+
+Useful metrics include runtime identification before host-specific routing, tool-selection accuracy, schema-valid call rate, recovery quality, verification depth, false-success rate, unnecessary retries, and authorization or safety failures.
 
 See [`benchmarks/README.md`](./benchmarks/README.md), [`benchmarks/behavioral-benchmark.md`](./benchmarks/behavioral-benchmark.md), and [`evals/evals.json`](./evals/evals.json).
 
-> **No fake percentages:** until paired runs are recorded, improvement is an engineering hypothesis, not experimental data.
-
----
+> **No fake percentages:** until paired live runs exist, improvement is an engineering hypothesis, not experimental data.
 
 ## Installation
 
-This repository is a distribution/project repository; the actual Skill name is `claude-capability-bridge`.
+### Agent Skill
 
 ```bash
 python3 scripts/package_skill.py
 ```
 
-This produces:
+This produces `dist/claude-capability-bridge/`. Install that generated directory with the host's Agent Skills mechanism.
 
-```text
-dist/claude-capability-bridge/
-```
-
-Install that generated directory using your host's Agent Skills mechanism.
-
-When the host exposes Skills as slash commands:
-
-```text
-/claude-capability-bridge
-```
-
-Validate locally with:
+### Claude Code plugin
 
 ```bash
-python3 scripts/validate_skill.py
+python3 scripts/package_claude_code_plugin.py
 ```
 
----
+This produces `dist/claude-capability-bridge-plugin/`, bundling the same Skill payload with the optional hook runtime.
+
+### Plain Skill hook registration
+
+Copy the entries from [`bootstrap/settings.json.example`](./bootstrap/settings.json.example) into your settings and choose a mode with `CLAUDE_CAPABILITY_BRIDGE_MODE`. The plugin registers its own hooks.
+
+Rollback is simple: set the mode to `off`, remove the hook entries, or delete the installed package. Session state lives in one per-user state directory and can be deleted to reset the next session to cold state.
 
 ## Repository structure
 
 ```text
 claude-capability-bridge-skill/
-├── SKILL.md
-├── references/
-├── benchmarks/
-├── evals/
-├── scripts/
-├── tests/
-├── bootstrap/                 # optional Claude Code host bootstrap examples
-├── assets/
-├── i18n/
-└── LICENSE
-```
-
-The project follows progressive disclosure:
-
-```text
-metadata → SKILL.md → relevant reference → execution → verification
-```
-
----
-
-## Design boundaries
-
-### The Skill can teach
-
-`runtime awareness` · `capability discovery` · `tool routing` · `schema discipline` · `workflow sequencing` · `state tracking` · `verification` · `recovery` · `security boundaries` · `evidence-based reporting`
-
-### The Skill cannot create
-
-`browser runtime` · `computer-use runtime` · `MCP server` · `filesystem mount` · `network access` · `permissions` · `provider protocol compatibility` · `missing model capabilities` · `host hook registration`
-
-That boundary is a core design rule.
-
----
-
-## Validation
-
-Run repository checks locally:
-
-```bash
-python3 scripts/validate_skill.py
-python3 scripts/package_skill.py
-bash -n bootstrap/session-start.sh
-python3 -m json.tool bootstrap/settings.json.example
-```
-
-For strict Agent Skills conformance, validate the generated package with the official `skills-ref` validator when available.
-
-GitHub Actions runs the structural, packaging, Agent Skills, evaluation, and benchmark-definition checks.
-
----
-
-## Documentation map
-
-| Document | Purpose |
-|---|---|
-| [`SKILL.md`](./SKILL.md) | Main runtime-first procedural bridge |
-| [`Runtime detection`](./references/runtime-detection-and-profiles.md) | Host/execution/provider profiling |
-| [`CLI operating model`](./references/claude-code-cli-operating-model.md) | CLI-first routing and browser/provider boundaries |
-| [`Bootstrap kit`](./references/claude-code-bootstrap-kit.md) | Always-on Claude Code context/hook path |
-| [`Capability remediation`](./references/capability-remediation.md) | Diagnose and repair missing integrations |
-| [`Custom Provider`](./references/custom-provider-transport.md) | Endpoint, gateway and provider boundaries |
-| [`Web App Verification`](./references/webapp-verification.md) | End-to-end web-app verification |
-| [`Browser Workflows`](./references/browser-workflows.md) | Browser / Chrome procedures |
-| [`MCP & Connectors`](./references/mcp-and-connectors.md) | Structured integration workflows |
-| [`Evaluation`](./references/evaluation-and-attribution.md) | Controlled behavioral attribution |
-| [`References`](./references/README.md) | Full reference map |
-
----
-
-## Telegram
-
-Project updates, releases, experiments and more:
-
-<p align="center">
-  <a href="https://t.me/pythash"><strong>@pythash</strong></a>
-</p>
-
----
-
-## Language versions
-
-| Language | README |
-|---|---|
-| English | [`README.md`](./README.md) |
-| 简体中文 | [`README_ZH.md`](./i18n/README_ZH.md) |
-| Español | [`README_ES.md`](./i18n/README_ES.md) |
-| हिन्दी | [`README_HI.md`](./i18n/README_HI.md) |
-| العربية | [`README_AR.md`](./i18n/README_AR.md) |
-| Français | [`README_FR.md`](./i18n/README_FR.md) |
-| فارسی | [`README_FA.md`](./i18n/README_FA.md) |
-
----
-
-## License
-
-Claude Capability Bridge Skill is released under the **[MIT License](./LICENSE)**.
-
----
-
-<div align="center">
-
-### The goal
-
-**Don't simulate agentic competence. Detect the real runtime, use the right surface, verify the real outcome, and recover safely.**
-
-[GitHub](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [Issues](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/issues) · [Discussions](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/discussions) · [Telegram](https://t.me/pythash) · [MIT License](./LICENSE)
-
-</div>
-## 🧷 Always-on bootstrap
-
-A portable Skill cannot force its own invocation. For Claude Code the repository ships a small hook engine (`bootstrap/bridge_hook.py`) that decides *when* extra context is worth adding, instead of repeating one reminder on every turn.
-
-| Event | What the engine emits |
-|---|---|
-| `SessionStart` (startup / resume / fork) | the compact protocol kernel once per session, plus the card catalogue |
-| `SessionStart` (compact) | a short rehydration notice; earlier capability observations are marked stale |
-| `UserPromptSubmit` | nothing on ordinary turns; at most one capability card when the prompt clearly matches a task family |
-| `PostToolUseFailure` | the failure class, concrete next-step guidance, and the relevant card; bounded repeats, then silence |
-
-Delivery is selected with one environment variable:
-
-```text
-CLAUDE_CAPABILITY_BRIDGE_MODE = off | session-only | adaptive (default) | legacy-every-turn
-```
-
-`legacy-every-turn` reproduces the pre-0.9.0 always-on reminder, so the new default can be compared with data instead of preference.
-
-Registration examples live under [`bootstrap/`](./bootstrap/) and [`references/claude-code-bootstrap-kit.md`](./references/claude-code-bootstrap-kit.md); the layer contract is in [`docs/cache-contract.md`](./docs/cache-contract.md).
-
-The bootstrap does **not** create tools, bypass permissions, register itself, or make a third-party provider support an unsupported host feature. Hook delivery is best-effort: a hook cannot confirm that the host inserted its text, so nothing downstream assumes the model saw it.
-
----
-
-## 🔬 Evaluation & benchmarking
-
-The repository deliberately does **not** claim that the Skill improves every model. Effectiveness should be demonstrated empirically.
-
-For forgetting, runtime-first behavior, and cost, compare four variants on one workload:
-
-```text
-A  control                    no Skill, no hooks
-B  skill only                 Skill installed, hooks not registered
-C  skill + adaptive           the shipped default
-D  skill + legacy-every-turn  the pre-0.9.0 always-on reminder
-```
-
-Keep model, host, tools, provider config, workspace, task wording, and success criteria constant. Grade the trajectory and final state separately, and report **cost per verified success** - tokens spent divided by successes confirmed with evidence - beside the raw counts. Cold and warm sessions are different experiments and must never be averaged together.
-
-Useful metrics include runtime identification before host-specific routing, tool-selection accuracy, schema-valid call rate, recovery quality, verification depth, false-success rate, unnecessary retries, and safety/authorization failures.
-
-See [`benchmarks/README.md`](./benchmarks/README.md), [`benchmarks/behavioral-benchmark.md`](./benchmarks/behavioral-benchmark.md), and [`evals/evals.json`](./evals/evals.json).
-
-> **No fake percentages:** until paired runs are recorded, improvement is an engineering hypothesis, not experimental data.
-
----
-
-## 📦 Installation
-
-This repository is a distribution/project repository; the installed Skill name is `claude-capability-bridge`.
-
-**As an Agent Skill:**
-
-```bash
-python3 scripts/package_skill.py                 # -> dist/claude-capability-bridge/
-```
-
-Install that generated directory with your host's Agent Skills mechanism. When the host exposes Skills as slash commands:
-
-```text
-/claude-capability-bridge
-```
-
-**As a Claude Code plugin** (same content, plus the hooks):
-
-```bash
-python3 scripts/package_claude_code_plugin.py    # -> dist/claude-capability-bridge-plugin/
-```
-
-Both packages carry their own reference, profile, and card files, so no link inside a package points outside it. The packagers refuse to build if one does.
-
-**Hook registration** (only needed for the plain Skill install; the plugin registers its own): copy the entries from [`bootstrap/settings.json.example`](./bootstrap/settings.json.example) into your settings, then pick a mode:
-
-```bash
-export CLAUDE_CAPABILITY_BRIDGE_MODE=adaptive           # default: session start + routed cards + failure guidance
-export CLAUDE_CAPABILITY_BRIDGE_MODE=session-only       # session start only
-export CLAUDE_CAPABILITY_BRIDGE_MODE=legacy-every-turn  # pre-0.9.0 behaviour, for A/B comparison
-export CLAUDE_CAPABILITY_BRIDGE_MODE=off                # emit nothing
-```
-
-**Rollback:** set the mode to `off`, or drop the hook entries and keep the Skill, or delete the installed package. Nothing is written outside the package directory and one per-user state directory (`%LOCALAPPDATA%` on Windows, `$XDG_STATE_HOME` or `~/.local/state` elsewhere, each plus `claude-capability-bridge`). Deleting that directory resets all session state; the next session starts cold.
-
-Validate locally with:
-
-```bash
-python3 scripts/validate_skill.py
-```
-
----
-
-## 📁 Repository structure
-
-```text
-claude-capability-bridge-skill/
-├── SKILL.md                   # always-on kernel: small and byte-stable
-├── profiles/                  # one per host runtime, loaded on demand
-├── cards/                     # task-family cards + generated index.json
-├── references/                # long-form background reading
-├── bootstrap/                 # hook engine, shell/PowerShell wrappers, settings examples
-├── config/                    # content budgets enforced by the validator
-├── docs/                      # cache contract, baseline audit
-├── scripts/                   # packagers, validator, card index, trace analyser, test runner
+├── SKILL.md                   # stable kernel
+├── profiles/                  # host contracts
+├── cards/                     # task-family procedures + generated index
+├── references/                # long-form background and troubleshooting
+├── bootstrap/                 # hook engine and host registration examples
+├── config/                    # content budgets
+├── docs/                      # cache contract and migration notes
+├── scripts/                   # packagers, validator, card index, trace tools
 ├── tests/python/              # offline test suite
-├── benchmarks/                # scenarios, variants, metrics, synthetic fixtures
+├── benchmarks/                # scenarios, variants, metrics, fixtures
 ├── evals/
 ├── assets/
 ├── i18n/
@@ -469,49 +244,73 @@ The project follows progressive disclosure:
 kernel → runtime profile → task card → reference → execution → verification
 ```
 
----
+## Design boundaries
 
-## ✅ Validation
+### The Skill can teach
+
+`runtime awareness` · `capability discovery` · `tool routing` · `schema discipline` · `workflow sequencing` · `state tracking` · `verification` · `recovery` · `security boundaries` · `evidence-based reporting`
+
+### The Skill cannot create
+
+`browser runtime` · `computer-use runtime` · `MCP server` · `filesystem mount` · `network access` · `permissions` · `provider protocol compatibility` · `missing model capabilities` · `host hook registration`
+
+That boundary is part of the design, not a disclaimer added after the fact.
+
+## Validation
 
 Run the offline checks locally:
 
 ```bash
 python3 -m pip install -r requirements-dev.txt
-python3 scripts/validate_skill.py            # structure, budgets, reference graph, built packages
-python3 scripts/run_tests.py                 # full offline suite
-python3 bootstrap/bridge_hook.py --selftest  # hook engine
-python3 scripts/analyze_trace.py --selftest  # trace analyser, synthetic fixtures
+python3 scripts/validate_skill.py
+python3 scripts/run_tests.py
+python3 bootstrap/bridge_hook.py --selftest
+python3 scripts/analyze_trace.py --selftest
 ```
 
-**What those checks cover:** packaging and reference closure, content contracts, hook behaviour against real payloads, state lifecycle and recovery, safety invariants (hook input stays data, no secrets in state, no permission claims), and byte-stability of the shipped text.
+These checks cover packaging and reference closure, content contracts, hook behavior, state lifecycle and recovery, safety invariants, and shipped-text stability.
 
-**What they do not cover:** live model behaviour, real Claude Code execution, Windows (see [`tests/windows-manual-checklist.md`](./tests/windows-manual-checklist.md), deliberately unfilled), and any provider's cache behaviour. That last one can only be read from live usage fields - see [`docs/cache-contract.md`](./docs/cache-contract.md).
+They do **not** prove live model behavior, real Claude Code execution, Windows support, or provider cache behavior. The live behavioral benchmark is intentionally not reported as passing by CI.
 
 For strict Agent Skills conformance, validate the generated package with the official `skills-ref` validator when available.
 
-GitHub Actions runs the same checks plus the Agent Skills validator, version consistency across build outputs, and the benchmark-definition schema. The live behavioural benchmark is reported as skipped, never as passing.
-
----
-
-## 📚 Documentation map
+## Documentation map
 
 | Document | Purpose |
 |---|---|
-| [`SKILL.md`](./SKILL.md) | Main runtime-first procedural bridge |
-| [`Runtime detection`](./references/runtime-detection-and-profiles.md) | Host/execution/provider profiling |
+| [`SKILL.md`](./SKILL.md) | Stable runtime-first procedural kernel |
+| [`Runtime detection`](./references/runtime-detection-and-profiles.md) | Host, execution, and provider profiling |
 | [`CLI operating model`](./references/claude-code-cli-operating-model.md) | CLI-first routing and browser/provider boundaries |
-| [`Bootstrap kit`](./references/claude-code-bootstrap-kit.md) | Always-on Claude Code context/hook path |
+| [`Bootstrap kit`](./references/claude-code-bootstrap-kit.md) | Adaptive Claude Code delivery and hook setup |
 | [`Capability remediation`](./references/capability-remediation.md) | Diagnose and repair missing integrations |
-| [`Custom Provider`](./references/custom-provider-transport.md) | Endpoint, gateway and provider boundaries |
+| [`Custom Provider`](./references/custom-provider-transport.md) | Endpoint, gateway, and provider boundaries |
 | [`Web App Verification`](./references/webapp-verification.md) | End-to-end web-app verification |
-| [`Browser Workflows`](./references/browser-workflows.md) | Browser / Chrome procedures |
+| [`Browser Workflows`](./references/browser-workflows.md) | Browser and Chrome procedures |
 | [`MCP & Connectors`](./references/mcp-and-connectors.md) | Structured integration workflows |
 | [`Evaluation`](./references/evaluation-and-attribution.md) | Controlled behavioral attribution |
-| [`References`](./references/README.md) | Full reference map |
-| [`Cache contract`](./docs/cache-contract.md) | Which layer controls caching, and which claims need live data |
-| [`Migration`](./references/MIGRATION.md) | Where the 0.8.0 operating rules moved |
-| [`Changelog`](./CHANGELOG.md) | 0.9.0 changes, fixes, and upgrade steps |
-| [`Windows checklist`](./tests/windows-manual-checklist.md) | Unfilled manual verification for the PowerShell wrappers |
+| [`Cache contract`](./docs/cache-contract.md) | Ownership of cache-related behavior and claims |
+| [`Migration`](./references/MIGRATION.md) | Where the 0.8.0 rules moved |
+| [`Changelog`](./CHANGELOG.md) | 0.9.0 changes and upgrade notes |
+| [`Windows checklist`](./tests/windows-manual-checklist.md) | Manual verification scope for PowerShell wrappers |
 
----
+## Language versions
 
+| Language | README |
+|---|---|
+| English | [`README.md`](./README.md) |
+| 简体中文 | [`README_ZH.md`](./i18n/README_ZH.md) |
+| Español | [`README_ES.md`](./i18n/README_ES.md) |
+| हिन्दी | [`README_HI.md`](./i18n/README_HI.md) |
+| العربية | [`README_AR.md`](./i18n/README_AR.md) |
+| Français | [`README_FR.md`](./i18n/README_FR.md) |
+| فارسی | [`README_FA.md`](./i18n/README_FA.md) |
+
+## License
+
+Claude Capability Bridge Skill is released under the **[MIT License](./LICENSE)**.
+
+<div align="center">
+
+[GitHub](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [Issues](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/issues) · [Discussions](https://github.com/Abolfazlshahi/claude-capability-bridge-skill/discussions) · [Telegram](https://t.me/pythash) · [MIT License](./LICENSE)
+
+</div>
