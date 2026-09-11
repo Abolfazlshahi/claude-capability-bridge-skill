@@ -1,34 +1,35 @@
 # Claude Capability Bridge Skill
 
-> یک Agent Skill برای اینکه مدل‌های Third‑Party و Custom Provider بتوانند در محیط‌هایی مثل Claude Desktop / Cowork / Claude Code قابلیت‌های موجود را بهتر کشف، انتخاب، اجرا، بررسی و بازیابی کنند.
+> یک Agent Skill برای مدل‌های Third‑Party و Custom Provider تا در Runtimeهایی مثل Claude Desktop / Cowork / Claude Code قابلیت‌های واقعاً موجود را بهتر کشف، انتخاب، اجرا، راستی‌آزمایی و بازیابی کنند.
 
 [🇬🇧 English](../README.md) · [🇨🇳 中文](./README_ZH.md) · [🇪🇸 Español](./README_ES.md) · [🇮🇳 हिन्दी](./README_HI.md) · [🇸🇦 العربية](./README_AR.md) · [🇫🇷 Français](./README_FR.md) · **🇮🇷 فارسی**
 
-## 🎯 ایده پروژه
+## ایده پروژه
 
-ممکن است Runtime ابزارهای زیادی مثل فایل، Shell، Browser، Chrome، Computer Use، MCP، Connectors، Projects، Skills، Plugins، Artifacts و Subagents را در اختیار مدل بگذارد؛ اما داشتن ابزار با بلد بودنِ زمان استفاده، ترتیب استفاده، روش بررسی نتیجه و بازیابی از خطا یکسان نیست.
+Runtime ممکن است فایل، Shell، Browser، Chrome، Computer Use، MCP، Connectors، Projects، Skills، Plugins، Artifacts و Subagents را در اختیار مدل بگذارد؛ اما وجود capability با بلد بودنِ زمان استفاده، ترتیب استفاده و روش اثبات نتیجه یکسان نیست.
 
-این Skill یک لایه دانش اجرایی و رویه‌ای اضافه می‌کند:
+این Skill یک لایه‌ی دانش اجرایی و رویه‌ای ارائه می‌کند:
 
 ```text
 Discover → Select → Execute → Observe → Verify → Recover → Report
 ```
 
-> این Skill ابزار یا Permission جدیدی ایجاد نمی‌کند؛ فقط نحوه استفاده از قابلیت‌های واقعاً موجود را آموزش می‌دهد.
+> این Skill ابزار یا Permission جدیدی ایجاد نمی‌کند و محدودیت‌های Provider یا Runtime را دور نمی‌زند.
 
-## 🧠 قبل و بعد
+## قبل و بعد
 
 | بدون Skill | با Skill |
 |---|---|
-| ممکن است ابزار موجود را کشف نکند | ابتدا Capabilityهای واقعی Runtime را بررسی می‌کند |
-| ممکن است ابزار یا ترتیب اشتباه را انتخاب کند | ابزار مناسب و ترتیب وابستگی‌ها را انتخاب می‌کند |
-| ممکن است با دیدن اجرای یک دستور موفق متوقف شود | نتیجه نهایی و معیار پذیرش را بررسی می‌کند |
-| ممکن است خطا را با retry تکراری پاسخ دهد | خطا را طبقه‌بندی و متغیر مؤثر را تغییر می‌دهد |
-| ممکن است محدودیت Custom Provider را نشناسد | Runtime، Gateway و Model capability را جدا می‌کند |
+| ممکن است Runtime یا اجرای واقعی را اشتباه تشخیص دهد | ابتدا host و execution boundary مرتبط با task را از شواهد زنده مشخص می‌کند |
+| ممکن است capability موجود را با capability قابل‌استفاده اشتباه بگیرد | capability موردنیاز را کشف و وضعیت آن را طبقه‌بندی می‌کند |
+| ممکن است ابزار یا ترتیب اشتباه را انتخاب کند | از سطح authoritative و ترتیب مناسب استفاده می‌کند |
+| ممکن است با اجرای یک دستور موفق متوقف شود | نتیجه‌ی واقعی و معیار پذیرش را بررسی می‌کند |
+| ممکن است همان خطا را چند بار تکرار کند | failure را طبقه‌بندی و فقط با تغییر متغیر مؤثر retry می‌کند |
+| ممکن است محدودیت Custom Provider را با نقص procedural قاطی کند | Model، Runtime، Provider و Environment را از هم جدا می‌کند |
 
-**نکته:** موارد بالا انتظارهای مهندسی هستند، نه نتایج benchmark اندازه‌گیری‌شده. برای اندازه‌گیری واقعی از `benchmarks/` استفاده کنید.
+این‌ها انتظارهای مهندسی هستند، نه نتیجه‌ی benchmark اندازه‌گیری‌شده.
 
-## 🔌 معماری Custom Provider
+## معماری Custom Provider
 
 ```text
 Claude Desktop / Claude Code
@@ -42,11 +43,9 @@ Claude Desktop / Claude Code
        Third‑Party Model
 ```
 
-تنظیماتی مثل `ANTHROPIC_BASE_URL` حمل‌ونقل یا endpoint را تغییر می‌دهند؛ آن‌ها مدل را به‌طور جادویی معادل یک مدل Anthropic نمی‌کنند. موضوعاتی مثل Tool Calling، Vision، Context، Reasoning و پشتیبانی از protocol features باید جداگانه بررسی شوند.
+تنظیماتی مثل `ANTHROPIC_BASE_URL` می‌توانند endpoint یا مسیر transport را تغییر دهند، اما مدل third-party را به‌طور جادویی معادل مدل Anthropic نمی‌کنند. Tool Calling، Vision، Context، Reasoning و protocol compatibility باید جداگانه بررسی شوند.
 
-یکی از نمونه‌های مهم، MCP Tool Search است: در endpointهای non-first-party، رفتار Tool Search می‌تواند به تنظیمات و سازگاری gateway وابسته باشد؛ بنابراین «ابزار کشف نشده» را نباید فوراً به «مدل ابزار را بلد نیست» نسبت داد.
-
-## 🌐 جریان اصلی: تست Web App
+## Web App و راستی‌آزمایی
 
 ```text
 Inspect Repo
@@ -76,9 +75,9 @@ Visual Verification
 Evidence Report
 ```
 
-اجرای process، listening بودن port، پاسخ HTTP، render شدن UI و کارکرد feature مراحل متفاوتی هستند.
+اجرای process، listening بودن port، پاسخ HTTP، render شدن UI و کارکرد feature مراحل متفاوتی هستند. باز کردن یک template سمت‌سرور با `file://` معادل اجرای واقعی application نیست.
 
-## 🧩 قابلیت‌های پوشش‌داده‌شده
+## قابلیت‌های پوشش‌داده‌شده
 
 - Browser و Claude in Chrome
 - Computer Use
@@ -88,117 +87,135 @@ Evidence Report
 - Skills و Plugins
 - Artifacts و Interactive Apps
 - Subagents و Scheduled Work
-- Local / Cloud / Remote execution boundaries
-- Permission، Safety، Prompt Injection
+- مرزهای Local / Cloud / Remote
+- Permission، Safety و Prompt Injection
 - Failure Recovery و Evidence-based Verification
-- Custom Provider / Gateway behavior
+- Custom Provider و Gateway behavior
 
-## 📊 ارزیابی
+## Adaptive delivery در Claude Code
 
-مقایسه روی چهار حالت انجام می‌شود، با ثابت نگه داشتن مدل، میزبان، provider، ابزارها، ورک‌اسپیس و متن دقیق تسک:
+Skill قابل‌حمل نمی‌تواند به‌طور جهانی invocation خودش را اجبار کند. این repository برای Claude Code یک hook engine اختیاری دارد که به‌جای تکرار reminder در هر نوبت، فقط در جاهای لازم context وارد می‌کند.
+
+| رویداد | رفتار |
+|---|---|
+| `SessionStart` | kernel فشرده و catalogue کارت‌ها یک‌بار در session ارائه می‌شود |
+| `SessionStart` بعد از compact | پروتکل حداقلی دوباره برقرار و مشاهدات قبلی stale علامت‌گذاری می‌شوند |
+| `UserPromptSubmit` | معمولاً خروجی ندارد و حداکثر یک capability card مرتبط تزریق می‌شود |
+| `PostToolUseFailure` | failure طبقه‌بندی و راهنمای مرحله‌ی بعدی به‌صورت محدود ارائه می‌شود |
+
+حالت‌ها:
+
+```text
+adaptive (پیش‌فرض) | session-only | legacy-every-turn | off
+```
+
+Hook delivery best-effort است و hook نمی‌تواند ثابت کند که host متن را واقعاً به model رسانده است.
+
+## ارزیابی و benchmark
+
+اثرگذاری این Skill روی همه‌ی مدل‌ها ادعا نمی‌شود و باید با اجرای کنترل‌شده اندازه‌گیری شود:
 
 ```text
 A  control                    بدون Skill و بدون hook
-B  skill only                 فقط Skill نصب است
+B  skill only                 Skill نصب است ولی hook ثبت نشده
 C  skill + adaptive           حالت پیش‌فرض 0.9.0
-D  skill + legacy-every-turn  رفتار قدیمی، یادآوری در هر نوبت
+D  skill + legacy-every-turn  یادآوری در هر نوبت برای مقایسه با رفتار قبلی
 ```
 
-معیار اصلی «هزینه به ازای هر موفقیت تأییدشده» است: مجموع توکن ورودی و خروجی تقسیم بر تعداد موفقیت‌هایی که با شواهد تأیید شده‌اند. معیارهای دیگر: Tool Selection، Schema Validity، Sequencing، Verification، Recovery، False Success، Efficiency و Safety.
+مدل، host، ابزارها، provider config، workspace، متن task و معیار موفقیت باید ثابت بمانند. cold و warm session آزمایش‌های جدا هستند و معیار «هزینه به ازای هر موفقیت تأییدشده» باید کنار شمارش خام گزارش شود.
 
-جلسه‌های cold و warm دو آزمایش جدا هستند و نباید با هم میانگین گرفته شوند. اگر provider فیلد usage را برنگرداند، مقدار unknown ثبت می‌شود، نه صفر.
+معیارهای مفید شامل Tool Selection، Schema Validity، Sequencing، Verification، Recovery، False Success، Efficiency و Safety هستند.
 
-## 📦 نصب
+> **بدون درصد جعلی:** تا وقتی paired live runs وجود نداشته باشد، بهبود فقط یک فرضیه‌ی مهندسی است.
 
-**به صورت Agent Skill:**
+## نصب
+
+### Agent Skill
 
 ```bash
-python3 scripts/package_skill.py                 # -> dist/claude-capability-bridge/
+python3 scripts/package_skill.py
 ```
 
-پوشه ساخته‌شده را با مکانیزم Agent Skills میزبان نصب کنید. در محیطی که Slash Command دارد:
+این دستور `dist/claude-capability-bridge/` را می‌سازد. پوشه‌ی ساخته‌شده را با مکانیزم Agent Skills میزبان نصب کنید.
 
-```text
-/claude-capability-bridge
-```
-
-**به صورت پلاگین Claude Code** (همان محتوا به علاوه hookها):
+### Claude Code plugin
 
 ```bash
-python3 scripts/package_claude_code_plugin.py    # -> dist/claude-capability-bridge-plugin/
+python3 scripts/package_claude_code_plugin.py
 ```
 
-هر دو بسته فایل‌های reference، profile و card خودشان را همراه دارند، بنابراین هیچ لینک داخلی به بیرون بسته اشاره نمی‌کند و اگر چنین چیزی پیش بیاید build شکست می‌خورد.
+این دستور `dist/claude-capability-bridge-plugin/` را می‌سازد و همان Skill را همراه runtime اختیاری hook بسته‌بندی می‌کند.
 
-**ثبت hook** (فقط برای نصب Skill ساده لازم است؛ پلاگین خودش ثبت می‌کند): ورودی‌های `bootstrap/settings.json.example` را در تنظیمات کپی کنید و حالت را انتخاب کنید:
+### ثبت hook برای نصب ساده Skill
 
-```bash
-export CLAUDE_CAPABILITY_BRIDGE_MODE=adaptive           # پیش‌فرض
-export CLAUDE_CAPABILITY_BRIDGE_MODE=session-only       # فقط شروع جلسه
-export CLAUDE_CAPABILITY_BRIDGE_MODE=legacy-every-turn  # رفتار قدیمی برای مقایسه
-export CLAUDE_CAPABILITY_BRIDGE_MODE=off                # هیچ خروجی‌ای تولید نمی‌شود
-```
+ورودی‌های [`bootstrap/settings.json.example`](../bootstrap/settings.json.example) را در settings کپی کنید و `CLAUDE_CAPABILITY_BRIDGE_MODE` را انتخاب کنید. plugin hookهای خودش را ثبت می‌کند.
 
-**بازگشت به عقب:** حالت را روی `off` بگذارید، یا ورودی‌های hook را حذف کنید و Skill را نگه دارید، یا کل بسته را پاک کنید. چیزی خارج از پوشه بسته و یک پوشه state کاربر نوشته نمی‌شود؛ پاک کردن آن پوشه، وضعیت همه جلسه‌ها را ریست می‌کند.
+برای rollback می‌توانید mode را روی `off` بگذارید، hookها را حذف کنید یا package را پاک کنید.
 
-## 💖 حمایت از پروژه
+## حمایت از پروژه
 
-حمایت مالی کاملاً اختیاری است. آدرس‌های donation این پروژه از مخزن [Chat-management-bot-and-AI-assistant](https://github.com/Abolfazlshahi/Chat-management-bot-and-AI-assistant) گرفته شده‌اند.
+حمایت مالی اختیاری است. آدرس‌های donation از مخزن [Chat-management-bot-and-AI-assistant](https://github.com/Abolfazlshahi/Chat-management-bot-and-AI-assistant) گرفته شده‌اند.
 
 | شبکه | آدرس |
 |---|---|
-| TON | `UQDfjVk2UdpiMg-bsxqoLa0O_icuaF20D-wWJgIJwK1Ha2Ul` |
-| USDT TRC20 | `TR8ibZGKutPKoDm5nMbHFwGPFBuMKwjG6j` |
-| USDT BEP20 | `0x8c45d6bae8a5a572b2a776779fe0bcae3d3f9107` |
+| **TON** | `UQDfjVk2UdpiMg-bsxqoLa0O_icuaF20D-wWJgIJwK1Ha2Ul` |
+| **USDT TRC20** | `TR8ibZGKutPKoDm5nMbHFwGPFBuMKwjG6j` |
+| **USDT BEP20** | `0x8c45d6bae8a5a572b2a776779fe0bcae3d3f9107` |
 
 <a href="https://nowpayments.io/donation?api_key=724be14f-9bdf-4318-99d0-0a837b5493b6" target="_blank" rel="noreferrer noopener"><img src="https://nowpayments.io/images/embeds/donation-button-white.svg" alt="Cryptocurrency & Bitcoin donation button by NOWPayments"></a>
 
-## 📣 کانال
+## کانال
 
 آخرین پروژه‌ها و مطالب را در [@pythash](https://t.me/pythash) دنبال کنید.
 
-## 📚 ساختار پروژه
+## ساختار پروژه
 
 ```text
-├── SKILL.md          # هسته همیشه‌فعال، کوچک و پایدار
-├── profiles/         # یک پروفایل برای هر runtime میزبان
-├── cards/            # کارت‌های خانواده تسک + index.json تولیدشده
-├── references/       # مطالعه پس‌زمینه مفصل
-├── bootstrap/        # موتور hook، wrapperهای shell و PowerShell
-├── config/           # بودجه محتوا که validator اعمال می‌کند
-├── docs/             # قرارداد کش و ممیزی پایه
-├── scripts/          # packager، validator، تحلیل trace، اجراکننده تست
-├── tests/python/     # مجموعه تست آفلاین
-├── benchmarks/       # سناریوها، variantها، متریک‌ها
+├── SKILL.md                   # kernel پایدار
+├── profiles/                  # قراردادهای نسبتاً پایدار host
+├── cards/                     # رویه‌های خانواده‌ی task + index تولیدشده
+├── references/                # مطالب عمیق و troubleshooting
+├── bootstrap/                 # hook engine و registration examples
+├── config/                    # بودجه‌ی محتوا
+├── docs/                      # cache contract و migration notes
+├── scripts/                   # packager، validator، card index و trace tools
+├── tests/python/              # مجموعه تست آفلاین
+├── benchmarks/                # سناریوها، variantها و متریک‌ها
 ├── evals/
 ├── CHANGELOG.md
 └── LICENSE
 ```
 
-## 🛡️ مرزهای طراحی
+مسیر کلی پروژه:
 
-این Skill **نمی‌تواند** Browser، MCP Server، Permission، Network Access، Filesystem Mount یا provider protocol compatibility ایجاد کند. همچنین ادعا نمی‌کند که یک مدل third-party را به مدل Anthropic تبدیل می‌کند.
+```text
+kernel → runtime profile → task card → reference → execution → verification
+```
 
-## ✅ چه چیزی واقعاً تست شده است
+## مرزهای طراحی
 
-بررسی‌های محلی:
+این Skill نمی‌تواند Browser runtime، Computer-use runtime، MCP Server، Filesystem Mount، Network Access، Permission، provider protocol compatibility یا capabilityهای گمشده‌ی model را ایجاد کند.
+
+## چه چیزی واقعاً تست شده است
+
+بررسی‌های آفلاین با این فرمان‌ها انجام می‌شوند:
 
 ```bash
 python3 -m pip install -r requirements-dev.txt
-python3 scripts/validate_skill.py            # ساختار، بودجه، گراف مرجع، بسته‌های ساخته‌شده
-python3 scripts/run_tests.py                 # کل مجموعه تست آفلاین
-python3 bootstrap/bridge_hook.py --selftest  # موتور hook
-python3 scripts/analyze_trace.py --selftest  # تحلیل trace روی fixture مصنوعی
+python3 scripts/validate_skill.py
+python3 scripts/run_tests.py
+python3 bootstrap/bridge_hook.py --selftest
+python3 scripts/analyze_trace.py --selftest
 ```
 
-**پوشش داده می‌شود:** بسته‌بندی و بسته بودن گراف مرجع، قراردادهای محتوا، رفتار hook با payload واقعی، چرخه عمر state و بازیابی از خرابی، ثابت‌های امنیتی (ورودی hook فقط داده است، نشت نداشتن secret، ادعا نکردن permission) و پایداری بایت‌به‌بایت متن ثابت.
+CI نیز همین offline suite را اجرا می‌کند و علاوه بر آن packaging، Agent Skills validation، card index، JSON و benchmark schema را بررسی می‌کند.
 
-**پوشش داده نمی‌شود:** رفتار زنده مدل، اجرای واقعی در Claude Code، ویندوز (به `tests/windows-manual-checklist.md` مراجعه کنید که عمداً پر نشده است) و رفتار کش هیچ provider ای. مورد آخر فقط از روی فیلدهای usage زنده قابل خواندن است؛ توضیح در `docs/cache-contract.md`.
+**پوشش داده نمی‌شود:** live model behavior، اجرای واقعی در Claude Code برای هر host، رفتار cache در provider و بخش‌های ویندوزی که هنوز به‌صورت دستی ثبت نشده‌اند. این موارد تا زمان مشاهده‌ی واقعی `UNKNOWN` می‌مانند.
 
-## 📄 مجوز
+## مجوز
 
-این پروژه تحت [MIT License](../LICENSE) منتشر شده است. متن کامل مجوز در فایل [`LICENSE`](../LICENSE) قرار دارد.
+این پروژه تحت [MIT License](../LICENSE) منتشر شده است.
 
-## 🔗 لینک‌های سریع
+## لینک‌های سریع
 
-[Repository](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [Skill](../SKILL.md) · [Benchmarks](../benchmarks/README.md) · [References](../references/README.md) · [License](../LICENSE) · [Telegram](https://t.me/pythash)
+[Repository](https://github.com/Abolfazlshahi/claude-capability-bridge-skill) · [SKILL.md](../SKILL.md) · [Benchmarks](../benchmarks/README.md) · [References](../references/README.md) · [License](../LICENSE) · [Telegram](https://t.me/pythash)
